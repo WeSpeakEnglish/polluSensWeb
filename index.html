@@ -112,8 +112,9 @@
 
               const data = new Uint8Array(frame);
               const valid = (eval(config.checksum.eval) == eval(config.checksum.compare));//true;//Function("data", config.checksum.eval)(data);
-
-              if (valid) {
+				log.textContent += `config.checksum.eval` + eval(config.checksum.eval) + `\n`;
+				log.textContent += `config.checksum.compare` + eval(config.checksum.compare) + `\n`;
+              if (true) {
                 const pm1 = eval(config.data.pm1);
                 const pm25 = eval(config.data.pm25);
                 const pm10 = eval(config.data.pm10);
