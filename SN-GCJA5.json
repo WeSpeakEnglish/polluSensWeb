@@ -6,8 +6,8 @@
   },
   "data": {
     "pm1": "data[1] + (data[2] << 8) + (data[3] << 16) + (data[4] << 24)",
-    "pm25": "return data[5] + data[6] << 8 + data[7] << 16 + data[8] << 24;",
-    "pm10": "return data[9] + data[10] << 8 + data[11] << 16 + data[12] << 24;"
+    "pm25": "data[5] + data[6] << 8 + data[7] << 16 + data[8] << 24;",
+    "pm10": "data[9] + data[10] << 8 + data[11] << 16 + data[12] << 24;"
   },
   "checksum": {
     "eval": "return data[30] === data.slice(2, 30).reduce((a, b) => a ^ b, 0);"

@@ -114,12 +114,12 @@
               const valid = eval(function(data){config.checksum.eval});//true;//Function("data", config.checksum.eval)(data);
 
               if (valid) {
-                const pm1 = eval('(data) => {' + config.data.pm1 + '}')(data);
-                const pm25 = eval(function(data){config.data.pm25});
-                const pm10 = eval(function(data){config.data.pm10});
+                const pm1 = eval(config.data.pm1);
+                const pm25 = eval(config.data.pm25);
+                const pm10 = eval(config.data.pm10);
 
                 updateChart(pm1, pm25, pm10);
-				log.textContent += eval("data[1] + (data[2] << 8) + (data[3] << 16) + (data[4] << 24)") + `\n`;
+				log.textContent += eval('"'+config.data.pm1+'"') + `\n`;
 				log.textContent += `📦` + data + `\n`;
                 log.textContent += `✅ PM1: ${pm1}, PM2.5: ${pm25}, PM10: ${pm10}\n`;
               } else {
