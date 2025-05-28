@@ -6,8 +6,8 @@
   },
   "data": {
     "pm1": 4,
-    "pm25": 6,
-    "pm10": 8
+    "pm25": 8,
+    "pm10": 12
   },
   "checksum": {
     "eval": "return data[30] === data.slice(2, 30).reduce((a, b) => a ^ b, 0);"
