@@ -1,10 +1,4 @@
 {
-  "port": {
-    "baudRate": 9600,
-    "dataBits": 8,
-    "stopBits": 1,
-    "parity": "even"
-  },
   "frame": {
     "length": 32,
     "startByte": 2,
@@ -12,13 +6,17 @@
   },
   "data": {
     "pm1": 4,
-    "pm25": 8,
-    "pm10": 12
+    "pm25": 6,
+    "pm10": 8
   },
   "checksum": {
     "eval": "return data[30] === data.slice(2, 30).reduce((a, b) => a ^ b, 0);"
   },
-  "charts": {
-    "chart1": ["pm1", "pm25", "pm10"]
+  "port": {
+    "baudRate": 9600,
+    "dataBits": 8,
+    "stopBits": 1,
+    "parity": \"even\"
   }
 }
+
