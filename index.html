@@ -119,7 +119,6 @@
                 const pm10 = eval(config.data.pm10);
 
                 updateChart(pm1, pm25, pm10);
-				log.textContent += eval('"'+config.data.pm1+'"') + `\n`;
 				log.textContent += `📦` + data + `\n`;
                 log.textContent += `✅ PM1: ${pm1}, PM2.5: ${pm25}, PM10: ${pm10}\n`;
               } else {
