@@ -114,9 +114,9 @@
               const valid = eval(function(data){config.checksum.eval});//true;//Function("data", config.checksum.eval)(data);
 
               if (valid) {
-                const pm1 = (data[config.data.pm1] << 8) | data[config.data.pm1 + 1];
-                const pm25 = (data[config.data.pm25] << 8) | data[config.data.pm25 + 1];
-                const pm10 = (data[config.data.pm10] << 8) | data[config.data.pm10 + 1];
+                const pm1 = eval(function(data){config.data.pm1});
+                const pm25 = eval(function(data){config.data.pm25});
+                const pm10 = eval(function(data){config.data.pm10});
 
                 updateChart(pm1, pm25, pm10);
 				log.textContent += `📦` + data + `\n`;
