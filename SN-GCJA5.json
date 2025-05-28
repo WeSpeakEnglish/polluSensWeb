@@ -12,11 +12,11 @@
   "checksum": {
     "eval": "return data[30] === data.slice(2, 30).reduce((a, b) => a ^ b, 0);"
   },
-  "port": {
-    "baudRate": 9600,
-    "dataBits": 8,
-    "stopBits": 1,
-    "parity": \"even\"
-  }
+	"port": {
+	  "baudRate": 9600,
+	  "dataBits": 8,
+	  "stopBits": 1,
+	  "parity": "even"
+	}
 }
 
