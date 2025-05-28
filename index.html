@@ -32,28 +32,30 @@
 
     // Chart.js setup
     const ctx = document.getElementById('chart').getContext('2d');
-    const chart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [
-          { label: 'PM1.0', borderColor: 'blue', data: [], tension: 0.2 },
-          { label: 'PM2.5', borderColor: 'green', data: [], tension: 0.2 },
-          { label: 'PM10', borderColor: 'red', data: [], tension: 0.2 },
-        ]
-      },
-      options: {
-        animation: false,
-        scales: {
-          x: { display: true },
-          y: { beginAtZero: true }
-        }
-      }
-    });
+    var chart; 
 
     async function loadConfig() {
       const response = await fetch("https://raw.githubusercontent.com/WeSpeakEnglish/polluSensWeb/refs/heads/main/SN-GCJA5.json");
       config = await response.json();
+	  chart = new Chart(ctx, {
+		  type: 'line',
+		  data: {
+			labels: [],
+			datasets: [
+			  { label: 'PM1.0', borderColor: 'blue', data: [], tension: 0.2 },
+			  { label: 'PM2.5', borderColor: 'green', data: [], tension: 0.2 },
+			  { label: 'PM10', borderColor: 'red', data: [], tension: 0.2 },
+			]
+		  },
+		  options: {
+			animation: false,
+			scales: {
+			  x: { display: true },
+			  y: { beginAtZero: true }
+			}
+		  }
+		});
+	  
     }
 
     document.getElementById('request-port').addEventListener('click', async () => {
