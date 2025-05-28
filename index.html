@@ -111,7 +111,7 @@
               }
 
               const data = new Uint8Array(frame);
-              const valid = eval(function(data){config.checksum.eval});//true;//Function("data", config.checksum.eval)(data);
+              const valid = eval(config.checksum.eval);//true;//Function("data", config.checksum.eval)(data);
 
               if (valid) {
                 const pm1 = eval(config.data.pm1);
@@ -120,6 +120,7 @@
 
                 updateChart(pm1, pm25, pm10);
 				log.textContent += `📦` + data + `\n`;
+				log.textContent += `Checksum:`valid + `\n`; 
                 log.textContent += `✅ PM1: ${pm1}, PM2.5: ${pm25}, PM10: ${pm10}\n`;
               } else {
                 log.textContent += `❌ Bad checksum\n`;

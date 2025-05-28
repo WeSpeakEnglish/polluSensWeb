@@ -10,7 +10,7 @@
     "pm10": "data[9] + (data[10] << 8) + (data[11] << 16) + (data[12] << 24)"
   },
   "checksum": {
-    "eval": "return data[30] === data.slice(2, 30).reduce((a, b) => a ^ b, 0);",
+    "eval": "data.slice(2, 30).reduce((a, b) => a ^ b, 0)",
 	"compare": "data[30]"
   },
 	"port": {
