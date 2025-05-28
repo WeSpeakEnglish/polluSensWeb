@@ -114,7 +114,7 @@
               const valid = eval(function(data){config.checksum.eval});//true;//Function("data", config.checksum.eval)(data);
 
               if (valid) {
-                const pm1 = eval('(lim) => {' + config.data.pm1 + '}')(data);
+                const pm1 = eval('(data) => {' + config.data.pm1 + '}')(data);
                 const pm25 = eval(function(data){config.data.pm25});
                 const pm10 = eval(function(data){config.data.pm10});
 
