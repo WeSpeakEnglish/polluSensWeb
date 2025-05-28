@@ -11,7 +11,7 @@
   },
   "checksum": {
     "eval": "data.slice(1, 30).reduce((a, b) => a ^ b, 0)",
-	"compare": "data[30] + 1"
+    "compare": "data[30]"
   },
 	"port": {
 	  "baudRate": 9600,
