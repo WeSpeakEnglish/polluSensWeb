@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Air Quality Monitor (SN-GCJA5)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    #chart { width: 100%; height: 300px; }
+    pre { background: #f0f0f0; padding: 10px; height: 200px; overflow: auto; border: 1px solid #ccc; }
+    button { margin: 5px; padding: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Air Quality Monitor (SN-GCJA5)</h1>
+
+  <button id="select-port" disabled>Select Port</button>
+  <button id="connect" disabled>Connect</button>
+  <button id="disconnect" disabled>Disconnect</button>
+  <button id="export-csv" disabled>Export CSV</button>
+
+  <pre id="log"></pre>
+  <canvas id="chart"></canvas>
+
+  <script>
+    let config;
+    let port, reader;
+    let buffer = [];
+    let chart;
+    let csvLog = "Time,PM1,PM2.5,PM10\n";
+    const log = document.getElementById('log');
+
+    document.getElementById("select-port").disabled = true;
+    document.getElementById("connect").disabled = true;
+    document.getElementById("disconnect").disabled = true;
+    document.getElementById("export-csv").disabled = true;
+
+    async function loadConfig() {
+      const res = await fetch("SN-GCJA5.json");
+      config = await res.json();
+    }
+
+    async function setupChart() {
+      const ctx = document.getElementById("chart").getContext("2d");
+      chart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: [],
+          datasets: [
+            { label: "PM1.0", borderColor: "blue", data: [], fill: false },
+            { label: "PM2.5", borderColor: "green", data: [], fill: false },
+            { label: "PM10", borderColor: "red", data: [], fill: false }
+          ]
+        },
+        options: {
+          responsive: true,
+          animation: false,
+          scales: {
+            x: { display: true },
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    function updateChart(pm1, pm25, pm10) {
+      const time = new Date().toLocaleTimeString();
+      const data = chart.data;
+      data.labels.push(time);
+      data.datasets[0].data.push(pm1);
+      data.datasets[1].data.push(pm25);
+      data.datasets[2].data.push(pm10);
+      if (data.labels.length > 100) {
+        data.labels.shift();
+        data.datasets.forEach(ds => ds.data.shift());
+      }
+      chart.update();
+    }
+
+    function logFrame(bytes) {
+      const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' ');
+      log.textContent += `📦 ${hex}\n`;
+      log.scrollTop = log.scrollHeight;
+    }
+
+    async function readLoop() {
+      const readerStream = port.readable.getReader();
+      try {
+        while (true) {
+          const { value, done } = await readerStream.read();
+          if (done) break;
+          if (value) {
+            for (const byte of value) {
+              buffer.push(byte);
+              if (buffer.length > config.frame.length) buffer.shift();
+
+              if (buffer.length === config.frame.length &&
+                  buffer[0] === config.frame.startByte &&
+                  buffer[buffer.length - 1] === config.frame.endByte) {
+
+                const data = new Uint8Array(buffer);
+                const checksumValid = Function("data", config.checksum.eval)(data);
+
+                if (checksumValid) {
+                  const pm1  = (data[config.data.pm1] << 8)  | data[config.data.pm1 + 1];
+                  const pm25 = (data[config.data.pm25] << 8) | data[config.data.pm25 + 1];
+                  const pm10 = (data[config.data.pm10] << 8) | data[config.data.pm10 + 1];
+                  updateChart(pm1, pm25, pm10);
+                  csvLog += `${new Date().toISOString()},${pm1},${pm25},${pm10}\n`;
+                  logFrame(data);
+                }
+              }
+            }
+          }
+        }
+      } catch (err) {
+        log.textContent += `❌ Read error: ${err}\n`;
+      } finally {
+        readerStream.releaseLock();
+      }
+    }
+
+    document.getElementById("select-port").addEventListener("click", async () => {
+      try {
+        port = await navigator.serial.requestPort();
+        log.textContent += "✅ Port selected\n";
+      } catch (err) {
+        log.textContent += "❌ Port select failed: " + err + "\n";
+      }
+    });
+
+    document.getElementById("connect").addEventListener("click", async () => {
+      if (!port) {
+        log.textContent += "⚠️ No port selected\n";
+        return;
+      }
+      try {
+        await port.open(config.port);
+        log.textContent += "🔌 Port opened\n";
+        readLoop();
+      } catch (err) {
+        log.textContent += "❌ Error opening port: " + err + "\n";
+      }
+    });
+
+    document.getElementById("disconnect").addEventListener("click", async () => {
+      if (port?.readable) {
+        try {
+          await port.close();
+          log.textContent += "🔒 Port closed\n";
+        } catch (err) {
+          log.textContent += "❌ Error closing port: " + err + "\n";
+        }
+      }
+    });
+
+    document.getElementById("export-csv").addEventListener("click", () => {
+      const blob = new Blob([csvLog], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "pm_data.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    (async () => {
+      try {
+        await loadConfig();
+        await setupChart();
+        log.textContent += "✅ Config loaded\n";
+
+        document.getElementById("select-port").disabled = false;
+        document.getElementById("connect").disabled = false;
+        document.getElementById("disconnect").disabled = false;
+        document.getElementById("export-csv").disabled = false;
+      } catch (err) {
+        log.textContent += "❌ Failed to load config: " + err + "\n";
+      }
+    })();
+  </script>
+</body>
+</html>
+
