@@ -1,230 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>PolluSens Web Serial</title>
+  <meta charset="UTF-8" />
+  <title>Serial Sensor Chart</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: sans-serif; margin: 20px; }
-    button { margin-right: 10px; }
-    pre { background: #eee; padding: 10px; max-height: 200px; overflow-y: auto; }
-    .chart-container { display: block; margin-bottom: 20px; }
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+    }
+    .chart-wrapper {
+      position: relative;
+      margin-bottom: 40px;
+    }
+    .chart-container {
+      width: 100%;
+      height: 100%;
+    }
+    #log {
+      white-space: pre-wrap;
+      background: #f0f0f0;
+      padding: 10px;
+      height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 10px 15px;
+      font-size: 1em;
+    }
   </style>
 </head>
 <body>
-  <h1>PolluSens Web Serial Interface</h1>
-  <button id="request-port">Request Port</button>
-  <button id="connect" disabled>Connect</button>
-  <button id="disconnect" disabled>Disconnect</button>
-
-  <h3>Live Sensor Data</h3>
+  <button id="connect">🔌 Connect</button>
   <div id="charts"></div>
-
-  <h3>Raw Frames</h3>
   <pre id="log"></pre>
 
   <script>
-    let port, reader, config;
-    let isReading = false;
-    let buffer = [];
-    const chartData = {};
-    const charts = {};
-    const log = document.getElementById("log");
+    let port, charts = {}, config;
+    const log = document.getElementById('log');
+    let timeStart = performance.now();
+    const MAX_POINTS = 1000;
 
     async function loadConfig() {
-      const response = await fetch("https://raw.githubusercontent.com/WeSpeakEnglish/polluSensWeb/refs/heads/main/SN-GCJA5.json");
-      config = await response.json();
-      initializeCharts();
+      const res = await fetch("https://raw.githubusercontent.com/WeSpeakEnglish/polluSensWeb/refs/heads/main/SN-GCJA5.json");
+      config = await res.json();
     }
 
     function initializeCharts() {
       const chartsContainer = document.getElementById('charts');
       chartsContainer.innerHTML = '';
+      charts = {};
+      for (const [chartGroup, group] of Object.entries(config.charts)) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'chart-wrapper';
 
-      for (const [chartGroup, chartDef] of Object.entries(config.charts)) {
-        const datasets = chartDef.datasets || chartDef; // Fallback to old format
         const canvas = document.createElement('canvas');
         canvas.className = 'chart-container';
 
-        if (chartDef.size && Array.isArray(chartDef.size)) {
-          canvas.width = chartDef.size[0];
-          canvas.height = chartDef.size[1];
-        }
+        const [width, height] = group.size || [600, 300];
+        wrapper.style.maxWidth = `${width}px`;
+        wrapper.style.height = `${height}px`;
+        wrapper.style.width = '100%';
 
-        chartsContainer.appendChild(canvas);
+        wrapper.appendChild(canvas);
+        chartsContainer.appendChild(wrapper);
 
         charts[chartGroup] = new Chart(canvas, {
           type: 'line',
           data: {
-            datasets: datasets.map(([label, field, color, tension]) => ({
+            datasets: group.datasets.map(([label, field, color, tension]) => ({
               label,
               data: [],
               borderColor: color,
+              tension: tension ?? 0.3,
               borderWidth: 1,
               fill: false,
-              pointRadius: 0,
-              tension: tension
+              pointRadius: 0
             }))
           },
           options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
             scales: {
               x: {
                 type: 'linear',
                 title: { display: true, text: 'Time (s)' }
               },
               y: {
-                title: { display: true, text: chartGroup },
-                beginAtZero: true
+                beginAtZero: true,
+                title: { display: true, text: chartGroup }
               }
             },
-            plugins: { legend: { position: 'top' } },
-            animation: false
+            plugins: {
+              legend: { position: 'top' }
+            }
           }
         });
       }
     }
 
-    document.getElementById('request-port').addEventListener('click', async () => {
-      try {
-        port = await navigator.serial.requestPort();
-        document.getElementById('connect').disabled = false;
-        log.textContent += "✅ Port selected.\n";
-      } catch (err) {
-        log.textContent += `❌ Port request failed: ${err}\n`;
+    function updateCharts(parsedData) {
+      const now = (performance.now() - timeStart) / 1000;
+
+      for (const [chartGroup, chart] of Object.entries(charts)) {
+        const datasets = config.charts[chartGroup].datasets;
+
+        datasets.forEach(([label, field], i) => {
+          const value = parsedData[field];
+          if (value !== undefined) {
+            chart.data.datasets[i].data.push({ x: now, y: value });
+            if (chart.data.datasets[i].data.length > MAX_POINTS) {
+              chart.data.datasets[i].data.shift();
+            }
+          }
+        });
+
+        chart.update('none');
       }
-    });
+    }
+
+    async function readLoop(reader) {
+      const { frame, checksum, data: dataFields } = config;
+      let buffer = [];
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer.push(...value);
+
+        while (buffer.length >= frame.length) {
+          const slice = buffer.slice(0, frame.length);
+          if (slice[0] === frame.startByte && slice[frame.length - 1] === frame.endByte) {
+            const data = slice;
+            const valid = eval(checksum.eval) === eval(checksum.compare);
+            if (valid) {
+              const parsed = {};
+              for (const [name, expr] of Object.entries(dataFields)) {
+                parsed[name] = eval(expr);
+              }
+              updateCharts(parsed);
+
+              let output = `📦 [${data.join(', ')}]\nChecksum: ✅\n`;
+              for (const [group, groupConf] of Object.entries(config.charts)) {
+                for (const [label, field] of groupConf.datasets) {
+                  if (parsed[field] !== undefined) {
+                    output += `${label}: ${parsed[field]} `;
+                  }
+                }
+              }
+              log.textContent += output.trim() + '\n';
+            } else {
+              log.textContent += `❌ Bad checksum\n`;
+            }
+            buffer = buffer.slice(frame.length);
+          } else {
+            buffer.shift();
+          }
+        }
+      }
+    }
 
     document.getElementById('connect').addEventListener('click', async () => {
-      if (!port) return;
       await loadConfig();
-      await port.open(config.port);
-      log.textContent += `🔌 Port opened at ${config.port.baudRate} baud.\n`;
-
-      reader = port.readable.getReader();
-      isReading = true;
-      document.getElementById('disconnect').disabled = false;
-      document.getElementById('connect').disabled = true;
-      buffer = [];
-      startTime = Date.now() / 1000;
-      readLoop();
-    });
-
-    let startTime = 0;
-    const MAX_POINTS = 1000;
-
-    async function readLoop() {
-      const frameLen = config.frame.length;
-      const startByte = config.frame.startByte;
-      const endByte = config.frame.endByte;
-
+      initializeCharts();
       try {
-        while (isReading) {
-          const { value, done } = await reader.read();
-          if (done || !value) break;
-
-          for (const byte of value) {
-            buffer.push(byte);
-
-            while (buffer.length >= frameLen) {
-              if (buffer[0] !== startByte) {
-                buffer.shift();
-                continue;
-              }
-
-              const frame = buffer.slice(0, frameLen);
-              if (frame[frameLen - 1] !== endByte) {
-                buffer.shift();
-                continue;
-              }
-
-              const data = new Uint8Array(frame);
-              const valid = (eval(config.checksum.eval) == eval(config.checksum.compare));
-
-              if (valid) {
-                const values = {};
-                for (const [field, expr] of Object.entries(config.data)) {
-                  try {
-                    values[field] = eval(expr);
-                  } catch (e) {
-                    values[field] = undefined;
-                  }
-                }
-
-                updateChartData(values);
-                log.textContent += `📦 [${Array.from(data).join(', ')}]\n`;
-                log.textContent += `Checksum: ${valid}\n`;
-
-                for (const [chartGroup, chartDef] of Object.entries(config.charts)) {
-                  const datasets = chartDef.datasets || chartDef;
-                  for (const [label, field] of datasets) {
-                    log.textContent += `✅ ${label}: ${values[field]}\n`;
-                  }
-                }
-              } else {
-                log.textContent += `❌ Bad checksum\n`;
-              }
-
-              buffer.splice(0, frameLen);
-            }
-
-            if (buffer.length > 100) {
-              buffer = buffer.slice(-50);
-            }
-          }
-        }
+        port = await navigator.serial.requestPort();
+        await port.open(config.port);
+        const reader = port.readable.getReader();
+        log.textContent += '✅ Port opened\n';
+        await readLoop(reader);
       } catch (err) {
-        log.textContent += `❌ Read error: ${err}\n`;
-      } finally {
-        reader.releaseLock();
+        log.textContent += `❌ ${err.message}\n`;
       }
-    }
-
-    function updateChartData(values) {
-      const timeNow = Date.now() / 1000 - startTime;
-
-      for (const [chartGroup, chartDef] of Object.entries(config.charts)) {
-        const datasets = chartDef.datasets || chartDef;
-        const chart = charts[chartGroup];
-        if (!chart) continue;
-
-        datasets.forEach(([label, field], index) => {
-          const val = values[field];
-          if (val !== undefined) {
-            chart.data.datasets[index].data.push({ x: timeNow, y: val });
-            if (chart.data.datasets[index].data.length > MAX_POINTS) {
-              chart.data.datasets[index].data.shift();
-            }
-          }
-        });
-
-        chart.update();
-      }
-    }
-
-    document.getElementById('disconnect').addEventListener('click', async () => {
-      isReading = false;
-
-      if (reader) {
-        try {
-          await reader.cancel();
-          await reader.releaseLock();
-        } catch {}
-
-        reader = null;
-      }
-
-      if (port) {
-        try {
-          await port.close();
-          log.textContent += "🔒 Port closed.\n";
-        } catch (err) {
-          log.textContent += `❌ Port close error: ${err}\n`;
-        }
-      }
-
-      document.getElementById('connect').disabled = false;
-      document.getElementById('disconnect').disabled = true;
     });
   </script>
 </body>
 </html>
+
