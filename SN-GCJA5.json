@@ -20,8 +20,14 @@
 	  "parity": "even"
 	},
 	"charts": {
-		"Particulate Matter": [["PM1.0","pm1","blue",0.2]],
-		"Particulate Matter 2": [["PM2.5","pm25","green",0.2],["PM10","pm10","red",0.2]]
+		    "Particulate Matter": {
+				"size": [600, 300],
+				"datasets": [
+							["PM1.0", "pm1", "blue", 0.3],
+							["PM2.5", "pm25", "green", 0.2],
+							["PM10", "pm10", "red", 0.2]
+    ],
+			"Particulate Matter 2": [["PM2.5","pm25","green",0.2],["PM10","pm10","red",0.2]]
    }
 }
 
