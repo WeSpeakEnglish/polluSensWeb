@@ -1,219 +1,239 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>PolluSens Web Serial</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body { font-family: sans-serif; margin: 20px; }
-    button { margin-right: 10px; }
-    canvas { max-width: 100%; height: 300px; }
-    pre { background: #eee; padding: 10px; max-height: 200px; overflow-y: auto; }
-  </style>
-</head>
-<body>
-  <h1>PolluSens Web Serial Interface</h1>
-  <button id="request-port">Request Port</button>
-  <button id="connect" disabled>Connect</button>
-  <button id="disconnect" disabled>Disconnect</button>
-  <h3>Live Sensor Data</h3>
-  
-  <div id="charts"></div>
-  
-  <h3>Raw Frames</h3>
-  <pre id="log"></pre>
-
-  <script>
-    let port, reader, config;
-    let isReading = false;
-    let buffer = [];
-
-    const log = document.getElementById("log");
-    const connectBtn = document.getElementById("connect");
-    const disconnectBtn = document.getElementById("disconnect");
-
-    const charts = {};
-    const chartData = {};
-
-    async function loadConfig() {
-      const response = await fetch("https://raw.githubusercontent.com/WeSpeakEnglish/polluSensWeb/refs/heads/main/SN-GCJA5.json");
-      config = await response.json();
-      initializeCharts();
-    }
-
-    function initializeCharts() {
-      if (!config) {
-        log.textContent += '⚠️ No configuration loaded\n';
-        return;
-      }
-
-      const chartsContainer = document.getElementById('charts');
-      chartsContainer.innerHTML = '';
-
-      for (const [chartGroup, datasets] of Object.entries(config.charts)) {
-        const canvas = document.createElement('canvas');
-        canvas.className = 'chart-container';
-        chartsContainer.appendChild(canvas);
-
-        chartData[chartGroup] = datasets.map(() => []);
-        charts[chartGroup] = new Chart(canvas, {
-          type: 'line',
-          data: {
-            labels: [],
-            datasets: datasets.map(([label, field, color, tension]) => ({
-              label,
-              data: [],
-              borderColor: color,
-              borderWidth: 1,
-              fill: false,
-              pointRadius: 0,
-              tension
-            }))
-          },
-          options: {
-            scales: {
-              x: { type: 'linear', title: { display: true, text: 'Time (s)' } },
-              y: { title: { display: true, text: chartGroup }, beginAtZero: true }
-            },
-            plugins: { legend: { position: 'top' } },
-            animation: false
-          }
-        });
-      }
-    }
-
-    document.getElementById('request-port').addEventListener('click', async () => {
-      try {
-        port = await navigator.serial.requestPort();
-        connectBtn.disabled = false;
-        log.textContent += "✅ Port selected.\n";
-      } catch (err) {
-        log.textContent += `❌ Port request failed: ${err}\n`;
-      }
-    });
-
-    connectBtn.addEventListener('click', async () => {
-      if (!port) return;
-
-      await loadConfig();
-      await port.open(config.port);
-      log.textContent += `🔌 Port opened at ${config.port.baudRate} baud.\n`;
-
-      reader = port.readable.getReader();
-      isReading = true;
-      disconnectBtn.disabled = false;
-      connectBtn.disabled = true;
-      buffer = [];
-
-      readLoop();
-    });
-
-    async function readLoop() {
-      const frameLen = config.frame.length;
-      const startByte = config.frame.startByte;
-      const endByte = config.frame.endByte;
-
-      try {
-        while (isReading) {
-          const { value, done } = await reader.read();
-          if (done || !value) break;
-
-          for (const byte of value) {
-            buffer.push(byte);
-
-            while (buffer.length >= frameLen) {
-              if (buffer[0] !== startByte) {
-                buffer.shift();
-                continue;
-              }
-
-              const frame = buffer.slice(0, frameLen);
-              if (frame[frameLen - 1] !== endByte) {
-                buffer.shift();
-                continue;
-              }
-
-              const data = new Uint8Array(frame);
-              const valid = (eval(config.checksum.eval) == eval(config.checksum.compare));
-              log.textContent += `config.checksum.eval ` + eval(config.checksum.eval) + `\n`;
-              log.textContent += `config.checksum.compare ` + eval(config.checksum.compare) + `\n`;
-
-              if (valid) {
-                const pm1 = eval(config.data.pm1);
-                const pm25 = eval(config.data.pm25);
-                const pm10 = eval(config.data.pm10);
-
-                updateChartData({ pm1, pm2_5: pm25, pm10 });
-                log.textContent += `📦 [${Array.from(data).join(', ')}]\n`;
-                log.textContent += `Checksum: ${valid}\n`;
-                log.textContent += `✅ PM1: ${pm1}, PM2.5: ${pm25}, PM10: ${pm10}\n`;
-              } else {
-                log.textContent += `❌ Bad checksum\n`;
-              }
-
-              buffer.splice(0, frameLen);
-            }
-
-            if (buffer.length > 100) {
-              buffer = buffer.slice(-50);
-            }
-          }
-        }
-      } catch (err) {
-        log.textContent += `❌ Read error: ${err}\n`;
-      } finally {
-        reader.releaseLock();
-      }
-    }
-
-    function updateChartData(dataPoint) {
-      const now = performance.now() / 1000; // time in seconds since page load
-
-      for (const [chartGroup, datasets] of Object.entries(config.charts)) {
-        const chart = charts[chartGroup];
-        if (!chart) continue;
-
-        datasets.forEach(([label, field], index) => {
-          const value = dataPoint[field.replace('.', '_')]; // e.g., pm2.5 => pm2_5
-          if (value == null) return;
-
-          const dataset = chart.data.datasets[index];
-          dataset.data.push({ x: now, y: value });
-
-          if (dataset.data.length > 100) {
-            dataset.data.shift();
-          }
-        });
-
-        chart.update();
-      }
-    }
-
-    disconnectBtn.addEventListener('click', async () => {
-      isReading = false;
-
-      if (reader) {
-        try {
-          await reader.cancel();
-          reader.releaseLock();
-        } catch {}
-
-        reader = null;
-      }
-
-      if (port) {
-        try {
-          await port.close();
-          log.textContent += "🔒 Port closed.\n";
-        } catch (err) {
-          log.textContent += `❌ Port close error: ${err}\n`;
-        }
-      }
-
-      connectBtn.disabled = false;
-      disconnectBtn.disabled = true;
-    });
-  </script>
-</body>
+	<head>
+		<meta charset="UTF-8">
+		<title>PolluSens Web Serial</title>
+		<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+		<style>
+			body { font-family: sans-serif; margin: 20px; }
+			button { margin-right: 10px; }
+			canvas { max-width: 100%; height: 300px; }
+			pre { background: #eee; padding: 10px; max-height: 200px; overflow-y: auto; }
+		</style>
+	</head>
+	<body>
+		<h1>PolluSens Web Serial Interface</h1>
+		<button id="request-port">Request Port</button>
+		<button id="connect" disabled>Connect</button>
+		<button id="disconnect" disabled>Disconnect</button>
+		<h3>Live Sensor Data</h3>
+		
+		<div id="charts"></div>
+		
+		<h3>Raw Frames</h3>
+		<pre id="log"></pre>
+		
+		<script>
+			let port, reader, config;
+			let isReading = false;
+			let buffer = [];
+			
+			const log = document.getElementById("log");
+			const connectBtn = document.getElementById("connect");
+			const disconnectBtn = document.getElementById("disconnect");
+			
+			const charts = {};
+			const chartData = {};
+			
+			async function loadConfig() {
+				const response = await fetch("https://raw.githubusercontent.com/WeSpeakEnglish/polluSensWeb/refs/heads/main/SN-GCJA5.json");
+				config = await response.json();
+				initializeCharts();
+			}
+			
+			function initializeCharts() {
+				if (!config) {
+					log.textContent += '⚠️ No configuration loaded\n';
+					return;
+				}
+				
+				const chartsContainer = document.getElementById('charts');
+				chartsContainer.innerHTML = '';
+				
+				for (const [chartGroup, datasets] of Object.entries(config.charts)) {
+					const canvas = document.createElement('canvas');
+					canvas.className = 'chart-container';
+					chartsContainer.appendChild(canvas);
+					
+					chartData[chartGroup] = datasets.map(() => []);
+					charts[chartGroup] = new Chart(canvas, {
+						type: 'line',
+						data: {
+							labels: [],
+							datasets: datasets.map(([label, field, color, tension]) => ({
+								label,
+								data: [],
+								borderColor: color,
+								borderWidth: 1,
+								fill: false,
+								pointRadius: 0,
+								tension
+							}))
+						},
+						options: {
+							scales: {
+								x: { type: 'linear', title: { display: true, text: 'Time (s)' } },
+								y: { title: { display: true, text: chartGroup }, beginAtZero: true }
+							},
+							plugins: { legend: { position: 'top' } },
+							animation: false
+						}
+					});
+				}
+			}
+			
+			document.getElementById('request-port').addEventListener('click', async () => {
+				try {
+					port = await navigator.serial.requestPort();
+					connectBtn.disabled = false;
+					log.textContent += "✅ Port selected.\n";
+					} catch (err) {
+					log.textContent += `❌ Port request failed: ${err}\n`;
+				}
+			});
+			
+			connectBtn.addEventListener('click', async () => {
+				if (!port) return;
+				
+				await loadConfig();
+				await port.open(config.port);
+				log.textContent += `🔌 Port opened at ${config.port.baudRate} baud.\n`;
+				
+				reader = port.readable.getReader();
+				isReading = true;
+				disconnectBtn.disabled = false;
+				connectBtn.disabled = true;
+				buffer = [];
+				
+				readLoop();
+			});
+			
+			async function readLoop() {
+				const frameLen = config.frame.length;
+				const startByte = config.frame.startByte;
+				const endByte = config.frame.endByte;
+				
+				try {
+					while (isReading) {
+						const { value, done } = await reader.read();
+						if (done || !value) break;
+						
+						for (const byte of value) {
+							buffer.push(byte);
+							
+							while (buffer.length >= frameLen) {
+								if (buffer[0] !== startByte) {
+									buffer.shift();
+									continue;
+								}
+								
+								const frame = buffer.slice(0, frameLen);
+								if (frame[frameLen - 1] !== endByte) {
+									buffer.shift();
+									continue;
+								}
+								
+								const data = new Uint8Array(frame);
+								const valid = (eval(config.checksum.eval) == eval(config.checksum.compare));
+								log.textContent += `config.checksum.eval ` + eval(config.checksum.eval) + `\n`;
+								log.textContent += `config.checksum.compare ` + eval(config.checksum.compare) + `\n`;
+								
+								if (valid) {
+									const dataPoint = {};
+									for (const [, datasets] of Object.entries(config.charts)) {
+										for (const [label, field] of datasets) {
+											if (!(field in dataPoint)) {
+												dataPoint[field] = eval(config.data[field]);
+											}
+										}
+									}
+									
+									updateChartData(dataPoint);
+									
+									log.textContent += `📦 [${Array.from(data).join(', ')}]\n`;
+									log.textContent += `Checksum: ${valid}\n`;
+									log.textContent += `✅ ` + Object.entries(dataPoint)
+									.map(([field, value]) => {
+										// Find the first label for this field from any chart
+										let label = field;
+										for (const [, datasets] of Object.entries(config.charts)) {
+											for (const [lbl, f] of datasets) {
+												if (f === field) {
+													label = lbl;
+													break;
+												}
+											}
+										}
+										return `${label}: ${value}`;
+									})
+									.join(', ') + `\n`;
+									} else {
+									log.textContent += `❌ Bad checksum\n`;
+								}
+								
+								buffer.splice(0, frameLen);
+							}
+							
+							if (buffer.length > 100) {
+								buffer = buffer.slice(-50);
+							}
+						}
+					}
+					} catch (err) {
+					log.textContent += `❌ Read error: ${err}\n`;
+					} finally {
+					reader.releaseLock();
+				}
+			}
+			
+			function updateChartData(dataPoint) {
+				const now = performance.now() / 1000; // time in seconds since page load
+				
+				for (const [chartGroup, datasets] of Object.entries(config.charts)) {
+					const chart = charts[chartGroup];
+					if (!chart) continue;
+					
+					datasets.forEach(([label, field], index) => {
+						const value = dataPoint[field.replace('.', '_')]; // e.g., pm2.5 => pm2_5
+						if (value == null) return;
+						
+						const dataset = chart.data.datasets[index];
+						dataset.data.push({ x: now, y: value });
+						
+						if (dataset.data.length > 100) {
+							dataset.data.shift();
+						}
+					});
+					
+					chart.update();
+				}
+			}
+			
+			disconnectBtn.addEventListener('click', async () => {
+				isReading = false;
+				
+				if (reader) {
+					try {
+						await reader.cancel();
+						reader.releaseLock();
+					} catch {}
+					
+					reader = null;
+				}
+				
+				if (port) {
+					try {
+						await port.close();
+						log.textContent += "🔒 Port closed.\n";
+						} catch (err) {
+						log.textContent += `❌ Port close error: ${err}\n`;
+					}
+				}
+				
+				connectBtn.disabled = false;
+				disconnectBtn.disabled = true;
+			});
+		</script>
+	</body>
 </html>
 
