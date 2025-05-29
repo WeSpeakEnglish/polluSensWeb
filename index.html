@@ -16,8 +16,12 @@
   <button id="request-port">Request Port</button>
   <button id="connect" disabled>Connect</button>
   <button id="disconnect" disabled>Disconnect</button>
-  <h3>Live PM Data</h3>
-  <canvas id="chart"></canvas>
+  <h3>Live Sensor Data</h3>
+  
+	<div id = "charts">
+	 <canvas id="chart1"></canvas>
+	</div>
+	
   <h3>Raw Frames</h3>
   <pre id="log"></pre>
 
@@ -31,13 +35,13 @@
     const disconnectBtn = document.getElementById("disconnect");
 
     // Chart.js setup
-    const ctx = document.getElementById('chart').getContext('2d');
-    var chart; 
+    const ctx = document.getElementById('chart1').getContext('2d');
+    var chart1; 
 
     async function loadConfig() {
       const response = await fetch("https://raw.githubusercontent.com/WeSpeakEnglish/polluSensWeb/refs/heads/main/SN-GCJA5.json");
       config = await response.json();
-	  chart = new Chart(ctx, {
+	  chart1 = new Chart(ctx, {
 		  type: 'line',
 		  data: {
 			labels: [],
@@ -144,19 +148,19 @@
 
     function updateChart(pm1, pm25, pm10) {
       const ts = new Date().toLocaleTimeString();
-      const labels = chart.data.labels;
+      const labels = chart1.data.labels;
 
       labels.push(ts);
-      chart.data.datasets[0].data.push(pm1);
-      chart.data.datasets[1].data.push(pm25);
-      chart.data.datasets[2].data.push(pm10);
+      chart1.data.datasets[0].data.push(pm1);
+      chart1.data.datasets[1].data.push(pm25);
+      chart1.data.datasets[2].data.push(pm10);
 
       if (labels.length > 100) {
         labels.shift();
-        chart.data.datasets.forEach(d => d.data.shift());
+        chart1.data.datasets.forEach(d => d.data.shift());
       }
 
-      chart.update();
+      chart1.update();
     }
 
     disconnectBtn.addEventListener('click', async () => {
