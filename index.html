@@ -39,8 +39,10 @@
   <pre id="log"></pre>
 
   <script>
-    let port, charts = {}, config;
+    let port = null, reader = null, reading = false;
+    let charts = {}, config;
     const log = document.getElementById('log');
+    const connectBtn = document.getElementById('connect');
     let timeStart = performance.now();
     const MAX_POINTS = 1000;
 
@@ -120,11 +122,12 @@
       }
     }
 
-    async function readLoop(reader) {
+    async function readLoop() {
       const { frame, checksum, data: dataFields } = config;
       let buffer = [];
+      reading = true;
 
-      while (true) {
+      while (reading) {
         const { value, done } = await reader.read();
         if (done) break;
         buffer.push(...value);
@@ -141,11 +144,8 @@
               }
               updateCharts(parsed);
 
-              // Format packet as hex (no 0x)
               const hexPacket = data.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
               let output = `📦 [${hexPacket}]\nChecksum: ✅`;
-
-              // Avoid duplicate field values in log
               const seenFields = new Set();
               for (const groupConf of Object.values(config.charts)) {
                 for (const [label, field] of groupConf.datasets) {
@@ -155,7 +155,6 @@
                   }
                 }
               }
-
               log.textContent += output + '\n';
             } else {
               log.textContent += `❌ Bad checksum\n`;
@@ -168,17 +167,37 @@
       }
     }
 
-    document.getElementById('connect').addEventListener('click', async () => {
-      await loadConfig();
-      initializeCharts();
+    connectBtn.addEventListener('click', async () => {
+      if (port) {
+        // Disconnect
+        reading = false;
+        if (reader) {
+          try {
+            await reader.cancel();
+            await reader.releaseLock();
+          } catch (e) {}
+        }
+        await port.close();
+        port = null;
+        reader = null;
+        connectBtn.textContent = '🔌 Connect';
+        log.textContent += '🔌 Port closed\n';
+        return;
+      }
+
+      // Connect
       try {
+        await loadConfig();
+        initializeCharts();
         port = await navigator.serial.requestPort();
         await port.open(config.port);
-        const reader = port.readable.getReader();
+        reader = port.readable.getReader();
+        connectBtn.textContent = '❌ Disconnect';
         log.textContent += '✅ Port opened\n';
-        await readLoop(reader);
+        await readLoop();
       } catch (err) {
         log.textContent += `❌ ${err.message}\n`;
+        connectBtn.textContent = '🔌 Connect';
       }
     });
 
@@ -188,4 +207,3 @@
   </script>
 </body>
 </html>
-
