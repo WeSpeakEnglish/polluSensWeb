@@ -142,15 +142,17 @@
               }
               updateCharts(parsed);
 
-              let output = `📦 [${data.join(', ')}]\nChecksum: ✅\n`;
-              for (const [group, groupConf] of Object.entries(config.charts)) {
+              let output = `📦 [${data.join(', ')}]\nChecksum: ✅`;
+              const seenFields = new Set();
+              for (const groupConf of Object.values(config.charts)) {
                 for (const [label, field] of groupConf.datasets) {
-                  if (parsed[field] !== undefined) {
-                    output += `${label}: ${parsed[field]} `;
+                  if (!seenFields.has(field) && parsed[field] !== undefined) {
+                    output += `\n${label}: ${parsed[field]}`;
+                    seenFields.add(field);
                   }
                 }
               }
-              log.textContent += output.trim() + '\n';
+              log.textContent += output + '\n';
             } else {
               log.textContent += `❌ Bad checksum\n`;
             }
@@ -178,4 +180,5 @@
   </script>
 </body>
 </html>
+
 
