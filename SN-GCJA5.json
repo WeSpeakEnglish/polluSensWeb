@@ -1,4 +1,11 @@
 {
+	"command": "none",
+	"port": {
+		"baudRate": 9600,
+		"dataBits": 8,
+		"stopBits": 1,
+		"parity": "even"
+	},	
 	"frame": {
 		"length": 32,
 		"startByte": 2,
@@ -12,12 +19,6 @@
 	"checksum": {
 		"eval": "data.slice(1, 30).reduce((a, b) => a ^ b, 0)",
 		"compare": "data[30]"
-	},
-	"port": {
-		"baudRate": 9600,
-		"dataBits": 8,
-		"stopBits": 1,
-		"parity": "even"
 	},
 	"charts": {
 		"Particulate Matter": {

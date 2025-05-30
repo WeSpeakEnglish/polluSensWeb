@@ -39,7 +39,7 @@
   <pre id="log"></pre>
 
   <script>
-    let port = null, reader = null, reading = false;
+    let port = null, reader = null, writer = null, reading = false;
     let charts = {}, config;
     const log = document.getElementById('log');
     const connectBtn = document.getElementById('connect');
@@ -120,6 +120,18 @@
         });
         chart.update('none');
       }
+    }
+
+    async function sendCommandIfNeeded() {
+      const command = config.command;
+      if (!command || command.toLowerCase() === "none") return;
+
+      const bytes = command.split(/\s+/).map(hex => parseInt(hex, 16));
+      const data = new Uint8Array(bytes);
+      writer = port.writable.getWriter();
+      await writer.write(data);
+      writer.releaseLock();
+      log.textContent += `➡️ Sent command: [${bytes.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ')}]\n`;
     }
 
     async function readLoop() {
@@ -206,6 +218,8 @@
         reader = port.readable.getReader();
         connectBtn.textContent = '❌ Disconnect';
         log.textContent += '✅ Port opened\n';
+
+        await sendCommandIfNeeded();
         await readLoop();
       } catch (err) {
         log.textContent += `❌ ${err.message}\n`;
@@ -219,4 +233,3 @@
   </script>
 </body>
 </html>
-
