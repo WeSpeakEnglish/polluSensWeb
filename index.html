@@ -124,6 +124,12 @@
 
     async function readLoop() {
       const { frame, checksum, data: dataFields } = config;
+      const useStart = frame.startByte !== "none";
+      const useEnd = frame.endByte !== "none";
+      const frameLength = frame.length;
+      const startByte = useStart ? frame.startByte : null;
+      const endByte = useEnd ? frame.endByte : null;
+
       let buffer = [];
       reading = true;
 
@@ -132,36 +138,44 @@
         if (done) break;
         buffer.push(...value);
 
-        while (buffer.length >= frame.length) {
-          const slice = buffer.slice(0, frame.length);
-          if (slice[0] === frame.startByte && slice[frame.length - 1] === frame.endByte) {
-            const data = slice;
-            const valid = eval(checksum.eval) === eval(checksum.compare);
-            if (valid) {
-              const parsed = {};
-              for (const [name, expr] of Object.entries(dataFields)) {
-                parsed[name] = eval(expr);
-              }
-              updateCharts(parsed);
+        while (buffer.length >= frameLength) {
+          let data;
+          if (useStart && useEnd) {
+            const slice = buffer.slice(0, frameLength);
+            if (slice[0] === startByte && slice[frameLength - 1] === endByte) {
+              data = slice;
+              buffer = buffer.slice(frameLength);
+            } else {
+              buffer.shift();
+              continue;
+            }
+          } else {
+            data = buffer.slice(0, frameLength);
+            buffer = buffer.slice(frameLength);
+          }
 
-              const hexPacket = data.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
-              let output = `📦 [${hexPacket}]\nChecksum: ✅`;
-              const seenFields = new Set();
-              for (const groupConf of Object.values(config.charts)) {
-                for (const [label, field] of groupConf.datasets) {
-                  if (!seenFields.has(field) && parsed[field] !== undefined) {
-                    output += `\n${label}: ${parsed[field]}`;
-                    seenFields.add(field);
-                  }
+          const valid = eval(checksum.eval) === eval(checksum.compare);
+          if (valid) {
+            const parsed = {};
+            for (const [name, expr] of Object.entries(dataFields)) {
+              parsed[name] = eval(expr);
+            }
+            updateCharts(parsed);
+
+            const hexPacket = data.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+            let output = `📦 [${hexPacket}]\nChecksum: ✅`;
+            const seenFields = new Set();
+            for (const groupConf of Object.values(config.charts)) {
+              for (const [label, field] of groupConf.datasets) {
+                if (!seenFields.has(field) && parsed[field] !== undefined) {
+                  output += `\n${label}: ${parsed[field]}`;
+                  seenFields.add(field);
                 }
               }
-              log.textContent += output + '\n';
-            } else {
-              log.textContent += `❌ Bad checksum\n`;
             }
-            buffer = buffer.slice(frame.length);
+            log.textContent += output + '\n';
           } else {
-            buffer.shift();
+            log.textContent += `❌ Bad checksum\n`;
           }
         }
       }
@@ -169,7 +183,6 @@
 
     connectBtn.addEventListener('click', async () => {
       if (port) {
-        // Disconnect
         reading = false;
         if (reader) {
           try {
@@ -185,7 +198,6 @@
         return;
       }
 
-      // Connect
       try {
         await loadConfig();
         initializeCharts();
@@ -207,3 +219,4 @@
   </script>
 </body>
 </html>
+
