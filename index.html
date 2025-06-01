@@ -5,26 +5,137 @@
   <title>Dynamic Serial Sensor Charts</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: sans-serif; margin: 20px; }
-    .chart-wrapper { position: relative; margin-bottom: 40px; border: 1px solid #ccc; padding: 10px; }
-    .chart-container { width: 100%; height: 100%; }
-    .datasetRow { margin-bottom: 8px; display: flex; gap: 8px; align-items: center; }
-    #chartControls { border: 1px solid #aaa; padding: 15px; margin-bottom: 20px; }
-    #log { white-space: pre-wrap; background: #f0f0f0; padding: 10px; height: 200px; overflow-y: auto; border: 1px solid #ccc; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.5em;
+    }
+    button {
+      padding: 8px 16px;
+      font-size: 1em;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .secondary-button {
+      background-color: #6c757d;
+    }
+    .secondary-button:hover {
+      background-color: #545b62;
+    }
+    .delete-button {
+      background-color: #dc3545;
+      margin-left: 10px;
+    }
+    .delete-button:hover {
+      background-color: #b02a37;
+    }
+    #chartControls {
+      background: white;
+      border: 1px solid #ddd;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+    #chartControls h3 {
+      margin-top: 0;
+      margin-bottom: 15px;
+    }
+    #chartControls input, #chartControls select {
+      padding: 5px;
+      font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .datasetRow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .datasetRow input[type="text"] {
+      width: 100px;
+    }
+    .datasetRow select,
+    .datasetRow input[type="color"] {
+      width: 90px;
+    }
+    .datasetRow input[type="number"] {
+      width: 70px;
+    }
+    .chart-wrapper {
+      background: white;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      position: relative;
+    }
+    .chart-container {
+      width: 100%;
+      height: 100%;
+    }
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    #charts {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    #log {
+      white-space: pre-wrap;
+      background: #f0f0f0;
+      padding: 10px;
+      height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
   </style>
 </head>
 <body>
-  <button id="connect">🔌 Connect</button>
-  <button id="clearLog">🧹 Clear Log</button>
+  <header>
+    <h1>Serial Sensor Chart Builder</h1>
+    <div>
+      <button id="connect">🔌 Connect</button>
+      <button id="clearLog" class="secondary-button">🧹 Clear Log</button>
+    </div>
+  </header>
 
   <div id="chartControls">
-    <h3>Create New Chart</h3>
-    <input type="text" id="chartName" placeholder="Chart name" />
-    <label>Width: <input type="number" id="chartWidth" value="600" /></label>
-    <label>Height: <input type="number" id="chartHeight" value="300" /></label>
+    <h3>Create a Chart</h3>
+    <div style="margin-bottom: 10px;">
+      <input type="text" id="chartName" placeholder="Chart name" />
+      <label>Width: <input type="number" id="chartWidth" value="600" /></label>
+      <label>Height: <input type="number" id="chartHeight" value="300" /></label>
+    </div>
     <div id="datasetConfigs"></div>
-    <button id="addDataset">➕ Add Signal</button>
-    <button id="createChart">📈 Create Chart</button>
+    <div style="margin-top: 10px;">
+      <button id="addDataset" class="secondary-button">➕ Add Signal</button>
+      <button id="createChart">📈 Create Chart</button>
+    </div>
   </div>
 
   <div id="charts"></div>
@@ -42,14 +153,35 @@
       config = await res.json();
     }
 
-    function createChart(name, size, datasets) {
+function createChart(name, size, datasets) {
+      const chartId = crypto.randomUUID();
       const wrapper = document.createElement('div');
       wrapper.className = 'chart-wrapper';
+      wrapper.dataset.id = chartId;
       wrapper.style.maxWidth = `${size[0]}px`;
       wrapper.style.height = `${size[1]}px`;
 
+      const header = document.createElement('div');
+      header.className = 'chart-header';
+      const title = document.createElement('h4');
+      title.textContent = name;
+      const delBtn = document.createElement('button');
+      delBtn.textContent = '🗑️ Delete Chart';
+      delBtn.className = 'delete-button';
+      delBtn.onclick = () => {
+        wrapper.remove();
+        if (chartSettings[chartId]) {
+          chartSettings[chartId].chart.destroy();
+          delete chartSettings[chartId];
+        }
+      };
+      header.appendChild(title);
+      header.appendChild(delBtn);
+
       const canvas = document.createElement('canvas');
       canvas.className = 'chart-container';
+
+      wrapper.appendChild(header);
       wrapper.appendChild(canvas);
       document.getElementById('charts').appendChild(wrapper);
 
@@ -85,7 +217,7 @@
           }
         }
       });
-      chartSettings[name] = { chart, datasets };
+      chartSettings[chartId] = { chart, datasets };
     }
 
     function updateCharts(parsedData) {
@@ -241,3 +373,4 @@
   </script>
 </body>
 </html>
+
