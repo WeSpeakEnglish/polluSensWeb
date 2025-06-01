@@ -1,42 +1,24 @@
 {
-	"command": "none",
-	"port": {
-		"baudRate": 9600,
-		"dataBits": 8,
-		"stopBits": 1,
-		"parity": "even"
-	},	
-	"frame": {
-		"length": 32,
-		"startByte": 2,
-		"endByte": 3
-	},
-	"data": {
-		"pm1": "data[1] + (data[2] << 8) + (data[3] << 16) + (data[4] << 24)",
-		"pm25": "data[5] + (data[6] << 8) + (data[7] << 16) + (data[8] << 24)",
-		"pm10": "data[9] + (data[10] << 8) + (data[11] << 16) + (data[12] << 24)"
-	},
-	"checksum": {
-		"eval": "data.slice(1, 30).reduce((a, b) => a ^ b, 0)",
-		"compare": "data[30]"
-	},
-	"charts": {
-		"Particulate Matter": {
-			"size": [600, 300],
-			"datasets": [
-				["PM1.0", "pm1", "blue", 0.2],
-				["PM2.5", "pm25", "green", 0.2],
-				["PM10", "pm10", "red", 0.2]
-			]
-		},
-		"Particulate Matter2": {
-			"size": [600, 200],
-			"datasets": [
-				["PM1.0", "pm1", "blue", 0.2],
-				["PM2.5", "pm25", "green", 0.2],
-				["PM10", "pm10", "red", 0.2]
-			]
-		}
-	}
+  "command": "none",
+  "port": {
+    "baudRate": 9600,
+    "dataBits": 8,
+    "stopBits": 1,
+    "parity": "even"
+  },
+  "frame": {
+    "length": 32,
+    "startByte": 2,
+    "endByte": 3
+  },
+  "data": {
+    "pm1": "data[1] + (data[2] << 8) + (data[3] << 16) + (data[4] << 24)",
+    "pm25": "data[5] + (data[6] << 8) + (data[7] << 16) + (data[8] << 24)",
+    "pm10": "data[9] + (data[10] << 8) + (data[11] << 16) + (data[12] << 24)"
+  },
+  "checksum": {
+    "eval": "data.slice(1, 30).reduce((a, b) => a ^ b, 0)",
+    "compare": "data[30]"
+  }
 }
 
