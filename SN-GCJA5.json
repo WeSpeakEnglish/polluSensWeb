@@ -1,24 +1,51 @@
 {
-  "command": "none",
-  "port": {
-    "baudRate": 9600,
-    "dataBits": 8,
-    "stopBits": 1,
-    "parity": "even"
-  },
-  "frame": {
-    "length": 32,
-    "startByte": 2,
-    "endByte": 3
-  },
-  "data": {
-    "pm1": "data[1] + (data[2] << 8) + (data[3] << 16) + (data[4] << 24)",
-    "pm25": "data[5] + (data[6] << 8) + (data[7] << 16) + (data[8] << 24)",
-    "pm10": "data[9] + (data[10] << 8) + (data[11] << 16) + (data[12] << 24)"
-  },
-  "checksum": {
-    "eval": "data.slice(1, 30).reduce((a, b) => a ^ b, 0)",
-    "compare": "data[30]"
-  }
+  "sensors": [
+    {
+      "name": "Pansonic SN-GCJA5",
+      "command": "none",
+      "port": {
+        "baudRate": 9600,
+        "dataBits": 8,
+        "stopBits": 1,
+        "parity": "even"
+      },
+      "frame": {
+        "length": 32,
+        "startByte": 2,
+        "endByte": 3
+      },
+      "data": {
+        "pm1": "data[1] + (data[2] << 8) + (data[3] << 16) + (data[4] << 24)",
+        "pm2_5": "data[5] + (data[6] << 8) + (data[7] << 16) + (data[8] << 24)",
+        "pm10": "data[9] + (data[10] << 8) + (data[11] << 16) + (data[12] << 24)"
+      },
+      "checksum": {
+        "eval": "data.slice(1, 30).reduce((a, b) => a ^ b, 0)",
+        "compare": "data[30]"
+      }
+    },
+    {
+      "name": "Honeywell HPMA115S0-XXX",
+      "command": "68 01 04 93",
+      "port": {
+        "baudRate": 9600,
+        "dataBits": 8,
+        "stopBits": 1,
+        "parity": "none"
+      },
+      "frame": {
+        "length": 8,
+        "startByte": 64,
+        "endByte": "none"
+      },
+      "data": {
+        "pm2_5": "(data[3] << 8) + data[4]",
+        "pm10": "(data[5] << 8) + data[6]"
+      },
+      "checksum": {
+        "eval": "(65536 - bytes.reduce((a, b) => a + b, 0)) % 256",
+        "compare": "data[7]"
+      }
+    }
+  ]
 }
-
