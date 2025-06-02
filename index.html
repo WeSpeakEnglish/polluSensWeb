@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Serial Sensor Chart Builder</title>
+  <title>Dynamic Serial Sensor Charts</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
@@ -19,6 +19,10 @@
       margin-bottom: 20px;
       flex-wrap: wrap;
       gap: 10px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.5em;
     }
     button, select {
       padding: 8px 16px;
@@ -55,19 +59,21 @@
       margin-bottom: 20px;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     }
+    #chartControls h3 {
+      margin-top: 0;
+      margin-bottom: 15px;
+    }
+    #chartControls input, #chartControls select {
+      padding: 5px;
+      font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
     .datasetRow {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
       margin-bottom: 10px;
-    }
-    .datasetRow input[type="text"] {
-      width: 100px;
-    }
-    .datasetRow label {
-      display: flex;
-      align-items: center;
-      gap: 4px;
     }
     .chart-wrapper {
       background: white;
@@ -75,6 +81,11 @@
       padding: 10px;
       margin-bottom: 30px;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      position: relative;
+    }
+    .chart-container {
+      width: 100%;
+      height: 100%;
     }
     .chart-header {
       display: flex;
@@ -111,7 +122,7 @@
   <div id="chartControls">
     <h3>Create a Chart</h3>
     <div style="margin-bottom: 10px;">
-      <input type="text" id="chartName" placeholder="Chart name" />
+      <input type="text" id="chartName" placeholder="Chart name" value="Chart" />
       <label>Width: <input type="number" id="chartWidth" value="600" /></label>
       <label>Height: <input type="number" id="chartHeight" value="300" /></label>
     </div>
@@ -155,7 +166,7 @@
         addDatasetRow();
       });
 
-      selector.dispatchEvent(new Event('change')); // select default
+      selector.dispatchEvent(new Event('change'));
     }
 
     function addDatasetRow() {
@@ -163,6 +174,7 @@
 
       const row = document.createElement('div');
       row.className = 'datasetRow';
+
       const signalOptions = Object.entries(config.data)
         .map(([key, meta]) => {
           const unit = typeof meta === 'object' && meta.unit ? ` [${meta.unit}]` : '';
@@ -171,7 +183,6 @@
         .join('');
 
       row.innerHTML = `
-        <input type="text" placeholder="Label" class="dsLabel" />
         <select class="dsField">${signalOptions}</select>
         <label>Color: <input type="color" class="dsColor" value="#00aa00" /></label>
         <label>Tension: <input type="number" class="dsTension" value="0.3" step="0.1" min="0" max="1" /></label>
@@ -217,10 +228,10 @@
       const chart = new Chart(canvas, {
         type: 'line',
         data: {
-          datasets: datasets.map(([label, field, color, tension, width]) => {
+          datasets: datasets.map(([_, field, color, tension, width]) => {
             const unit = config.data[field] && config.data[field].unit ? ` [${config.data[field].unit}]` : '';
             return {
-              label: `${label}${unit}`,
+              label: `${field}${unit}`,
               data: [],
               borderColor: color,
               tension: parseFloat(tension),
@@ -249,6 +260,7 @@
           }
         }
       });
+
       chartSettings[chartId] = { chart, datasets };
     }
 
@@ -331,20 +343,20 @@
     document.getElementById('addDataset').onclick = addDatasetRow;
 
     document.getElementById('createChart').onclick = () => {
-      const name = document.getElementById('chartName').value;
+      const name = document.getElementById('chartName').value || "Chart";
       const width = parseInt(document.getElementById('chartWidth').value);
       const height = parseInt(document.getElementById('chartHeight').value);
       const datasetEls = document.querySelectorAll('.datasetRow');
 
       const datasets = Array.from(datasetEls).map(row => [
-        row.querySelector('.dsLabel').value,
+        "", // empty label, use field name instead
         row.querySelector('.dsField').value,
         row.querySelector('.dsColor').value,
         row.querySelector('.dsTension').value,
         row.querySelector('.dsWidth').value
       ]);
 
-      if (name && datasets.length) {
+      if (datasets.length) {
         createChart(name, [width, height], datasets);
       }
     };
@@ -393,6 +405,8 @@
   </script>
 </body>
 </html>
+
+
 
 
 
