@@ -15,9 +15,18 @@
         "endByte": 3
       },
       "data": {
-        "PM1": "data[1] + (data[2] << 8) + (data[3] << 16) + (data[4] << 24)",
-        "PM2.5": "data[5] + (data[6] << 8) + (data[7] << 16) + (data[8] << 24)",
-        "PM10": "data[9] + (data[10] << 8) + (data[11] << 16) + (data[12] << 24)"
+        "PM1": {
+          "value": "data[1] + (data[2] << 8) + (data[3] << 16) + (data[4] << 24)",
+          "unit": "μg/m³"
+        },
+        "PM2.5": {
+          "value": "data[5] + (data[6] << 8) + (data[7] << 16) + (data[8] << 24)",
+          "unit": "μg/m³"
+        },
+        "PM10": {
+          "value": "data[9] + (data[10] << 8) + (data[11] << 16) + (data[12] << 24)",
+          "unit": "μg/m³"
+        }
       },
       "checksum": {
         "eval": "data.slice(1, 30).reduce((a, b) => a ^ b, 0)",
@@ -39,8 +48,14 @@
         "endByte": "none"
       },
       "data": {
-        "pm2_5": "(data[3] << 8) + data[4]",
-        "pm10": "(data[5] << 8) + data[6]"
+        "PM2.5": {
+          "value": "(data[3] << 8) + data[4]",
+          "unit": "μg/m³"
+        },
+        "PM10": {
+          "value": "(data[5] << 8) + data[6]",
+          "unit": "μg/m³"
+        }
       },
       "checksum": {
         "eval": "(65536 - bytes.reduce((a, b) => a + b, 0)) % 256",
