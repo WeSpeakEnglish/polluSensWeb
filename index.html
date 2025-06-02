@@ -148,24 +148,18 @@
 
   <script>
     let port = null, reader = null, writer = null, reading = false;
-    let config, chartSettings = {};
+    let config = null;
+    let sensors = [];
+    let chartSettings = {};
     let timeStart = performance.now();
     const MAX_POINTS = 1000;
     const log = document.getElementById('log');
 
-    async function loadConfig() {
+    async function loadConfigAndPopulateSelector() {
       const res = await fetch("https://raw.githubusercontent.com/WeSpeakEnglish/polluSensWeb/refs/heads/main/SN-GCJA5.json");
       const rawConfig = await res.json();
+      sensors = Array.isArray(rawConfig.sensors) ? rawConfig.sensors : [rawConfig];
 
-      if (Array.isArray(rawConfig.sensors)) {
-        config = rawConfig.sensors[0]; // default
-        populateSensorSelector(rawConfig.sensors);
-      } else {
-        config = rawConfig;
-      }
-    }
-
-    function populateSensorSelector(sensors) {
       const selector = document.getElementById('sensorSelector');
       selector.innerHTML = '';
       sensors.forEach((sensor, i) => {
@@ -175,13 +169,36 @@
         selector.appendChild(opt);
       });
 
-      selector.addEventListener('change', e => {
-        const index = parseInt(e.target.value);
+      selector.addEventListener('change', () => {
+        const index = parseInt(selector.value);
         config = sensors[index];
         document.getElementById('datasetConfigs').innerHTML = '';
         addDatasetRow();
       });
+
+      // Initialize default config on load
+      selector.dispatchEvent(new Event('change'));
     }
+
+    function addDatasetRow() {
+  if (!config || !config.data) return;
+
+  const row = document.createElement('div');
+  row.className = 'datasetRow';
+  const signalOptions = Object.keys(config.data)
+    .map(key => `<option value="${key}">${key}</option>`)
+    .join('');
+  row.innerHTML = `
+    <input type="text" placeholder="Label" class="dsLabel" />
+    <select class="dsField">${signalOptions}</select>
+    <label>Color: <input type="color" class="dsColor" value="#00aa00" /></label>
+    <label>Tension: <input type="number" class="dsTension" value="0.3" step="0.1" min="0" max="1" /></label>
+    <label>Thickness: <input type="number" class="dsWidth" value="2" min="1" /></label>
+    <button class="removeDataset">❌</button>
+  `;
+  row.querySelector('.removeDataset').onclick = () => row.remove();
+  document.getElementById('datasetConfigs').appendChild(row);
+}
 
     function createChart(name, size, datasets) {
       const chartId = crypto.randomUUID();
@@ -266,45 +283,6 @@
       }
     }
 
-    function addDatasetRow() {
-      const row = document.createElement('div');
-      row.className = 'datasetRow';
-      const signalOptions = Object.keys(config.data)
-        .map(key => `<option value="${key}">${key}</option>`)
-        .join('');
-      row.innerHTML = `
-        <input type="text" placeholder="Label" class="dsLabel" />
-        <select class="dsField">${signalOptions}</select>
-        <input type="color" class="dsColor" value="#00aa00" />
-        <input type="number" class="dsTension" value="0.3" step="0.1" min="0" max="1" />
-        <input type="number" class="dsWidth" value="2" min="1" />
-        <button class="removeDataset">❌</button>
-      `;
-      row.querySelector('.removeDataset').onclick = () => row.remove();
-      document.getElementById('datasetConfigs').appendChild(row);
-    }
-
-    document.getElementById('addDataset').onclick = addDatasetRow;
-
-    document.getElementById('createChart').onclick = () => {
-      const name = document.getElementById('chartName').value;
-      const width = parseInt(document.getElementById('chartWidth').value);
-      const height = parseInt(document.getElementById('chartHeight').value);
-      const datasetEls = document.querySelectorAll('.datasetRow');
-
-      const datasets = Array.from(datasetEls).map(row => [
-        row.querySelector('.dsLabel').value,
-        row.querySelector('.dsField').value,
-        row.querySelector('.dsColor').value,
-        row.querySelector('.dsTension').value,
-        row.querySelector('.dsWidth').value
-      ]);
-
-      if (name && datasets.length) {
-        createChart(name, [width, height], datasets);
-      }
-    };
-
     async function sendCommandIfNeeded() {
       const command = config.command;
       if (!command || command.toLowerCase() === "none") return;
@@ -364,8 +342,32 @@
       }
     }
 
+    document.getElementById('addDataset').onclick = addDatasetRow;
+
+    document.getElementById('createChart').onclick = () => {
+      const name = document.getElementById('chartName').value;
+      const width = parseInt(document.getElementById('chartWidth').value);
+      const height = parseInt(document.getElementById('chartHeight').value);
+      const datasetEls = document.querySelectorAll('.datasetRow');
+
+      const datasets = Array.from(datasetEls).map(row => [
+        row.querySelector('.dsLabel').value,
+        row.querySelector('.dsField').value,
+        row.querySelector('.dsColor').value,
+        row.querySelector('.dsTension').value,
+        row.querySelector('.dsWidth').value
+      ]);
+
+      if (name && datasets.length) {
+        createChart(name, [width, height], datasets);
+      }
+    };
+
     document.getElementById('connect').addEventListener('click', async () => {
       const connectBtn = document.getElementById('connect');
+      const sensorIndex = parseInt(document.getElementById('sensorSelector').value, 10);
+      config = sensors[sensorIndex];
+
       if (port) {
         reading = false;
         if (reader) try { await reader.cancel(); await reader.releaseLock(); } catch (e) {}
@@ -378,7 +380,6 @@
       }
 
       try {
-        await loadConfig();
         document.getElementById('datasetConfigs').innerHTML = '';
         addDatasetRow();
 
@@ -399,8 +400,15 @@
     document.getElementById('clearLog').addEventListener('click', () => {
       log.textContent = '';
     });
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadConfigAndPopulateSelector();
+    });
   </script>
 </body>
 </html>
+
+
+
 
 
