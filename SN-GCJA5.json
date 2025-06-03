@@ -1,66 +1,66 @@
 {
-  "sensors": [
-    {
-      "name": "Pansonic SN-GCJA5",
-      "command": "none",
-      "port": {
-        "baudRate": 9600,
-        "dataBits": 8,
-        "stopBits": 1,
-        "parity": "even"
-      },
-      "frame": {
-        "length": 32,
-        "startByte": 2,
-        "endByte": 3
-      },
-      "data": {
-        "PM1": {
-          "value": "data[1] + (data[2] << 8) + (data[3] << 16) + (data[4] << 24)",
-          "unit": "μg/m³"
-        },
-        "PM2.5": {
-          "value": "data[5] + (data[6] << 8) + (data[7] << 16) + (data[8] << 24)",
-          "unit": "μg/m³"
-        },
-        "PM10": {
-          "value": "data[9] + (data[10] << 8) + (data[11] << 16) + (data[12] << 24)",
-          "unit": "μg/m³"
-        }
-      },
-      "checksum": {
-        "eval": "data.slice(1, 30).reduce((a, b) => a ^ b, 0)",
-        "compare": "data[30]"
-      }
-    },
-    {
-      "name": "Honeywell HPMA115S0-XXX",
-      "command": "none",
-      "port": {
-        "baudRate": 9600,
-        "dataBits": 8,
-        "stopBits": 1,
-        "parity": "none"
-      },
-      "frame": {
-        "length": 32,
-        "startByte": 66,
-        "endByte": "none"
-      },
-      "data": {
-        "PM2.5": {
-          "value": "(data[6] << 8) + data[7]",
-          "unit": "μg/m³"
-        },
-        "PM10": {
-          "value": "(data[8] << 8) + data[9]",
-          "unit": "μg/m³"
-        }
-      },
-  "checksum": {
-    "eval": "data.slice(0, 30).reduce((a, b) => (a + b) & 0xFFFF, 0)",
-    "compare": "(data[30] << 8) + data[31]"
-  }
-    }
-  ]
+	"sensors": [
+		{
+			"name": "Pansonic SN-GCJA5",
+			"command": "none",
+			"port": {
+				"baudRate": 9600,
+				"dataBits": 8,
+				"stopBits": 1,
+				"parity": "even"
+			},
+			"frame": {
+				"length": 32,
+				"startByte": 2,
+				"endByte": 3
+			},
+			"data": {
+				"PM1": {
+					"value": "data[1] + (data[2] << 8) + (data[3] << 16) + (data[4] << 24)",
+					"unit": "μg/m³"
+				},
+				"PM2.5": {
+					"value": "data[5] + (data[6] << 8) + (data[7] << 16) + (data[8] << 24)",
+					"unit": "μg/m³"
+				},
+				"PM10": {
+					"value": "data[9] + (data[10] << 8) + (data[11] << 16) + (data[12] << 24)",
+					"unit": "μg/m³"
+				}
+			},
+			"checksum": {
+				"eval": "data.slice(1, 30).reduce((a, b) => a ^ b, 0)",
+				"compare": "data[30]"
+			}
+		},
+		{
+			"name": "Honeywell HPMA115S0-XXX",
+			"command": "00 00 00 00 AA AA AA",
+			"port": {
+				"baudRate": 9600,
+				"dataBits": 8,
+				"stopBits": 1,
+				"parity": "none"
+			},
+			"frame": {
+				"length": 32,
+				"startByte": [66, 77],
+				"endByte": "none"
+			},
+			"data": {
+				"PM2.5": {
+					"value": "(data[6] << 8) + data[7]",
+					"unit": "μg/m³"
+				},
+				"PM10": {
+					"value": "(data[8] << 8) + data[9]",
+					"unit": "μg/m³"
+				}
+			},
+			"checksum": {
+				"eval": "data.slice(0, 30).reduce((a, b) => (a + b) & 0xFFFF, 0)",
+				"compare": "(data[30] << 8) + data[31]"
+			}
+		}
+	]
 }
