@@ -58,8 +58,8 @@
         }
       },
       "checksum": {
-        "eval": "1",
-        "compare": "1"
+        "eval": "0",
+        "compare": "0"
       }
     }
   ]
