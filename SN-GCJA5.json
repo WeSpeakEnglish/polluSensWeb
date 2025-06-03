@@ -35,7 +35,7 @@
 		},
 		{
 			"name": "Honeywell HPMA115S0-XXX",
-			"command": "00 00 00 00 AA AA AA",
+			"command": "none",
 			"port": {
 				"baudRate": 9600,
 				"dataBits": 8,
