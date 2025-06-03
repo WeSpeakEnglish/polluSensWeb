@@ -57,10 +57,10 @@
           "unit": "μg/m³"
         }
       },
-      "checksum": {
-        "eval": "0",
-        "compare": "0"
-      }
+  "checksum": {
+    "eval": "data.slice(0, 30).reduce((a, b) => (a + b) & 0xFFFF, 0)",
+    "compare": "(data[30] << 8) + data[31]"
+  }
     }
   ]
 }
