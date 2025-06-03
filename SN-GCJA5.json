@@ -1,7 +1,7 @@
 {
 	"sensors": [
 		{
-			"name": "Pansonic SN-GCJA5",
+			"name": "Panasonic SN-GCJA5",
 			"command": "none",
 			"port": {
 				"baudRate": 9600,
