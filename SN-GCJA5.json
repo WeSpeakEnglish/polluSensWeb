@@ -58,7 +58,7 @@
         }
       },
       "checksum": {
-        "eval": "(65536 - bytes.reduce((a, b) => a + b, 0)) % 256",
+        "eval": "(65536 - data.reduce((a, b) => a + b, 0)) % 256",
         "compare": "data[7]"
       }
     }
