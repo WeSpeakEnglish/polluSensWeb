@@ -35,7 +35,7 @@
     },
     {
       "name": "Honeywell HPMA115S0-XXX",
-      "command": "68 01 04 93",
+      "command": "none",
       "port": {
         "baudRate": 9600,
         "dataBits": 8,
@@ -43,23 +43,23 @@
         "parity": "none"
       },
       "frame": {
-        "length": 8,
-        "startByte": 64,
+        "length": 32,
+        "startByte": 66,
         "endByte": "none"
       },
       "data": {
         "PM2.5": {
-          "value": "(data[3] << 8) + data[4]",
+          "value": "(data[6] << 8) + data[7]",
           "unit": "μg/m³"
         },
         "PM10": {
-          "value": "(data[5] << 8) + data[6]",
+          "value": "(data[8] << 8) + data[9]",
           "unit": "μg/m³"
         }
       },
       "checksum": {
-        "eval": "(65536 - data.reduce((a, b) => a + b, 0)) % 256",
-        "compare": "data[7]"
+        "eval": "data.slice(0, 30).reduce((a, b) => a + b, 0)",
+        "compare": "data[30]<<8 + data[31]"
       }
     }
   ]
