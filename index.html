@@ -120,7 +120,7 @@
     let port = null, reader = null, writer = null, reading = false;
     let config = null, sensors = [], chartSettings = {};
     const log = document.getElementById('log');
-    const MAX_SECONDS = 60;
+    const MAX_SECONDS = 600;
 
     async function loadConfigAndPopulateSelector() {
       const res = await fetch("https://raw.githubusercontent.com/WeSpeakEnglish/polluSensWeb/refs/heads/main/sensors.json");
@@ -172,6 +172,9 @@
         tension.min = 0;
         tension.max = 1;
         tension.step = 0.1;
+		
+		const tension_label = document.createElement('label');
+		tension_label.textContent = "tension:";
 
         const width = document.createElement('input');
         width.type = 'number';
@@ -179,7 +182,7 @@
         width.value = '2';
         width.min = 1;
 
-        row.append(checkbox, label, color, tension, width);
+        row.append(checkbox, label, color, tension_label, tension, width);
         container.appendChild(row);
       });
     }
