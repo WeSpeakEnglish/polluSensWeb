@@ -65,7 +65,7 @@
     {
       "name": "Air Master AM7 Plus",
       "command": "55 CD 47 00 00 00 00 00 00 01 69 0D 0A",
-	  "send_cmd_period": 5,
+	  "send_cmd_period": 10,
       "port": {
         "baudRate": 19200,
         "dataBits": 8,
