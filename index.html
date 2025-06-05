@@ -164,7 +164,10 @@
         color.type = 'color';
         color.className = 'dsColor';
         color.value = '#00aa00';
-
+		
+		const tension_label = document.createElement('label');
+		tension_label.textContent = "tension:";
+		
         const tension = document.createElement('input');
         tension.type = 'number';
         tension.className = 'dsTension';
@@ -173,8 +176,8 @@
         tension.max = 1;
         tension.step = 0.1;
 		
-		const tension_label = document.createElement('label');
-		tension_label.textContent = "tension:";
+		const thickness_label = document.createElement('label');
+		thickness_label.textContent = "thickness:";
 
         const width = document.createElement('input');
         width.type = 'number';
@@ -182,7 +185,7 @@
         width.value = '2';
         width.min = 1;
 
-        row.append(checkbox, label, color, tension_label, tension, width);
+        row.append(checkbox, label, color, tension_label, tension, thickness_label, width);
         container.appendChild(row);
       });
     }
