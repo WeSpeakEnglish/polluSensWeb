@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Dynamic Serial Sensor Charts</title>
+  <title>polluSensWeb Chart</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
   <style>
@@ -76,6 +76,15 @@
       margin-bottom: 10px;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     }
+    .signalRow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 5px;
+    }
+    .signalRow label {
+      margin-right: 5px;
+    }
   </style>
 </head>
 <body>
@@ -95,9 +104,11 @@
       <label>Width: <input type="number" id="chartWidth" value="600" /></label>
       <label>Height: <input type="number" id="chartHeight" value="300" /></label>
     </div>
-    <div id="datasetConfigs"></div>
+    <div id="datasetConfigs">
+      <h4>Signals</h4>
+      <div id="signalRows"></div>
+    </div>
     <div>
-      <button id="addDataset" class="secondary-button">➕ Add Signal</button>
       <button id="createChart">📈 Create Chart</button>
     </div>
   </div>
@@ -112,7 +123,7 @@
     const MAX_SECONDS = 60;
 
     async function loadConfigAndPopulateSelector() {
-      const res = await fetch("https://raw.githubusercontent.com/WeSpeakEnglish/polluSensWeb/refs/heads/main/SN-GCJA5.json");
+      const res = await fetch("https://raw.githubusercontent.com/WeSpeakEnglish/polluSensWeb/refs/heads/main/sensors.json");
       const rawConfig = await res.json();
       sensors = Array.isArray(rawConfig.sensors) ? rawConfig.sensors : [rawConfig];
       const selector = document.getElementById('sensorSelector');
@@ -124,33 +135,75 @@
         selector.appendChild(opt);
       });
       selector.addEventListener('change', () => {
-        const index = parseInt(selector.value);
-        config = sensors[index];
-        document.getElementById('datasetConfigs').innerHTML = '';
-        addDatasetRow();
+        config = sensors[parseInt(selector.value)];
+        renderSignalRows();
       });
       selector.dispatchEvent(new Event('change'));
     }
 
-    function addDatasetRow() {
+    function renderSignalRows() {
+      const container = document.getElementById('signalRows');
+      container.innerHTML = '';
       if (!config || !config.data) return;
-      const row = document.createElement('div');
-      row.className = 'datasetRow';
-      const signalOptions = Object.entries(config.data)
-        .map(([key, meta]) => {
-          const unit = typeof meta === 'object' && meta.unit ? ` [${meta.unit}]` : '';
-          return `<option value="${key}">${key}${unit}</option>`;
-        }).join('');
-      row.innerHTML = `
-        <select class="dsField">${signalOptions}</select>
-        <label>Color: <input type="color" class="dsColor" value="#00aa00" /></label>
-        <label>Tension: <input type="number" class="dsTension" value="0.3" step="0.1" min="0" max="1" /></label>
-        <label>Thickness: <input type="number" class="dsWidth" value="2" min="1" /></label>
-        <button class="removeDataset">❌</button>
-      `;
-      row.querySelector('.removeDataset').onclick = () => row.remove();
-      document.getElementById('datasetConfigs').appendChild(row);
+
+      Object.entries(config.data).forEach(([key, meta]) => {
+        const row = document.createElement('div');
+        row.className = 'signalRow';
+        row.dataset.field = key;
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'signalToggle';
+        checkbox.value = key;
+
+        const label = document.createElement('label');
+        const unit = typeof meta === 'object' && meta.unit ? ` [${meta.unit}]` : '';
+        label.textContent = key + unit;
+
+        const color = document.createElement('input');
+        color.type = 'color';
+        color.className = 'dsColor';
+        color.value = '#00aa00';
+
+        const tension = document.createElement('input');
+        tension.type = 'number';
+        tension.className = 'dsTension';
+        tension.value = '0.3';
+        tension.min = 0;
+        tension.max = 1;
+        tension.step = 0.1;
+
+        const width = document.createElement('input');
+        width.type = 'number';
+        width.className = 'dsWidth';
+        width.value = '2';
+        width.min = 1;
+
+        row.append(checkbox, label, color, tension, width);
+        container.appendChild(row);
+      });
     }
+
+    document.getElementById('createChart').onclick = () => {
+      const name = document.getElementById('chartName').value || "Chart";
+      const width = parseInt(document.getElementById('chartWidth').value);
+      const height = parseInt(document.getElementById('chartHeight').value);
+      const rows = document.querySelectorAll('.signalRow');
+      const datasets = [];
+
+      rows.forEach(row => {
+        if (!row.querySelector('.signalToggle').checked) return;
+        datasets.push([
+          '',
+          row.dataset.field,
+          row.querySelector('.dsColor').value,
+          row.querySelector('.dsTension').value,
+          row.querySelector('.dsWidth').value
+        ]);
+      });
+
+      if (datasets.length) createChart(name, [width, height], datasets);
+    };
 
     function createChart(name, size, datasets) {
       const chartId = crypto.randomUUID();
@@ -198,9 +251,7 @@
               time: {
                 unit: 'second',
                 tooltipFormat: 'HH:mm:ss',
-                displayFormats: {
-                  second: 'HH:mm:ss'
-                }
+                displayFormats: { second: 'HH:mm:ss' }
               },
               title: { display: true, text: 'Time' },
               ticks: { autoSkip: true }
@@ -210,9 +261,7 @@
               title: { display: true, text: name }
             }
           },
-          plugins: {
-            legend: { position: 'top' }
-          }
+          plugins: { legend: { position: 'top' } }
         }
       });
 
@@ -228,7 +277,6 @@
           const value = parsedData[field];
           if (value !== undefined) {
             chart.data.datasets[i].data.push({ x: now, y: value });
-            // Trim data older than 60s
             chart.data.datasets[i].data = chart.data.datasets[i].data.filter(p => p.x >= cutoff);
           }
         });
@@ -269,7 +317,11 @@
             ? startByte.every((v, i) => slice[i] === v)
             : !useStart || slice[0] === startByte;
 
-          const matchesEnd = !useEnd || slice[frameLength - 1] === endByte;
+          const matchesEnd = !useEnd || (
+            Array.isArray(endByte)
+              ? endByte.every((v, i) => slice[frameLength - endByte.length + i] === v)
+              : slice[frameLength - 1] === endByte
+          );
 
           if (matchesStart && matchesEnd) {
             const data = slice;
@@ -312,9 +364,6 @@
       }
 
       try {
-        document.getElementById('datasetConfigs').innerHTML = '';
-        addDatasetRow();
-
         port = await navigator.serial.requestPort();
         await port.open(config.port);
         reader = port.readable.getReader();
@@ -330,33 +379,8 @@
     };
 
     document.getElementById('clearLog').onclick = () => { log.textContent = ''; };
-    document.getElementById('addDataset').onclick = addDatasetRow;
-    document.getElementById('createChart').onclick = () => {
-      const name = document.getElementById('chartName').value || "Chart";
-      const width = parseInt(document.getElementById('chartWidth').value);
-      const height = parseInt(document.getElementById('chartHeight').value);
-      const datasetEls = document.querySelectorAll('.datasetRow');
-      const datasets = Array.from(datasetEls).map(row => [
-        "", row.querySelector('.dsField').value,
-        row.querySelector('.dsColor').value,
-        row.querySelector('.dsTension').value,
-        row.querySelector('.dsWidth').value
-      ]);
-      if (datasets.length) createChart(name, [width, height], datasets);
-    };
-
     document.addEventListener('DOMContentLoaded', loadConfigAndPopulateSelector);
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
 
