@@ -290,16 +290,33 @@
       }
     }
 
-    async function sendCommandIfNeeded() {
-      const command = config.command;
-      if (!command || command.toLowerCase() === "none") return;
-      const bytes = command.split(/\s+/).map(hex => parseInt(hex, 16));
-      const data = new Uint8Array(bytes);
+async function sendCommandIfNeeded() {
+  const command = config.command;
+  const period = config.send_cmd_period;
+
+  if (!command || command.toLowerCase() === "none") return;
+
+  const bytes = command.split(/\s+/).map(hex => parseInt(hex, 16));
+  const data = new Uint8Array(bytes);
+
+  const sendOnce = async () => {
+    try {
       writer = port.writable.getWriter();
       await writer.write(data);
       writer.releaseLock();
       log.textContent += `➡️ Sent command: [${bytes.map(b => b.toString(16).padStart(2, '0')).join(' ')}]\n`;
+    } catch (e) {
+      log.textContent += `❌ Error sending command: ${e.message}\n`;
     }
+  };
+
+  await sendOnce();
+
+  if (typeof period === "number" && period > 0) {
+    if (commandInterval) clearInterval(commandInterval);
+    commandInterval = setInterval(sendOnce, period * 1000);
+  }
+}
 
     async function readLoop() {
       const { frame, checksum, data: dataFields } = config;
@@ -366,6 +383,10 @@
         reader = null;
         connectBtn.textContent = '🔌 Connect';
         log.textContent += '🔌 Port closed\n';
+		if (commandInterval) {
+  clearInterval(commandInterval);
+  commandInterval = null;
+}
         return;
       }
 
