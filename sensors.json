@@ -84,23 +84,23 @@
 				"PM10": {
 					"value": "(data[3] << 8) + data[4]",
 					"unit": "μg/m³"
-				}
+				},
 				"HCHO": {
 					"value": "((data[5] << 8) + data[6])/1000.0",
 					"unit": "mg/m³"
-				}
+				},
 				"VOCs": {
 					"value": "((data[7] << 8) + data[8])/1000.0",
 					"unit": "mg/m³"
-				}
+				},
 				"CO₂": {
-					"value": "((data[9] << 8) + data[10])",
+					"value": "(data[9] << 8) + data[10]",
 					"unit": "ppm"
-				}
+				},
 				"Temperature": {
 					"value": "((data[11] << 8) + data[12])/100.0",
 					"unit": "T,°C"
-				}
+				},
 				"Humidity": {
 					"value": "((data[13] << 8) + data[14])/100.0",
 					"unit": "%"
