@@ -119,9 +119,11 @@
   <script>
     let port = null, reader = null, writer = null, reading = false;
     let config = null, sensors = [], chartSettings = {};
+    let commandInterval = null;
     const log = document.getElementById('log');
     const MAX_SECONDS = 600;
 
+	
     async function loadConfigAndPopulateSelector() {
       const res = await fetch("https://raw.githubusercontent.com/WeSpeakEnglish/polluSensWeb/refs/heads/main/sensors.json");
       const rawConfig = await res.json();
@@ -375,20 +377,22 @@ async function sendCommandIfNeeded() {
       const sensorIndex = parseInt(document.getElementById('sensorSelector').value);
       config = sensors[sensorIndex];
 
-      if (port) {
-        reading = false;
-        try { await reader?.cancel(); reader?.releaseLock(); } catch (e) {}
-        await port.close();
-        port = null;
-        reader = null;
-        connectBtn.textContent = '🔌 Connect';
-        log.textContent += '🔌 Port closed\n';
-		if (commandInterval) {
-  clearInterval(commandInterval);
-  commandInterval = null;
+if (port) {
+  reading = false;
+  try { await reader?.cancel(); reader?.releaseLock(); } catch (e) {}
+  await port.close();
+  port = null;
+  reader = null;
+  connectBtn.textContent = '🔌 Connect';
+  log.textContent += '🔌 Port closed\n';
+
+  if (commandInterval) {
+    clearInterval(commandInterval);
+    commandInterval = null;
+  }
+
+  return;
 }
-        return;
-      }
 
       try {
         port = await navigator.serial.requestPort();
