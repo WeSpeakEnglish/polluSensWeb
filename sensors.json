@@ -62,5 +62,54 @@
 				"compare": "(data[30] << 8) + data[31]"
 			}
 		}
+		{
+			"name": "Air Master AM7 Plus",
+			"command": "55 CD 47 00 00 00 00 00 00 01 69 0D 0A",
+			"port": {
+				"baudRate": 19200,
+				"dataBits": 8,
+				"stopBits": 1,
+				"parity": "none"
+			},
+			"frame": {
+				"length": 40,
+				"startByte": 170,
+				"endByte": [13, 10]
+			},
+			"data": {
+				"PM2.5": {
+					"value": "(data[1] << 8) + data[2]",
+					"unit": "μg/m³"
+				},
+				"PM10": {
+					"value": "(data[3] << 8) + data[4]",
+					"unit": "μg/m³"
+				}
+				"HCHO": {
+					"value": "((data[5] << 8) + data[6])/1000.0",
+					"unit": "mg/m³"
+				}
+				"VOCs": {
+					"value": "((data[7] << 8) + data[8])/1000.0",
+					"unit": "mg/m³"
+				}
+				"CO₂": {
+					"value": "((data[9] << 8) + data[10])",
+					"unit": "ppm"
+				}
+				"Temperature": {
+					"value": "((data[11] << 8) + data[12])/100.0",
+					"unit": "T,°C"
+				}
+				"Humidity": {
+					"value": "((data[13] << 8) + data[14])/100.0",
+					"unit": "%"
+				}
+			},
+			"checksum": {
+				"eval": "data.slice(0, 36).reduce((a, b) => (a + b) & 0xFFFF, 0)",
+				"compare": "(data[36] << 8) + data[37]"
+			}
+		}
 	]
 }
