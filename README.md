@@ -79,7 +79,8 @@ Each sensor config defines:
 - Signals parsed  
 - `updateCharts(parsedData)` called  
 - Data appended to in-memory `collectedData`  
-- Raw packet logged  
+- Raw packet logged
+  
 7️⃣ If invalid → error logged
 
 ---
@@ -155,21 +156,9 @@ polluSens_data_<timestamp>.csv
 5️⃣ User can:  
 - Create / remove charts  
 - Export full CSV at any time  
-- Clear log as needed  
+- Clear log as needed
+  
 6️⃣ User can disconnect anytime
-
----
-
-## Patch Summary (latest update)
-
-This patch added:
-
-- `let collectedData = [];` → array for storing parsed data
-- **💾 Save CSV** button and handler
-- CSV generation logic → `timestamp + parsed signals`
-- Minor CSS for "❌" button on charts
-- Chart "Delete" button changed to cross
-- No change to original serial logic (`sendCommandIfNeeded`, `readLoop`, frame parsing remain 100% unchanged)
 
 ---
 
