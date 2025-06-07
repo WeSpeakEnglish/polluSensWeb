@@ -1,8 +1,11 @@
 # polluSensWeb
 
-**polluSensWeb** is a lightweight web-based serial interface and charting tool for visualizing and logging data from UART pollution sensors (PM2.5, VOC, etc.).
+**polluSensWeb** is a lightweight web-based serial interface and charting tool for visualizing and logging data from UART pollution sensors (PM2.5, VOC, etc
 
+<div style="display: flex; align-items: flex-start;">
 
+  <div style="flex: 1; padding-right: 20px;">
+    <ul>
       <li>Communicates with sensors via Web Serial API.</li>
       <li>Parses configurable frame structures with checksum validation.</li>
       <li>Live visualization with dynamic charts (Chart.js).</li>
@@ -17,6 +20,7 @@
   </div>
 
 </div>
+
 
 
 ---
