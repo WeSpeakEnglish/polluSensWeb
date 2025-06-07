@@ -11,11 +11,7 @@
 
 ---
 
-## Demo
-
-*(Add screenshot here — e.g. main screen with chart and log visible)*
-
-![polluSensWeb Screenshot](./screenshot.png)
+![polluSensWeb](https://github.com/WeSpeakEnglish/images/blob/main/pollusensweb_one.png)
 
 ---
 
