@@ -6,103 +6,198 @@
 		<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 		<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 		<style>
-			body {
-			font-family: 'Segoe UI', sans-serif;
-			background: #f9f9f9;
-			margin: 0;
-			padding: 20px;
-			color: #333;
-			}
-			header {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			margin-bottom: 20px;
-			flex-wrap: wrap;
-			gap: 10px;
-			}
-			header h1 {
-			margin: 0;
-			font-size: 1.5em;
-			}
-			button, select {
-			padding: 8px 16px;
-			font-size: 1em;
-			border: none;
-			border-radius: 4px;
-			}
-			button {
-			background-color: #007bff;
-			color: white;
-			cursor: pointer;
-			}
-			button:hover {
-			background-color: #0056b3;
-			}
-			.secondary-button {
-			background-color: #6c757d;
-			}
-			.secondary-button:hover {
-			background-color: #545b62;
-			}
-			#chartControls {
-			background: white;
-			border: 1px solid #ddd;
-			padding: 20px;
-			border-radius: 8px;
-			margin-bottom: 20px;
-			box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-			}
-			#log {
-			white-space: pre-wrap;
-			background: #f0f0f0;
-			padding: 10px;
-			height: 200px;
-			overflow-y: auto;
-			border: 1px solid #ccc;
-			border-radius: 4px;
-			}
-			.chart-wrapper {
-			background: white;
-			border-radius: 8px;
-			padding: 5px 40px 40px 40px;
-			margin-bottom: 10px;
-			box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-			}
-			.signalRow {
-			display: flex;
-			align-items: center;
-			gap: 10px;
-			margin-bottom: 5px;
-			}
-			.signalRow label {
-			margin-right: 5px;
-			}
-			.chart-header {
-			position: relative;
-			padding: 5px 10px;
-			border-bottom: 1px solid #ddd;
-			}
-			
-			.chart-header h4 {
-			margin: 0;
-			}
-			
-			.chart-header .delete-button {
-			position: absolute;
-			top: 5px;
-			right: 5px;
-			background: transparent;
-			border: none;
-			color: #800;
-			font-size: 20px;
-			cursor: pointer;
-			}
-			
-			.chart-header .delete-button:hover {
-			color: #dc3545;
-			background-color: #b09999;
-			}
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f9f9f9;
+    margin: 0;
+    padding: 20px;
+    color: #333;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.5em;
+}
+
+button, select {
+    padding: 8px 16px;
+    font-size: 1em;
+    border: none;
+    border-radius: 4px;
+}
+
+button {
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.secondary-button {
+    background-color: #6c757d;
+}
+
+.secondary-button:hover {
+    background-color: #545b62;
+}
+
+#chartControls {
+    background: white;
+    border: 1px solid #ddd;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+#chartControls > h3 {
+    margin-bottom: 10px;
+    color: #333;
+}
+
+#chartControls .chartParams {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+#chartControls .chartParams label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.95em;
+    color: #333;
+}
+
+#chartControls .chartParams input[type="text"] {
+    flex: 1;
+    min-width: 200px;
+}
+
+#chartControls .chartParams input[type="number"] {
+    width: 80px;
+    text-align: right;
+}
+
+#chartControls input[type="color"] {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.95em;
+}
+
+#datasetConfigs > h4 {
+    margin-bottom: 5px;
+    color: #444;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 3px;
+}
+
+.signalRow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 6px;
+    padding: 6px 10px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.signalRow label {
+    margin-right: 5px;
+    color: #444;
+    font-size: 0.95em;
+}
+
+.signalRow:nth-child(odd) {
+    background-color: #f7f9fc;
+}
+
+.signalRow:nth-child(even) {
+    background-color: #ffffff;
+}
+
+.signalRow input.dsTension,
+.signalRow input.dsWidth {
+    width: 60px;
+    text-align: right;
+}
+
+#chartControls button#createChart {
+    margin-top: 10px;
+    background-color: #007bff;
+    color: white;
+}
+
+#chartControls button#createChart:hover {
+    background-color: #0056b3;
+}
+
+#log {
+    white-space: pre-wrap;
+    background: #f0f0f0;
+    padding: 10px;
+    height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.chart-wrapper {
+    background: white;
+    border-radius: 8px;
+    padding: 5px 40px 40px 40px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.chart-header {
+    position: relative;
+    padding: 5px 10px;
+    border-bottom: 1px solid #ddd;
+    background-color: #fafafa;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.chart-header h4 {
+    margin: 0;
+    font-size: 1.1em;
+    color: #333;
+}
+
+.chart-header .delete-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: transparent;
+    border: none;
+    color: #800;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0 4px; /* Always apply padding */
+    border-radius: 4px; /* Always apply border-radius */
+}
+
+.chart-header .delete-button:hover {
+    color: #dc3545;
+    background-color: #b09999;
+}
+
 		</style>
 	</head>
 	<body>
@@ -118,11 +213,17 @@
 		
 		<div id="chartControls">
 			<h3>Create a Chart</h3>
-			<div>
-				<input type="text" id="chartName" placeholder="Chart name" value="Chart" />
-				<label>Width: <input type="number" id="chartWidth" value="600" /></label>
-				<label>Height: <input type="number" id="chartHeight" value="300" /></label>
-			</div>
+<div class="chartParams">
+    <label>Chart name:
+        <input type="text" id="chartName" placeholder="Chart name" value="Chart" />
+    </label>
+    <label>Width:
+        <input type="number" id="chartWidth" value="600" />
+    </label>
+    <label>Height:
+        <input type="number" id="chartHeight" value="300" />
+    </label>
+</div>
 			<div id="datasetConfigs">
 				<h4>Signals</h4>
 				<div id="signalRows"></div>
