@@ -7,8 +7,6 @@ Try it out yourself: [here](https://wespeakenglish.github.io/polluSensWeb/)
 <img src="https://raw.githubusercontent.com/WeSpeakEnglish/images/main/pollusensweb_one.png" alt="polluSensWeb" align="center">
 
 
-
-
 ---
 
 ## Features
