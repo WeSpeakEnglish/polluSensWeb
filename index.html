@@ -459,14 +459,27 @@
 					commandInterval = setInterval(sendOnce, period * 1000);
 				}
 			}
+			function parseByteValue(v) {
+				if (typeof v === 'string' && v.startsWith('0x')) {
+					return parseInt(v, 16);
+				}
+				return v;
+			}
 			
+			function parseByteField(field) {
+				if (field === "none") return field;
+				if (Array.isArray(field)) {
+					return field.map(parseByteValue);
+				}
+				return parseByteValue(field);
+			}			
 			async function readLoop() {
 				const { frame, checksum, data: dataFields } = config;
 				const useStart = frame.startByte !== "none";
 				const useEnd = frame.endByte !== "none";
 				const frameLength = frame.length;
-				const startByte = frame.startByte;
-				const endByte = frame.endByte;
+				const startByte = parseByteField(frame.startByte);
+				const endByte = parseByteField(frame.endByte);
 				let buffer = [];
 				reading = true;
 				

@@ -1,116 +1,161 @@
 {
-  "sensors": [
-    {
-      "name": "Panasonic SN-GCJA5",
-      "command": "none",
-      "port": {
-        "baudRate": 9600,
-        "dataBits": 8,
-        "stopBits": 1,
-        "parity": "even"
-      },
-      "frame": {
-        "length": 32,
-        "startByte": 2,
-        "endByte": 3
-      },
-      "data": {
-        "PM1": {
-          "value": "data[1] + (data[2] << 8) + (data[3] << 16) + (data[4] << 24)",
-          "unit": "μg/m³"
-        },
-        "PM2.5": {
-          "value": "data[5] + (data[6] << 8) + (data[7] << 16) + (data[8] << 24)",
-          "unit": "μg/m³"
-        },
-        "PM10": {
-          "value": "data[9] + (data[10] << 8) + (data[11] << 16) + (data[12] << 24)",
-          "unit": "μg/m³"
-        }
-      },
-      "checksum": {
-        "eval": "data.slice(1, 30).reduce((a, b) => a ^ b, 0)",
-        "compare": "data[30]"
-      }
-    },
-    {
-      "name": "Honeywell HPMA115S0-XXX",
-      "command": "none",
-      "port": {
-        "baudRate": 9600,
-        "dataBits": 8,
-        "stopBits": 1,
-        "parity": "none"
-      },
-      "frame": {
-        "length": 32,
-        "startByte": [66, 77],
-        "endByte": "none"
-      },
-      "data": {
-        "PM2.5": {
-          "value": "(data[6] << 8) + data[7]",
-          "unit": "μg/m³"
-        },
-        "PM10": {
-          "value": "(data[8] << 8) + data[9]",
-          "unit": "μg/m³"
-        }
-      },
-      "checksum": {
-        "eval": "data.slice(0, 30).reduce((a, b) => (a + b) & 0xFFFF, 0)",
-        "compare": "(data[30] << 8) + data[31]"
-      }
-    },
-    {
-      "name": "Air Master AM7 Plus",
-      "command": "55 CD 47 00 00 00 00 00 00 01 69 0D 0A",
-      "send_cmd_period": 10,
-      "port": {
-        "baudRate": 19200,
-        "dataBits": 8,
-        "stopBits": 1,
-        "parity": "none"
-      },
-      "frame": {
-        "length": 40,
-        "startByte": 170,
-        "endByte": [13, 10]
-      },
-      "data": {
-        "PM2.5": {
-          "value": "(data[1] << 8) + data[2]",
-          "unit": "μg/m³"
-        },
-        "PM10": {
-          "value": "(data[3] << 8) + data[4]",
-          "unit": "μg/m³"
-        },
-        "HCHO": {
-          "value": "((data[5] << 8) + data[6])/1000.0",
-          "unit": "mg/m³"
-        },
-        "VOCs": {
-          "value": "((data[7] << 8) + data[8])/1000.0",
-          "unit": "mg/m³"
-        },
-        "CO₂": {
-          "value": "(data[9] << 8) + data[10]",
-          "unit": "ppm"
-        },
-        "Temperature": {
-          "value": "((data[11] << 8) + data[12])/100.0",
-          "unit": "T,°C"
-        },
-        "Humidity": {
-          "value": "((data[13] << 8) + data[14])/100.0",
-          "unit": "%"
-        }
-      },
-      "checksum": {
-        "eval": "data.slice(0, 36).reduce((a, b) => (a + b) & 0xFFFF, 0)",
-        "compare": "(data[36] << 8) + data[37]"
-      }
-    }
-  ]
+	"sensors": [
+		{
+			"name": "Panasonic SN-GCJA5",
+			"command": "none",
+			"port": {
+				"baudRate": 9600,
+				"dataBits": 8,
+				"stopBits": 1,
+				"parity": "even"
+			},
+			"frame": {
+				"length": 32,
+				"startByte": 2,
+				"endByte": 3
+			},
+			"data": {
+				"PM1": {
+					"value": "data[1] + (data[2] << 8) + (data[3] << 16) + (data[4] << 24)",
+					"unit": "μg/m³"
+				},
+				"PM2.5": {
+					"value": "data[5] + (data[6] << 8) + (data[7] << 16) + (data[8] << 24)",
+					"unit": "μg/m³"
+				},
+				"PM10": {
+					"value": "data[9] + (data[10] << 8) + (data[11] << 16) + (data[12] << 24)",
+					"unit": "μg/m³"
+				}
+			},
+			"checksum": {
+				"eval": "data.slice(1, 30).reduce((a, b) => a ^ b, 0)",
+				"compare": "data[30]"
+			}
+		},
+		{
+			"name": "Honeywell HPMA115S0-XXX",
+			"command": "none",
+			"port": {
+				"baudRate": 9600,
+				"dataBits": 8,
+				"stopBits": 1,
+				"parity": "none"
+			},
+			"frame": {
+				"length": 32,
+				"startByte": [66, 77],
+				"endByte": "none"
+			},
+			"data": {
+				"PM2.5": {
+					"value": "(data[6] << 8) + data[7]",
+					"unit": "μg/m³"
+				},
+				"PM10": {
+					"value": "(data[8] << 8) + data[9]",
+					"unit": "μg/m³"
+				}
+			},
+			"checksum": {
+				"eval": "data.slice(0, 30).reduce((a, b) => (a + b) & 0xFFFF, 0)",
+				"compare": "(data[30] << 8) + data[31]"
+			}
+		},
+		{
+			"name": "Air Master AM7 Plus",
+			"command": "55 CD 47 00 00 00 00 00 00 01 69 0D 0A",
+			"send_cmd_period": 10,
+			"port": {
+				"baudRate": 19200,
+				"dataBits": 8,
+				"stopBits": 1,
+				"parity": "none"
+			},
+			"frame": {
+				"length": 40,
+				"startByte": 170,
+				"endByte": [13, 10]
+			},
+			"data": {
+				"PM2.5": {
+					"value": "(data[1] << 8) + data[2]",
+					"unit": "μg/m³"
+				},
+				"PM10": {
+					"value": "(data[3] << 8) + data[4]",
+					"unit": "μg/m³"
+				},
+				"HCHO": {
+					"value": "((data[5] << 8) + data[6])/1000.0",
+					"unit": "mg/m³"
+				},
+				"VOCs": {
+					"value": "((data[7] << 8) + data[8])/1000.0",
+					"unit": "mg/m³"
+				},
+				"CO₂": {
+					"value": "(data[9] << 8) + data[10]",
+					"unit": "ppm"
+				},
+				"Temperature": {
+					"value": "((data[11] << 8) + data[12])/100.0",
+					"unit": "T,°C"
+				},
+				"Humidity": {
+					"value": "((data[13] << 8) + data[14])/100.0",
+					"unit": "%"
+				}
+			},
+			"checksum": {
+				"eval": "data.slice(0, 36).reduce((a, b) => (a + b) & 0xFFFF, 0)",
+				"compare": "(data[36] << 8) + data[37]"
+			}
+		},
+		{
+			"name": "Plantower PMSA003-S/PS3003A/PMS(5003,7003)",
+			"command": "none",
+			"port": {
+				"baudRate": 9600,
+				"dataBits": 8,
+				"stopBits": 1,
+				"parity": "none"
+			},
+			"frame": {
+				"length": 32,
+				"startByte": [66,77],
+				"endByte": "none"
+			},
+			"data": {
+				"PM1.0 factory env.": {
+					"value": "(data[4] << 8) + data[5]",
+					"unit": "μg/m³"
+				},
+				"PM2.5 factory env.": {
+					"value": "(data[6] << 8) + data[7]",
+					"unit": "μg/m³"
+				},
+				"PM10 factory env.": {
+					"value": "(data[8] << 8) + data[9]",
+					"unit": "μg/m³"
+				},
+				"PM1.0 atmospheric env.": {
+					"value": "(data[10] << 8) + data[11]",
+					"unit": "μg/m³"
+				},
+				"PM2.5 atmospheric env.": {
+					"value": "(data[12] << 8) + data[13]",
+					"unit": "μg/m³"
+				},
+				"PM10 atmospheric env.": {
+					"value": "(data[14] << 8) + data[15]",
+					"unit": "μg/m³"
+				}
+			},
+			"checksum": {
+				"eval": "data.slice(0, 30).reduce((a, b) => (a + b) & 0xFFFF, 0)",
+				"compare": "(data[30] << 8) + data[31]"
+			}
+		}
+	]
 }
