@@ -113,7 +113,7 @@
 			}
 		},
 		{
-			"name": "Plantower PMSA003-S/PS3003A/PMS(5003,7003)",
+			"name": "Plantower PMSA003-S/PS3003A/PMS(1003,5003,7003,9103)",
 			"command": "none",
 			"port": {
 				"baudRate": 9600,
