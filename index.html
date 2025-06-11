@@ -262,24 +262,56 @@
 			const MAX_SECONDS = 600;
 			
 			
-			async function loadConfigAndPopulateSelector() {
-				const res = await fetch("https://raw.githubusercontent.com/WeSpeakEnglish/polluSensWeb/refs/heads/main/sensors.json");
-				const rawConfig = await res.json();
-				sensors = Array.isArray(rawConfig.sensors) ? rawConfig.sensors : [rawConfig];
-				const selector = document.getElementById('sensorSelector');
-				selector.innerHTML = '';
-				sensors.forEach((sensor, i) => {
-					const opt = document.createElement('option');
-					opt.value = i;
-					opt.textContent = sensor.name || `Sensor ${i + 1}`;
-					selector.appendChild(opt);
-				});
-				selector.addEventListener('change', () => {
-					config = sensors[parseInt(selector.value)];
-					renderSignalRows();
-				});
-				selector.dispatchEvent(new Event('change'));
-			}
+async function loadConfigAndPopulateSelector() {
+	const res = await fetch("https://raw.githubusercontent.com/WeSpeakEnglish/polluSensWeb/refs/heads/main/sensors.json");
+	const rawConfig = await res.json();
+	let rawSensors = Array.isArray(rawConfig.sensors) ? rawConfig.sensors : [rawConfig];
+
+	const nameToSensor = {};
+	rawSensors.forEach(sensor => {
+		if (sensor.name) nameToSensor[sensor.name] = sensor;
+	});
+
+	function resolveInheritance(sensor, stack = []) {
+		if (!sensor.inherits_from) return sensor;
+		if (stack.includes(sensor.name)) {
+			console.warn("Circular inheritance detected:", stack.join(" -> "), "->", sensor.name);
+			return sensor;
+		}
+		const base = nameToSensor[sensor.inherits_from];
+		if (!base) {
+			console.warn("Base sensor not found:", sensor.inherits_from);
+			return sensor;
+		}
+		const resolvedBase = resolveInheritance(base, [...stack, sensor.name]);
+		return {
+			...resolvedBase,
+			...sensor,
+			port: { ...resolvedBase.port, ...sensor.port },
+			frame: { ...resolvedBase.frame, ...sensor.frame },
+			checksum: { ...resolvedBase.checksum, ...sensor.checksum },
+			data: { ...resolvedBase.data, ...sensor.data }
+		};
+	}
+
+	// Apply inheritance resolution
+	sensors = rawSensors.map(resolveInheritance);
+
+	const selector = document.getElementById('sensorSelector');
+	selector.innerHTML = '';
+	sensors.forEach((sensor, i) => {
+		const opt = document.createElement('option');
+		opt.value = i;
+		opt.textContent = sensor.name || `Sensor ${i + 1}`;
+		selector.appendChild(opt);
+	});
+	selector.addEventListener('change', () => {
+		config = sensors[parseInt(selector.value)];
+		renderSignalRows();
+	});
+	selector.dispatchEvent(new Event('change'));
+}
+
 			
 			function renderSignalRows() {
 				const container = document.getElementById('signalRows');
