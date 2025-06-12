@@ -223,8 +223,11 @@
 			<div>
 				<select id="sensorSelector"></select>
 				<button id="connect">🔌 Connect</button>
+				
 				<button id="clearLog" class="secondary-button">🧹 Clear Log</button>
 				<button id="saveCSV" class="secondary-button">💾 Save CSV</button>
+				<br/>
+				<label>Custom JSON Sensor Configuration: <input type="file" id="jsonUpload" accept=".json" class="secondary-button" /></label>
 			</div>
 		</header>
 		
@@ -258,60 +261,110 @@
 			let config = null, sensors = [], chartSettings = {};
 			let commandInterval = null;
 			let collectedData = []; 
+			let defaultSensorNames = [];
+			let defaultSensors = [];
 			const log = document.getElementById('log');
 			const MAX_SECONDS = 600;
 			
 			
-async function loadConfigAndPopulateSelector() {
-	const res = await fetch("https://raw.githubusercontent.com/WeSpeakEnglish/polluSensWeb/refs/heads/main/sensors.json");
-	const rawConfig = await res.json();
-	let rawSensors = Array.isArray(rawConfig.sensors) ? rawConfig.sensors : [rawConfig];
-
-	const nameToSensor = {};
-	rawSensors.forEach(sensor => {
-		if (sensor.name) nameToSensor[sensor.name] = sensor;
-	});
-
-	function resolveInheritance(sensor, stack = []) {
-		if (!sensor.inherits_from) return sensor;
-		if (stack.includes(sensor.name)) {
-			console.warn("Circular inheritance detected:", stack.join(" -> "), "->", sensor.name);
-			return sensor;
-		}
-		const base = nameToSensor[sensor.inherits_from];
-		if (!base) {
-			console.warn("Base sensor not found:", sensor.inherits_from);
-			return sensor;
-		}
-		const resolvedBase = resolveInheritance(base, [...stack, sensor.name]);
-		return {
-			...resolvedBase,
-			...sensor,
-			port: { ...resolvedBase.port, ...sensor.port },
-			frame: { ...resolvedBase.frame, ...sensor.frame },
-			checksum: { ...resolvedBase.checksum, ...sensor.checksum },
-			data: { ...resolvedBase.data, ...sensor.data }
-		};
-	}
-
-	// Apply inheritance resolution
-	sensors = rawSensors.map(resolveInheritance);
-
-	const selector = document.getElementById('sensorSelector');
-	selector.innerHTML = '';
-	sensors.forEach((sensor, i) => {
-		const opt = document.createElement('option');
-		opt.value = i;
-		opt.textContent = sensor.name || `Sensor ${i + 1}`;
-		selector.appendChild(opt);
-	});
-	selector.addEventListener('change', () => {
-		config = sensors[parseInt(selector.value)];
-		renderSignalRows();
-	});
-	selector.dispatchEvent(new Event('change'));
-}
-
+			async function loadConfigAndPopulateSelector(customConfig = null, customName = null) {
+				let rawConfig;
+				let sourceLabel = '';
+				
+				try {
+					if (customConfig) {
+						rawConfig = customConfig;
+						sourceLabel = ` (from ${customName})`;
+						} else {
+						const res = await fetch("https://raw.githubusercontent.com/WeSpeakEnglish/polluSensWeb/refs/heads/main/sensors.json");
+						rawConfig = await res.json();
+						sourceLabel = " (default)";
+					}
+					} catch (err) {
+					log.textContent += `❌ Failed to load configuration: ${err.message}\n`;
+					return;
+				}
+				
+				let rawSensors = Array.isArray(rawConfig.sensors) ? rawConfig.sensors : [rawConfig];
+				//rawSensors = rawSensors.filter(s => s && typeof s === 'object' && s.name);
+				
+				// Convert to map for easy override
+				const sensorMap = {};
+				
+				// Load default sensors first (if not custom load)
+				if (!customConfig) {
+					defaultSensors = rawSensors;
+					defaultSensorNames = rawSensors.map(s => s.name);
+					rawSensors.forEach(s => {
+						if (s.name) sensorMap[s.name] = s;
+					});
+					} else {
+					// Merge custom sensors into existing map (override if same name)
+					rawSensors.forEach(s => {
+						if (s.name) sensorMap[s.name] = s;
+					});
+					
+					// Reconstruct sensor list: customs first, then defaults not overridden
+					const customNames = rawSensors.map(s => s.name);
+					const allNames = [...customNames, ...defaultSensorNames.filter(n => !customNames.includes(n))];
+					rawSensors = allNames.map(name => sensorMap[name]).filter(s => s && s.name);
+				}
+				
+				// Handle inheritance
+				const nameToSensor = {};
+				rawSensors.forEach(sensor => {
+					if (sensor.name) nameToSensor[sensor.name] = sensor;
+				});
+				function resolveInheritance(sensor, stack = []) {
+					if (!sensor.inherits_from) return sensor;
+					if (stack.includes(sensor.name)) {
+						console.warn("Circular inheritance:", stack.join(" -> "), "->", sensor.name);
+						return sensor;
+					}
+					const base = nameToSensor[sensor.inherits_from];
+					if (!base) {
+						console.warn("Base sensor not found:", sensor.inherits_from);
+						return sensor;
+					}
+					const resolvedBase = resolveInheritance(base, [...stack, sensor.name]);
+					return {
+						...resolvedBase,
+						...sensor,
+						port: { ...resolvedBase.port, ...sensor.port },
+						frame: { ...resolvedBase.frame, ...sensor.frame },
+						checksum: { ...resolvedBase.checksum, ...sensor.checksum },
+						data: { ...resolvedBase.data, ...sensor.data }
+					};
+				}
+				sensors = rawSensors.map(resolveInheritance);
+				
+				// Populate dropdown
+				const selector = document.getElementById('sensorSelector');
+				selector.innerHTML = '';
+				sensors.forEach((sensor, i) => {
+					const opt = document.createElement('option');
+					opt.value = i;
+					opt.textContent = sensor.name || `Sensor ${i + 1}`;
+					
+					const isCustom = customConfig && (!defaultSensorNames.includes(sensor.name) || sourceLabel !== " (default)");
+					if (isCustom) {
+						opt.textContent += " 🆕";
+						opt.style.backgroundColor = "#d1ffd1";
+						opt.title = "Custom uploaded sensor";
+					}
+					
+					selector.appendChild(opt);
+				});
+				
+selector.onchange = () => {
+	config = sensors[parseInt(selector.value)];
+	renderSignalRows();
+};
+				selector.dispatchEvent(new Event('change'));
+				
+				log.textContent += `✅ Sensor list loaded${sourceLabel} (${sensors.length} sensors)\n`;
+			}
+			
 			
 			function renderSignalRows() {
 				const container = document.getElementById('signalRows');
@@ -645,7 +698,27 @@ async function loadConfigAndPopulateSelector() {
 				link.click();
 				document.body.removeChild(link);
 			};
-			document.addEventListener('DOMContentLoaded', loadConfigAndPopulateSelector);
+			document.addEventListener('DOMContentLoaded', async () => {
+				await loadConfigAndPopulateSelector(); // load default first
+			});
+			document.getElementById('jsonUpload').addEventListener('change', async (e) => {
+				const file = e.target.files[0];
+				if (!file) return;
+				
+				try {
+					const text = await file.text();
+					const json = JSON.parse(text);
+					
+					// Ensure default sensors were loaded (for merging)
+					if (!defaultSensorNames.length || !defaultSensors.length) {
+						await loadConfigAndPopulateSelector(); // fallback load
+					}
+					
+					await loadConfigAndPopulateSelector(json, file.name);
+					} catch (err) {
+					log.textContent += `❌ Failed to load custom config: ${err.message}\n`;
+				}
+			});
 		</script>
 	</body>
 </html>
