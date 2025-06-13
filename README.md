@@ -207,37 +207,41 @@ Each sensor object describes how to read and interpret data from a UART-connecte
 
 ---
 
-## ✅ Sensor Example
+## ✅ Sensor Example (full JSON example, may be used like custom template)
 
 ```json
 {
-  "name": "Plantower PMSA003",
-  "command": "none",
-  "port": {
-    "baudRate": 9600,
-    "dataBits": 8,
-    "stopBits": 1,
-    "parity": "none"
-  },
-  "frame": {
-    "length": 32,
-    "startByte": ["0x42", "0x4D"],
-    "endByte": "none"
-  },
-  "checksum": {
-    "eval": "data.slice(0, 30).reduce((a, b) => (a + b) & 0xFFFF, 0)",
-    "compare": "(data[30] << 8) + data[31]"
-  },
-  "data": {
-    "PM2.5": {
-      "value": "(data[6] << 8) + data[7]",
-      "unit": "μg/m³"
-    },
-    "PM10": {
-      "value": "(data[8] << 8) + data[9]",
-      "unit": "μg/m³"
-    }
-  }
+	"sensors": [
+     {
+			"name": "Honeywell HPMA115S0-XXX",
+			"command": "none",
+			"port": {
+				"baudRate": 9600,
+				"dataBits": 8,
+				"stopBits": 1,
+				"parity": "none"
+			},
+			"frame": {
+				"length": 32,
+				"startByte": [66, 77],
+				"endByte": "none"
+			},
+			"data": {
+				"PM2.5": {
+					"value": "(data[6] << 8) + data[7]",
+					"unit": "μg/m³"
+				},
+				"PM10": {
+					"value": "(data[8] << 8) + data[9]",
+					"unit": "μg/m³"
+				}
+			},
+			"checksum": {
+				"eval": "data.slice(0, 30).reduce((a, b) => (a + b) & 0xFFFF, 0)",
+				"compare": "(data[30] << 8) + data[31]"
+			}
+		}
+	]
 }
 ```
 
