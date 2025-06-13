@@ -264,7 +264,7 @@ You can reuse and override parts of existing sensors:
 }
 ```
 
-This example keeps all settings from `Plantower PMSA003` but adds a corrected PM2.5 value.
+This example keeps all settings from `Plantower PMSA003` but adds a humidity value.
 
 ---
 
