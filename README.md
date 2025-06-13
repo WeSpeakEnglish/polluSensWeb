@@ -151,7 +151,139 @@ polluSens_data_<timestamp>.csv
 6️⃣ User can disconnect anytime
 
 ---
+## 📁 Upload Your Own Configuration
 
+You can upload a custom JSON configuration using the **"Custom JSON Sensor Configuration"** input in the interface.
+
+- Uploaded sensors appear **at the top** of the list
+- They can **override default sensors** (by name)
+- Custom entries are marked with 🆕 and highlighted
+
+---
+
+## 🧾 JSON Schema Overview
+
+Top-level structure:
+
+```json
+{
+  "sensors": [
+    { /* sensor object */ },
+    ...
+  ]
+}
+```
+
+Each sensor object describes how to read and interpret data from a UART-connected sensor.
+
+---
+
+## 🧩 Sensor Object Fields
+
+| Field             | Required | Type      | Description |
+|------------------|----------|-----------|-------------|
+| `name`           | ✅       | string    | Unique sensor name (shown in dropdown) |
+| `inherits_from`  | ➖       | string    | Name of another sensor to inherit from |
+| `command`        | ➖       | string    | Hex string to send on connect (e.g. `"AA 01 00 FF"`) or `"none"` |
+| `send_cmd_period`| ➖       | number    | If > 0, send `command` every N seconds |
+| `port`           | ✅       | object    | UART settings |
+| `frame`          | ✅       | object    | Frame length and optional start/end bytes |
+| `checksum`       | ✅       | object    | JavaScript expressions to validate data |
+| `data`           | ✅       | object    | Signal names, extraction formulas, and units |
+
+---
+
+## 🔧 Field Value Examples
+
+| Field       | Example(s)                               | Notes |
+|-------------|-------------------------------------------|-------|
+| `command`   | `"AA 01 00 FF"`, `"none"`                | Space-separated hex or `"none"` |
+| `startByte` | `[66, 77]`, `["0x42", "0x4D"]`, `"none"` | Use decimal or string-encoded hex |
+| `endByte`   | `[13, 10]`, `10`, `"none"`               | Optional terminator bytes |
+| `parity`    | `"none"`, `"even"`, `"odd"`              | Matches Web Serial API |
+| `baudRate`  | `9600`, `19200`                          | Integer |
+| `dataBits`  | `7`, `8`                                 | Usually `8` |
+| `stopBits`  | `1`, `2`                                 | Usually `1` |
+
+---
+
+## ✅ Sensor Example
+
+```json
+{
+  "name": "Plantower PMSA003",
+  "command": "none",
+  "port": {
+    "baudRate": 9600,
+    "dataBits": 8,
+    "stopBits": 1,
+    "parity": "none"
+  },
+  "frame": {
+    "length": 32,
+    "startByte": ["0x42", "0x4D"],
+    "endByte": "none"
+  },
+  "checksum": {
+    "eval": "data.slice(0, 30).reduce((a, b) => (a + b) & 0xFFFF, 0)",
+    "compare": "(data[30] << 8) + data[31]"
+  },
+  "data": {
+    "PM2.5": {
+      "value": "(data[6] << 8) + data[7]",
+      "unit": "μg/m³"
+    },
+    "PM10": {
+      "value": "(data[8] << 8) + data[9]",
+      "unit": "μg/m³"
+    }
+  }
+}
+```
+
+---
+
+## 🔁 Inheritance with `inherits_from`
+
+You can reuse and override parts of existing sensors:
+
+```json
+{
+  "name": "Your New Sensor PM2.5",
+  "inherits_from": "Plantower PMSA003",
+  "data": {
+    "Humidity": {
+      "value": "(data[14] << 8) + data[5]",
+      "unit": "%"
+    }
+  }
+}
+```
+
+This example keeps all settings from `Plantower PMSA003` but adds a corrected PM2.5 value.
+
+---
+
+## 🧪 Tips & Troubleshooting
+
+- All `value`, `eval`, and `compare` fields are evaluated using JavaScript `eval()`.
+- You can use decimal values (`66`) or hex strings (`"0x42"`) — **no raw hex like `0x42`**.
+- If your JSON fails to load, check the browser log or validate at [https://jsonlint.com](https://jsonlint.com).
+
+---
+
+## 📚 See Also
+
+- Default sensors: [`sensors.json`](https://raw.githubusercontent.com/WeSpeakEnglish/polluSensWeb/main/sensors.json)
+- Project homepage: [pollutants.eu](https://pollutants.eu)
+
+---
+
+## 🤝 Contribute
+
+If you've created and sucessfully tested a sensor config (you may test it via uploading via web interface), feel free to submit it via pull request adding to sensor list JSON.
+
+---
 ## License
 
 MIT License
