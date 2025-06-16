@@ -285,7 +285,7 @@ This example keeps all settings from `Plantower PMSA003` but adds a humidity val
 
 ## 🤝 Contribute
 
-If you've created and sucessfully tested a sensor config (you may test it via uploading via web interface), feel free to submit it via pull request adding to sensor list JSON.
+If you've created and sucessfully tested a sensor config (you may test it by uploading custom JSON via web interface), feel free to submit it in pull request adding to sensor list JSON.
 
 ---
 ## License
