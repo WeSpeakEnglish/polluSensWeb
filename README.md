@@ -17,7 +17,7 @@ Try it out yourself: [here](https://wespeakenglish.github.io/polluSensWeb/)
 ✅ Multiple simultaneous charts  
 ✅ Full CSV export (timestamp + all signals)  
 ✅ Clearable log with raw serial packets and checksum result  
-✅ Fully configurable via external `sensors.json`  
+✅ Configurable via external JSON file  
 ✅ Works offline after load  
 ✅ Minimal dependencies  
 ✅ No external servers required  
