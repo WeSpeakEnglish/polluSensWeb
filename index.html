@@ -265,7 +265,40 @@
 			let defaultSensors = [];
 			const log = document.getElementById('log');
 			const MAX_SECONDS = 600;
-			
+			// Handle inheritance
+			const nameToSensor = {};
+				
+			function resolveInheritance(sensor, stack) {
+  stack = Array.isArray(stack) ? stack : [];
+
+  if (!sensor || typeof sensor !== 'object') return null;
+  if (!sensor.name) return null;
+  if (!sensor.inherits_from) return sensor;
+
+  if (stack.includes(sensor.name)) {
+    console.warn("Circular inheritance:", [...stack, sensor.name].join(" → "));
+    return sensor;
+  }
+
+  const base = nameToSensor[sensor.inherits_from];
+  if (!base) {
+    console.warn("Base sensor not found:", sensor.inherits_from);
+    return sensor;
+  }
+
+  const resolvedBase = resolveInheritance(base, [...stack, sensor.name]);
+  if (!resolvedBase) return sensor;
+
+  return {
+    name: sensor.name,
+    command: sensor.command ?? resolvedBase.command,
+    send_cmd_period: sensor.send_cmd_period ?? resolvedBase.send_cmd_period,
+    port: { ...resolvedBase.port, ...(sensor.port || {}) },
+    frame: { ...resolvedBase.frame, ...(sensor.frame || {}) },
+    checksum: { ...resolvedBase.checksum, ...(sensor.checksum || {}) },
+    data: { ...resolvedBase.data, ...(sensor.data || {}) }
+  };
+}
 			
 			async function loadConfigAndPopulateSelector(customConfig = null, customName = null) {
 				let rawConfig;
@@ -286,7 +319,7 @@
 				}
 				
 				let rawSensors = Array.isArray(rawConfig.sensors) ? rawConfig.sensors : [rawConfig];
-				//rawSensors = rawSensors.filter(s => s && typeof s === 'object' && s.name);
+				sensors = rawSensors.map(resolveInheritance).filter(s => s && s.name && s.data);
 				
 				// Convert to map for easy override
 				const sensorMap = {};
@@ -310,32 +343,12 @@
 					rawSensors = allNames.map(name => sensorMap[name]).filter(s => s && s.name);
 				}
 				
-				// Handle inheritance
-				const nameToSensor = {};
+
 				rawSensors.forEach(sensor => {
 					if (sensor.name) nameToSensor[sensor.name] = sensor;
 				});
-				function resolveInheritance(sensor, stack = []) {
-					if (!sensor.inherits_from) return sensor;
-					if (stack.includes(sensor.name)) {
-						console.warn("Circular inheritance:", stack.join(" -> "), "->", sensor.name);
-						return sensor;
-					}
-					const base = nameToSensor[sensor.inherits_from];
-					if (!base) {
-						console.warn("Base sensor not found:", sensor.inherits_from);
-						return sensor;
-					}
-					const resolvedBase = resolveInheritance(base, [...stack, sensor.name]);
-					return {
-						...resolvedBase,
-						...sensor,
-						port: { ...resolvedBase.port, ...sensor.port },
-						frame: { ...resolvedBase.frame, ...sensor.frame },
-						checksum: { ...resolvedBase.checksum, ...sensor.checksum },
-						data: { ...resolvedBase.data, ...sensor.data }
-					};
-				}
+
+
 				sensors = rawSensors.map(resolveInheritance);
 				
 				// Populate dropdown
@@ -356,10 +369,10 @@
 					selector.appendChild(opt);
 				});
 				
-selector.onchange = () => {
-	config = sensors[parseInt(selector.value)];
-	renderSignalRows();
-};
+				selector.onchange = () => {
+					config = sensors[parseInt(selector.value)];
+					renderSignalRows();
+				};
 				selector.dispatchEvent(new Event('change'));
 				
 				log.textContent += `✅ Sensor list loaded${sourceLabel} (${sensors.length} sensors)\n`;
