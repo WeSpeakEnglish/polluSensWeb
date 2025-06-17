@@ -113,7 +113,7 @@
 			}
 		},
 		{
-			"name": "Plantower PMSA003-S/PS3003A/PMS(1003,5003,7003,9103)",
+			"name": "Plantower PMSA003-S",
 			"command": "none",
 			"port": {
 				"baudRate": 9600,
@@ -156,6 +156,26 @@
 				"eval": "data.slice(0, 30).reduce((a, b) => (a + b) & 0xFFFF, 0)",
 				"compare": "(data[30] << 8) + data[31]"
 			}
+		},
+		{
+			"name": "Plantower PS3003A",
+			"inherits_from": "Plantower PMSA003-S"
+		},
+		{
+			"name": "Plantower PMS1003",
+			"inherits_from": "Plantower PMSA003-S"
+		},
+		{
+			"name": "Plantower PMS5003",
+			"inherits_from": "Plantower PMSA003-S"
+		},
+		{
+			"name": "Plantower PMS7003",
+			"inherits_from": "Plantower PMSA003-S"
+		},
+		{
+			"name": "Plantower PMS9103",
+			"inherits_from": "Plantower PMSA003-S"
 		}
 	]
 }
