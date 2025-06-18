@@ -100,7 +100,7 @@
 				},
 				"Temperature": {
 					"value": "((data[11] << 8) + data[12])/100.0",
-					"unit": "T,°C"
+					"unit": "°C"
 				},
 				"Humidity": {
 					"value": "((data[13] << 8) + data[14])/100.0",
@@ -174,8 +174,25 @@
 			"inherits_from": "Plantower PMSA003-S"
 		},
 		{
+			"name": "Plantower PMS6003",
+			"inherits_from": "Plantower PMSA003-S"
+		},
+		{
 			"name": "Plantower PMS9103",
 			"inherits_from": "Plantower PMSA003-S"
+		},
+		{
+			"name": "Plantower PMS3003",
+			"inherits_from": "Plantower PMSA003-S",
+			"frame": {
+				"length": 24,
+				"startByte": ["0x42","0x4d"],
+				"endByte": "none"
+			},
+			"checksum": {
+				"eval": "data.slice(0, 22).reduce((a, b) => (a + b) & 0xFFFF, 0)",
+				"compare": "(data[22] << 8) + data[23]"
+			}
 		}
-	]
+	]	
 }
