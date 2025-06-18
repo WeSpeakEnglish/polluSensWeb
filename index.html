@@ -243,6 +243,9 @@
 				<label>Height:
 					<input type="number" id="chartHeight" value="300" />
 				</label>
+				<label>Chart datapoints:
+					<input type="number" id="maxDatapoints" value="600" min="2" />
+				</label>
 			</div>
 			<div id="datasetConfigs">
 				<h4>Signals</h4>
@@ -267,38 +270,38 @@
 			const MAX_SECONDS = 600;
 			// Handle inheritance
 			const nameToSensor = {};
-				
+			
 			function resolveInheritance(sensor, stack) {
-  stack = Array.isArray(stack) ? stack : [];
-
-  if (!sensor || typeof sensor !== 'object') return null;
-  if (!sensor.name) return null;
-  if (!sensor.inherits_from) return sensor;
-
-  if (stack.includes(sensor.name)) {
-    console.warn("Circular inheritance:", [...stack, sensor.name].join(" → "));
-    return sensor;
-  }
-
-  const base = nameToSensor[sensor.inherits_from];
-  if (!base) {
-    console.warn("Base sensor not found:", sensor.inherits_from);
-    return sensor;
-  }
-
-  const resolvedBase = resolveInheritance(base, [...stack, sensor.name]);
-  if (!resolvedBase) return sensor;
-
-  return {
-    name: sensor.name,
-    command: sensor.command ?? resolvedBase.command,
-    send_cmd_period: sensor.send_cmd_period ?? resolvedBase.send_cmd_period,
-    port: { ...resolvedBase.port, ...(sensor.port || {}) },
-    frame: { ...resolvedBase.frame, ...(sensor.frame || {}) },
-    checksum: { ...resolvedBase.checksum, ...(sensor.checksum || {}) },
-    data: { ...resolvedBase.data, ...(sensor.data || {}) }
-  };
-}
+				stack = Array.isArray(stack) ? stack : [];
+				
+				if (!sensor || typeof sensor !== 'object') return null;
+				if (!sensor.name) return null;
+				if (!sensor.inherits_from) return sensor;
+				
+				if (stack.includes(sensor.name)) {
+					console.warn("Circular inheritance:", [...stack, sensor.name].join(" → "));
+					return sensor;
+				}
+				
+				const base = nameToSensor[sensor.inherits_from];
+				if (!base) {
+					console.warn("Base sensor not found:", sensor.inherits_from);
+					return sensor;
+				}
+				
+				const resolvedBase = resolveInheritance(base, [...stack, sensor.name]);
+				if (!resolvedBase) return sensor;
+				
+				return {
+					name: sensor.name,
+					command: sensor.command ?? resolvedBase.command,
+					send_cmd_period: sensor.send_cmd_period ?? resolvedBase.send_cmd_period,
+					port: { ...resolvedBase.port, ...(sensor.port || {}) },
+					frame: { ...resolvedBase.frame, ...(sensor.frame || {}) },
+					checksum: { ...resolvedBase.checksum, ...(sensor.checksum || {}) },
+					data: { ...resolvedBase.data, ...(sensor.data || {}) }
+				};
+			}
 			
 			async function loadConfigAndPopulateSelector(customConfig = null, customName = null) {
 				let rawConfig;
@@ -343,12 +346,12 @@
 					rawSensors = allNames.map(name => sensorMap[name]).filter(s => s && s.name);
 				}
 				
-
+				
 				rawSensors.forEach(sensor => {
 					if (sensor.name) nameToSensor[sensor.name] = sensor;
 				});
-
-
+				
+				
 				sensors = rawSensors.map(resolveInheritance);
 				
 				// Populate dropdown
@@ -514,7 +517,7 @@
 			
 			function updateCharts(parsedData) {
 				const now = new Date();
-				const cutoff = new Date(now.getTime() - MAX_SECONDS * 1000);
+				const maxPoints = parseInt(document.getElementById('maxDatapoints')?.value || 600);
 				
 				collectedData.push({ timestamp: now.toISOString(), ...parsedData });
 				
@@ -523,7 +526,10 @@
 						const value = parsedData[field];
 						if (value !== undefined) {
 							chart.data.datasets[i].data.push({ x: now, y: value });
-							chart.data.datasets[i].data = chart.data.datasets[i].data.filter(p => p.x >= cutoff);
+							const dataArr = chart.data.datasets[i].data;
+							if (dataArr.length > maxPoints) {
+								chart.data.datasets[i].data = dataArr.slice(dataArr.length - maxPoints);
+							}
 						}
 					});
 					chart.update('none');
