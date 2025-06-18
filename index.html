@@ -449,7 +449,12 @@
 					]);
 				});
 				
-				if (datasets.length) createChart(name, [width, height], datasets);
+				if (datasets.length === 0) {
+					alert("At least one signal should be selected to create a chart.");
+					return;
+				}
+				
+				createChart(name, [width, height], datasets);
 			};
 			
 			function createChart(name, size, datasets) {
