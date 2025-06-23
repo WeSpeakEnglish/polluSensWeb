@@ -156,8 +156,8 @@ polluSens_data_<timestamp>.csv
 
 You can upload a custom JSON configuration using the **"Custom JSON Sensor Configuration"** input in the interface.
 
-- Uploaded sensors appear **at the top** of the list
-- They can **override default sensors** (by name)
+<strike> Uploaded sensors appear **at the top** of the list</strike>
+<strike> They can **override default sensors** (by name) </strike>
 - Custom entries are marked with 🆕 and highlighted
 
 ---
