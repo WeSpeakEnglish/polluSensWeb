@@ -91,7 +91,8 @@ Each sensor config defines:
 #### Create a Chart Section
 
 - **Chart Name** → Title of chart  
-- **Width / Height** → Chart dimensions in px  
+- **Width / Height** → Chart dimensions in px
+- **Chart datapoints** → Chart length in datapoints  
 - **Signals Section** → List of available signals:
   - Checkbox to include signal
   - Color picker
@@ -279,7 +280,7 @@ This example keeps all settings from `Plantower PMSA003` but adds a humidity val
 ## 📚 See Also
 
 - Default sensors: [`sensors.json`](https://raw.githubusercontent.com/WeSpeakEnglish/polluSensWeb/main/sensors.json)
-- Project homepage: [pollutants.eu](https://pollutants.eu)
+- Project homepage: [pollutants.eu/sensor](https://pollutants.eu/sensor)
 
 ---
 
