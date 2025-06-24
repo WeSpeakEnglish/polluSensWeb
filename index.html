@@ -433,6 +433,7 @@
 			
 			document.getElementById('createChart').onclick = () => {
 				const name = document.getElementById('chartName').value || "Chart";
+				const maxDatapoints = parseInt(document.getElementById('maxDatapoints').value || 600);
 				const width = parseInt(document.getElementById('chartWidth').value);
 				const height = parseInt(document.getElementById('chartHeight').value);
 				const rows = document.querySelectorAll('.signalRow');
@@ -454,10 +455,10 @@
 					return;
 				}
 				
-				createChart(name, [width, height], datasets);
+				createChart(name, [width, height], datasets, maxDatapoints);
 			};
 			
-			function createChart(name, size, datasets) {
+			function createChart(name, size, datasets, maxDatapoints) {
 				const chartId = crypto.randomUUID();
 				const wrapper = document.createElement('div');
 				wrapper.className = 'chart-wrapper';
@@ -466,7 +467,7 @@
 				
 				const header = document.createElement('div');
 				header.className = 'chart-header';
-				header.innerHTML = `<h4>${name}</h4><button class="delete-button">×</button>`;
+				header.innerHTML = `<h4>${name} <span style="font-size: 0.8em; color: #966;">(max. ${maxDatapoints} datapoints)</span></h4><button class="delete-button">×</button>`;
 				header.querySelector('button').onclick = () => {
 					wrapper.remove();
 					chartSettings[chartId]?.chart?.destroy();
@@ -517,23 +518,22 @@
 					}
 				});
 				
-				chartSettings[chartId] = { chart, datasets };
+				chartSettings[chartId] = { chart, datasets, maxDatapoints };
 			}
 			
 			function updateCharts(parsedData) {
 				const now = new Date();
-				const maxPoints = parseInt(document.getElementById('maxDatapoints')?.value || 600);
 				
 				collectedData.push({ timestamp: now.toISOString(), ...parsedData });
 				
-				for (const { chart, datasets } of Object.values(chartSettings)) {
+				for (const { chart, datasets, maxDatapoints } of Object.values(chartSettings)) {
 					datasets.forEach(([_, field], i) => {
 						const value = parsedData[field];
 						if (value !== undefined) {
 							chart.data.datasets[i].data.push({ x: now, y: value });
 							const dataArr = chart.data.datasets[i].data;
-							if (dataArr.length > maxPoints) {
-								chart.data.datasets[i].data = dataArr.slice(dataArr.length - maxPoints);
+							if (dataArr.length > maxDatapoints) {
+								chart.data.datasets[i].data = dataArr.slice(dataArr.length - maxDatapoints);
 							}
 						}
 					});
