@@ -196,15 +196,15 @@ Each sensor object describes how to read and interpret data from a UART-connecte
 
 ## 🔧 Field Value Examples
 
-| Field       | Example(s)                                        | Notes |
-|-------------|----------------------------------------------------|-------|
-| `command`   | `"AA 01 00 FF"`, `"none"`                         | Space-separated hex string or `"none"` to disable |
-| `startByte` | `[66, 77]`, `["0x42", "0x4D"]`, `170`, `"0xAA"`, `"none"` | Single or multiple bytes; use decimal or string-encoded hex |
-| `endByte`   | `[13, 10]`, `10`, `"none"`                        | Optional terminator byte(s); same format as `startByte` |
-| `parity`    | `"none"`, `"even"`, `"odd"`                       | Matches Web Serial API |
-| `baudRate`  | `9600`, `19200`, `115200`                         | Integer baud rate |
-| `dataBits`  | `7`, `8`                                          | Usually `8` |
-| `stopBits`  | `1`, `2`                                          | Usually `1` |
+| Field       | Example(s)                                              | Notes |
+|-------------|----------------------------------------------------------|-------|
+| `command`   | `"AA 01 00 FF"`, `"none"`                               | Space-separated hex string, or `"none"` to skip sending |
+| `startByte` | `[66, 77]`, `["0x42", "0x4D"]`, `170`, `"0xAA"`, `"none"` | Single or multiple bytes; decimal or string-encoded hex |
+| `endByte`   | `[13, 10]`, `10`, `"0x0A"`, `[0x0D, 0x0A]`, `"none"`     | Optional single or multi-byte terminator; any format accepted by `startByte` |
+| `parity`    | `"none"`, `"even"`, `"odd"`                             | Must match Web Serial API |
+| `baudRate`  | `9600`, `19200`, `115200`                               | Integer |
+| `dataBits`  | `7`, `8`                                                | Typically `8` |
+| `stopBits`  | `1`, `2`                                                | Typically `1` |
 
 ---
 
