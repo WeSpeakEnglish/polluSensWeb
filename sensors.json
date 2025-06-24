@@ -193,6 +193,35 @@
 				"eval": "data.slice(0, 22).reduce((a, b) => (a + b) & 0xFFFF, 0)",
 				"compare": "(data[22] << 8) + data[23]"
 			}
+		},
+		{
+			"name": "Nova PM SDS011",
+			"command": "none",
+			"port": {
+				"baudRate": 9600,
+				"dataBits": 8,
+				"stopBits": 1,
+				"parity": "none"
+			},
+			"frame": {
+				"length": 10,
+				"startByte": ["0xAA", "0xC0"],
+				"endByte": "0xAB"
+			},
+			"data": {
+				"PM2.5": {
+					"value": "((data[3] << 8) + data[2])/10",
+					"unit": "μg/m³"
+				},
+				"PM10": {
+					"value": "((data[5] << 8) + data[4])/10",
+					"unit": "μg/m³"
+				}
+			},
+			"checksum": {
+				"eval": "data.slice(2, 8).reduce((a, b) => (a + b) & 0xFF, 0)",
+				"compare": "data[8]"
+			}
 		}
 	]	
 }
