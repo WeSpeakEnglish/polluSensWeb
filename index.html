@@ -467,7 +467,7 @@
 				
 				const header = document.createElement('div');
 				header.className = 'chart-header';
-				header.innerHTML = `<h4>${name} <span style="font-size: 0.8em; color: #966;">(max. ${maxDatapoints} datapoints)</span></h4><button class="delete-button">×</button>`;
+				header.innerHTML = `<h4>${name} <span style="font-size: 0.7em; color: #966;">(${maxDatapoints} datapoints)</span></h4><button class="delete-button">×</button>`;
 				header.querySelector('button').onclick = () => {
 					wrapper.remove();
 					chartSettings[chartId]?.chart?.destroy();
