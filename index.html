@@ -387,6 +387,14 @@
 				container.innerHTML = '';
 				if (!config || !config.data) return;
 				
+				const colors = [
+				"#aa0000", "#00aa00", "#0000aa", "#aaaa00",
+				"#00aaaa", "#aa00aa", "#aa5500", "#0055aa",
+				"#55aa00", "#5500aa", "#aa0055", "#55aaaa"
+				];
+				
+				let colorIndex = 0;
+				
 				Object.entries(config.data).forEach(([key, meta]) => {
 					const row = document.createElement('div');
 					row.className = 'signalRow';
@@ -404,7 +412,8 @@
 					const color = document.createElement('input');
 					color.type = 'color';
 					color.className = 'dsColor';
-					color.value = '#00aa00';
+					color.value = colors[colorIndex % colors.length];
+					colorIndex++;
 					
 					const tension_label = document.createElement('label');
 					tension_label.textContent = "tension:";
@@ -430,6 +439,7 @@
 					container.appendChild(row);
 				});
 			}
+			
 			
 			document.getElementById('createChart').onclick = () => {
 				const name = document.getElementById('chartName').value || "Chart";
