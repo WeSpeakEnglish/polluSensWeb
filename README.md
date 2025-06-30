@@ -11,28 +11,28 @@ Try it out yourself: [here](https://wespeakenglish.github.io/polluSensWeb/)
 
 ## Features
 
-✅ Live serial data acquisition  
-✅ Frame parsing with startByte / endByte / checksum  
-✅ Dynamic charts with customizable signal style (color, thickness, tension)  
-✅ Multiple simultaneous charts  
-✅ Full CSV export (timestamp + all signals)  
-✅ Clearable log with raw serial packets and checksum result  
-✅ Configurable via external JSON file  
-✅ Works offline after load  
-✅ Minimal dependencies  
-✅ No external servers required  
+Live serial data acquisition  
+Frame parsing with startByte / endByte / checksum  
+Dynamic charts with customizable signal style (color, thickness, tension)  
+Multiple simultaneous charts  
+Full CSV export (timestamp + all signals)  
+Clearable log with raw serial packets and checksum result  
+Configurable via external JSON file  
+Works offline after load  
+Minimal dependencies  
+No external servers required  
 
 ---
 
 ## Supported Browsers
 
-✅ Chrome ≥ 89  
-✅ Edge ≥ 89  
-✅ Brave ≥ 1.24  
-✅ **Opera ≥ 75**  
-✅ Other Chromium-based browsers with Web Serial API
+Chrome ≥ 89  
+Edge ≥ 89  
+Brave ≥ 1.24  
+**Opera ≥ 75**  
+Other Chromium-based browsers with Web Serial API
 
-⚠️ *Web Serial API is not supported in Firefox / Safari.*
+*Web Serial API is not supported in Firefox / Safari.*
 
 ---
 
@@ -60,18 +60,18 @@ Each sensor config defines:
 
 ### Serial Communication Flow
 
-1️⃣ User clicks **Connect** → serial port opened  
-2️⃣ Initial command is sent (if configured)  
-3️⃣ Incoming bytes are buffered  
-4️⃣ Frames are detected (startByte + endByte + length)  
-5️⃣ Checksum is validated  
-6️⃣ If valid:  
+1. User clicks **Connect** → serial port opened  
+2. Initial command is sent (if configured)  
+3. Incoming bytes are buffered  
+4.  Frames are detected (startByte + endByte + length)  
+5. Checksum is validated  
+6. If valid:  
 - Signals parsed  
 - `updateCharts(parsedData)` called  
 - Data appended to in-memory `collectedData`  
 - Raw packet logged
   
-7️⃣ If invalid → error logged
+7. If invalid → error logged
 
 ---
 
@@ -80,9 +80,9 @@ Each sensor config defines:
 ### Header Bar
 
 - **Sensor Selector** → Choose sensor config from `sensors.json`
-- **🔌 Connect / Disconnect** → Open or close serial connection
-- **🧹 Clear Log** → Clear log area
-- **💾 Save CSV** → Export full collected data since connection
+- **Connect / Disconnect** → Open or close serial connection
+- **Clear Log** → Clear log area
+- **Save CSV** → Export full collected data since connection
 
 ---
 
@@ -98,7 +98,7 @@ Each sensor config defines:
   - Color picker
   - Tension (line smoothness)
   - Thickness (line width)  
-- **📈 Create Chart** → Create chart with selected signals
+- **Create Chart** → Create chart with selected signals
 
 ---
 
@@ -125,7 +125,7 @@ Each sensor config defines:
 
 ## CSV Export
 
-When user clicks **💾 Save CSV**:
+When user clicks **Save CSV**:
 
 - The `collectedData` array (one object per frame) is exported to CSV:
   - First column: `timestamp` (ISO 8601)
@@ -140,19 +140,19 @@ polluSens_data_<timestamp>.csv
 
 ## Flow Summary
 
-1️⃣ Load polluSensWeb → sensors loaded from `sensors.json`  
-2️⃣ User selects sensor → signals list updates  
-3️⃣ User clicks **Connect** → serial connection opened, command sent  
-4️⃣ Incoming data is parsed, validated, displayed on charts, and logged  
-5️⃣ User can:  
+1. Load polluSensWeb → sensors loaded from `sensors.json`  
+2. User selects sensor → signals list updates  
+3. User clicks **Connect** → serial connection opened, command sent  
+4. Incoming data is parsed, validated, displayed on charts, and logged  
+5. User can:  
 - Create / remove charts  
 - Export full CSV at any time  
 - Clear log as needed
   
-6️⃣ User can disconnect anytime
+6. User can disconnect anytime
 
 ---
-## 📁 Upload Your Own Configuration
+## Upload Your Own Configuration
 
 You can upload a custom JSON configuration using the **"Custom JSON Sensor Configuration"** input in the interface.
 
@@ -162,7 +162,7 @@ You can upload a custom JSON configuration using the **"Custom JSON Sensor Confi
 
 ---
 
-## 🧾 JSON Schema Overview
+## JSON Schema Overview
 
 Top-level structure:
 
@@ -179,18 +179,18 @@ Each sensor object describes how to read and interpret data from a UART-connecte
 
 ---
 
-## 🧩 Sensor Object Fields
+##  Sensor Object Fields
 
 | Field             | Required | Type      | Description |
 |------------------|----------|-----------|-------------|
-| `name`           | ✅       | string    | Unique sensor name (shown in dropdown) |
+| `name`           | yes       | string    | Unique sensor name (shown in dropdown) |
 | `inherits_from`  | ➖       | string    | Name of another sensor to inherit from |
 | `command`        | ➖       | string    | Hex string to send on connect (e.g. `"AA 01 00 FF"`) or `"none"` |
 | `send_cmd_period`| ➖       | number    | If > 0, send `command` every N seconds |
-| `port`           | ✅       | object    | UART settings |
-| `frame`          | ✅       | object    | Frame length and optional start/end bytes |
-| `checksum`       | ✅       | object    | JavaScript expressions to validate data |
-| `data`           | ✅       | object    | Signal names, extraction formulas, and units |
+| `port`           | yes       | object    | UART settings |
+| `frame`          | yes       | object    | Frame length and optional start/end bytes |
+| `checksum`       | yes       | object    | JavaScript expressions to validate data |
+| `data`           | yes       | object    | Signal names, extraction formulas, and units |
 
 ---
 
@@ -208,7 +208,7 @@ Each sensor object describes how to read and interpret data from a UART-connecte
 
 ---
 
-## ✅ Sensor Example (full JSON example, may be used like custom template)
+## Sensor Example (full JSON example, may be used like custom template)
 
 ```json
 {
@@ -248,7 +248,7 @@ Each sensor object describes how to read and interpret data from a UART-connecte
 
 ---
 
-## 🔁 Inheritance with `inherits_from`
+## Inheritance with `inherits_from`
 
 You can reuse and override parts of existing sensors:
 
@@ -269,7 +269,7 @@ This example keeps all settings from `Plantower PMSA003` but adds a humidity val
 
 ---
 
-## 🧪 Tips & Troubleshooting
+## Tips & Troubleshooting
 
 - All `value`, `eval`, and `compare` fields are evaluated using JavaScript `eval()`.
 - You can use decimal values (`66`) or hex strings (`"0x42"`) — **no raw hex like `0x42`**.
@@ -277,14 +277,14 @@ This example keeps all settings from `Plantower PMSA003` but adds a humidity val
 
 ---
 
-## 📚 See Also
+## See Also
 
 - Default sensors: [`sensors.json`](https://raw.githubusercontent.com/WeSpeakEnglish/polluSensWeb/main/sensors.json)
 - Project homepage: [pollutants.eu/sensor](https://pollutants.eu/sensor)
 
 ---
 
-## 🤝 Contribute
+## Contribute
 
 If you've created and sucessfully tested a sensor config (you may test it by uploading custom JSON via web interface), feel free to submit it in pull request adding to sensor list JSON.
 
