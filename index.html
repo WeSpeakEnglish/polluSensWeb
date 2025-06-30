@@ -257,7 +257,19 @@
 		</div>
 		
 		<div id="charts"></div>
-		<pre id="log"></pre>
+		
+<div style="margin-bottom: 8px;">
+	<label>Display last 
+		<input type="number" id="maxLogPackets" value="1000" min="1" style="width: 80px;" />
+		packets
+	</label>
+	<label style="margin-left: 20px;">
+		<input type="checkbox" id="autoscrollLog" checked />
+		Autoscroll
+	</label>
+</div>
+
+<pre id="log"></pre>
 		
 		<script>
 			let port = null, reader = null, writer = null, reading = false;
@@ -267,6 +279,22 @@
 			let defaultSensorNames = [];
 			let defaultSensors = [];
 			const log = document.getElementById('log');
+
+function logMessage(msg, linesPerPacket = 1) {
+    const maxPackets = parseInt(document.getElementById('maxLogPackets')?.value) || 1000;
+    const autoscroll = document.getElementById('autoscrollLog')?.checked ?? true;
+
+    const logLines = log.textContent.trim().split('\n');
+    msg.trim().split('\n').forEach(line => logLines.push(line));
+
+    while (logLines.length > maxPackets * linesPerPacket) {
+        logLines.shift();
+    }
+
+    log.textContent = logLines.join('\n') + '\n';
+    if (autoscroll) log.scrollTop = log.scrollHeight;
+}
+
 			const MAX_SECONDS = 600;
 			// Handle inheritance
 			const nameToSensor = {};
@@ -317,7 +345,7 @@
 						sourceLabel = " (default)";
 					}
 					} catch (err) {
-					log.textContent += `❌ Failed to load configuration: ${err.message}\n`;
+					logMessage(`❌ Failed to load configuration: ${err.message}`, 1);
 					return;
 				}
 				
@@ -378,7 +406,7 @@
 				};
 				selector.dispatchEvent(new Event('change'));
 				
-				log.textContent += `✅ Sensor list loaded${sourceLabel} (${sensors.length} sensors)\n`;
+				logMessage(`✅ Sensor list loaded${sourceLabel} (${sensors.length} sensors)`, 1);
 			}
 			
 			
@@ -565,7 +593,7 @@
 						writer = port.writable.getWriter();
 						await writer.write(data);
 						writer.releaseLock();
-						log.textContent += `➡️ Sent command: [${bytes.map(b => b.toString(16).padStart(2, '0')).join(' ')}]\n`;
+						logMessage(`➡️ Sent command: [${bytes.map(b => b.toString(16).padStart(2, '0')).join(' ')}]`, 1);
 						} catch (e) {
 						log.textContent += `❌ Error sending command: ${e.message}\n`;
 					}
@@ -637,9 +665,10 @@
 									}
 									updateCharts(parsed);
 									const hexPacket = data.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
-									log.textContent += `📦 [${hexPacket}]\nChecksum: ✅\n`;
+									logMessage(`📦 [${hexPacket}]
+Checksum: ✅`, 2);
 									} else {
-									log.textContent += `❌ Bad checksum\n`;
+									logMessage(`❌ Bad checksum`, 1);
 								}
 								} else {
 								buffer.shift();
@@ -647,7 +676,7 @@
 						}
 					}
 					} catch (err) {
-					log.textContent += `⚠️ ${err.message}\n`;
+					logMessage(`⚠️ ${err.message}`, 1);
 					
 					// Stop sending commands
 					if (commandInterval) {
@@ -750,10 +779,11 @@
 					
 					await loadConfigAndPopulateSelector(json, file.name);
 					} catch (err) {
-					log.textContent += `❌ Failed to load custom config: ${err.message}\n`;
+					logMessage(`❌ Failed to load custom config: ${err.message}`, 1);
 				}
 			});
 		</script>
 	</body>
 </html>
+
 
