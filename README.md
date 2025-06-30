@@ -7,8 +7,6 @@ Try it out yourself: [here](https://wespeakenglish.github.io/polluSensWeb/)
 <img src="https://raw.githubusercontent.com/WeSpeakEnglish/images/main/pollusensweb_one.png" alt="polluSensWeb" align="center">
 
 
----
-
 ## Features
 
 Live serial data acquisition  
@@ -22,8 +20,6 @@ Works offline after load
 Minimal dependencies  
 No external servers required  
 
----
-
 ## Supported Browsers
 
 Chrome ≥ 89  
@@ -33,8 +29,6 @@ Brave ≥ 1.24
 Other Chromium-based browsers with Web Serial API
 
 *Web Serial API is not supported in Firefox / Safari.*
-
----
 
 ## How It Works
 
@@ -56,8 +50,6 @@ Each sensor config defines:
 - `send_cmd_period`: send once or periodically
 - Parsing expressions for each signal field
 
----
-
 ### Serial Communication Flow
 
 1. User clicks **Connect** → serial port opened  
@@ -73,8 +65,6 @@ Each sensor config defines:
   
 7. If invalid → error logged
 
----
-
 ## User Interface
 
 ### Header Bar
@@ -83,8 +73,6 @@ Each sensor config defines:
 - **Connect / Disconnect** → Open or close serial connection
 - **Clear Log** → Clear log area
 - **Save CSV** → Export full collected data since connection
-
----
 
 ### Chart Controls
 
@@ -100,8 +88,6 @@ Each sensor config defines:
   - Thickness (line width)  
 - **Create Chart** → Create chart with selected signals
 
----
-
 ### Charts Area
 
 - Multiple charts can be created dynamically.
@@ -113,15 +99,11 @@ Each sensor config defines:
   - Chart title
   - **❌** Cross button → removes chart
 
----
-
 ### Log Area
 
 - Displays raw packets in hex.
 - Shows checksum result (✅ pass / ❌ fail).
 - User can clear log manually.
-
----
 
 ## CSV Export
 
@@ -136,8 +118,6 @@ polluSens_data_<timestamp>.csv
 
 - CSV contains **all data collected since connection started**.
 
----
-
 ## Flow Summary
 
 1. Load polluSensWeb → sensors loaded from `sensors.json`  
@@ -151,7 +131,6 @@ polluSens_data_<timestamp>.csv
   
 6. User can disconnect anytime
 
----
 ## Upload Your Own Configuration
 
 You can upload a custom JSON configuration using the **"Custom JSON Sensor Configuration"** input in the interface.
@@ -159,8 +138,6 @@ You can upload a custom JSON configuration using the **"Custom JSON Sensor Confi
 - <strike> Uploaded sensors appear **at the top** of the list</strike>
 - <strike> They can **override default sensors** (by name) </strike>
 - Custom entries are marked with 🆕 and highlighted
-
----
 
 ## JSON Schema Overview
 
@@ -192,7 +169,6 @@ Each sensor object describes how to read and interpret data from a UART-connecte
 | `checksum`       | yes       | object    | JavaScript expressions to validate data |
 | `data`           | yes       | object    | Signal names, extraction formulas, and units |
 
----
 
 ## 🔧 Field Value Examples
 
@@ -205,8 +181,6 @@ Each sensor object describes how to read and interpret data from a UART-connecte
 | `baudRate`  | `9600`, `19200`, `115200`                               | Integer |
 | `dataBits`  | `7`, `8`                                                | Typically `8` |
 | `stopBits`  | `1`, `2`                                                | Typically `1` |
-
----
 
 ## Sensor Example (full JSON example, may be used like custom template)
 
@@ -246,8 +220,6 @@ Each sensor object describes how to read and interpret data from a UART-connecte
 }
 ```
 
----
-
 ## Inheritance with `inherits_from`
 
 You can reuse and override parts of existing sensors:
@@ -267,28 +239,21 @@ You can reuse and override parts of existing sensors:
 
 This example keeps all settings from `Plantower PMSA003` but adds a humidity value.
 
----
-
 ## Tips & Troubleshooting
 
 - All `value`, `eval`, and `compare` fields are evaluated using JavaScript `eval()`.
 - You can use decimal values (`66`) or hex strings (`"0x42"`) — **no raw hex like `0x42`**.
 - If your JSON fails to load, check the browser log or validate at [https://jsonlint.com](https://jsonlint.com).
 
----
-
 ## See Also
 
 - Default sensors: [`sensors.json`](https://raw.githubusercontent.com/WeSpeakEnglish/polluSensWeb/main/sensors.json)
 - Project homepage: [pollutants.eu/sensor](https://pollutants.eu/sensor)
 
----
-
 ## Contribute
 
 If you've created and sucessfully tested a sensor config (you may test it by uploading custom JSON via web interface), feel free to submit it in pull request adding to sensor list JSON.
 
----
 ## License
 
 MIT License
