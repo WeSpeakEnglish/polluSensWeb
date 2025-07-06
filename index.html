@@ -280,20 +280,20 @@
 			let defaultSensors = [];
 			const log = document.getElementById('log');
 
-function logMessage(msg, linesPerPacket = 1) {
-    const maxPackets = parseInt(document.getElementById('maxLogPackets')?.value) || 1000;
-    const autoscroll = document.getElementById('autoscrollLog')?.checked ?? true;
+			function logMessage(msg, linesPerPacket = 1) {
+				const maxPackets = parseInt(document.getElementById('maxLogPackets')?.value) || 1000;
+				const autoscroll = document.getElementById('autoscrollLog')?.checked ?? true;
 
-    const logLines = log.textContent.trim().split('\n');
-    msg.trim().split('\n').forEach(line => logLines.push(line));
+				const logLines = log.textContent.trim().split('\n');
+				msg.trim().split('\n').forEach(line => logLines.push(line));
 
-    while (logLines.length > maxPackets * linesPerPacket) {
-        logLines.shift();
-    }
+				while (logLines.length > maxPackets * linesPerPacket) {
+					logLines.shift();
+				}
 
-    log.textContent = logLines.join('\n') + '\n';
-    if (autoscroll) log.scrollTop = log.scrollHeight;
-}
+				log.textContent = logLines.join('\n') + '\n';
+				if (autoscroll) log.scrollTop = log.scrollHeight;
+			}
 
 			const MAX_SECONDS = 600;
 			// Handle inheritance
@@ -322,6 +322,8 @@ function logMessage(msg, linesPerPacket = 1) {
 				
 				return {
 					name: sensor.name,
+					start_command: sensor.start_command ?? resolvedBase.start_command,
+					stop_command: sensor.stop_command ?? resolvedBase.stop_command,
 					command: sensor.command ?? resolvedBase.command,
 					send_cmd_period: sensor.send_cmd_period ?? resolvedBase.send_cmd_period,
 					port: { ...resolvedBase.port, ...(sensor.port || {}) },
@@ -578,26 +580,30 @@ function logMessage(msg, linesPerPacket = 1) {
 					chart.update('none');
 				}
 			}
+
+			async function sendCommand(commandString) {
+				if (!port || !commandString || commandString.toLowerCase() === "none") {
+					return;
+				}
+				try {
+					const bytes = commandString.split(/\s+/).map(hex => parseInt(hex, 16));
+					const data = new Uint8Array(bytes);
+					const localWriter = port.writable.getWriter();
+					await localWriter.write(data);
+					localWriter.releaseLock();
+					logMessage(`➡️ Sent: [${bytes.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ')}]`);
+				} catch (e) {
+					logMessage(`❌ Error sending command: ${e.message}`);
+				}
+			}
 			
 			async function sendCommandIfNeeded() {
 				const command = config.command;
 				const period = config.send_cmd_period;
 				
 				if (!command || command.toLowerCase() === "none") return;
-				
-				const bytes = command.split(/\s+/).map(hex => parseInt(hex, 16));
-				const data = new Uint8Array(bytes);
-				
-				const sendOnce = async () => {
-					try {
-						writer = port.writable.getWriter();
-						await writer.write(data);
-						writer.releaseLock();
-						logMessage(`➡️ Sent command: [${bytes.map(b => b.toString(16).padStart(2, '0')).join(' ')}]`, 1);
-						} catch (e) {
-						log.textContent += `❌ Error sending command: ${e.message}\n`;
-					}
-				};
+
+				const sendOnce = async () => await sendCommand(command);
 				
 				await sendOnce();
 				
@@ -620,10 +626,37 @@ function logMessage(msg, linesPerPacket = 1) {
 				}
 				return parseByteValue(field);
 			}			
+			
+			function unstuffBytes(data, stuffingTable) {
+				if (!stuffingTable || stuffingTable.length === 0) {
+					return data.slice();
+				}
+				const escapeByte = parseInt(stuffingTable[0][0].split(' ')[0], 16);
+				const stuffedMap = {};
+				stuffingTable.forEach(([from, to]) => {
+					const [a, b] = from.split(' ').map(x => parseInt(x, 16));
+					stuffedMap[`${a},${b}`] = parseInt(to, 16);
+				});
+				const result = [];
+				for (let i = 0; i < data.length; i++) {
+					if (data[i] === escapeByte && i + 1 < data.length) {
+						const key = `${data[i]},${data[i + 1]}`;
+						if (key in stuffedMap) {
+							result.push(stuffedMap[key]);
+							i++; // skip stuffed byte
+							continue;
+						}
+					}
+					result.push(data[i]);
+				}
+				return result;
+			}
+			
 			async function readLoop() {
 				const { frame, checksum, data: dataFields } = config;
 				const useStart = frame.startByte !== "none";
 				const useEnd = frame.endByte !== "none";
+				const useStuffing = Array.isArray(frame.stuffing) && frame.stuffing.length > 0;
 				const frameLength = frame.length;
 				const startByte = parseByteField(frame.startByte);
 				const endByte = parseByteField(frame.endByte);
@@ -633,29 +666,62 @@ function logMessage(msg, linesPerPacket = 1) {
 				try {
 					while (reading) {
 						const { value, done } = await reader.read();
-						if (done) {
-							break;
-						}
+						if (done) break;
 						
 						buffer.push(...value);
 						
-						while (buffer.length >= frameLength) {
-							const slice = buffer.slice(0, frameLength);
+						let continueProcessing = true;
+						while (continueProcessing) {
+							continueProcessing = false;
+							let data = null;
 							
-							const matchesStart = Array.isArray(startByte)
-							? startByte.every((v, i) => slice[i] === v)
-							: !useStart || slice[0] === startByte;
-							
-							const matchesEnd = !useEnd || (
-							Array.isArray(endByte)
-							? endByte.every((v, i) => slice[frameLength - endByte.length + i] === v)
-							: slice[frameLength - 1] === endByte
-							);
-							
-							if (matchesStart && matchesEnd) {
-								const data = slice;
-								buffer = buffer.slice(frameLength);
+							if (useStuffing) {
+								const startIndex = Array.isArray(startByte) ? -1 : buffer.indexOf(startByte);
+								if (startIndex === -1) break; 
 								
+								if (startIndex > 0) {
+									buffer.splice(0, startIndex);
+								}
+								
+								const endIndex = Array.isArray(endByte) ? -1 : buffer.indexOf(endByte, 1);
+								if (endIndex === -1) break;
+								
+								const rawFrame = buffer.splice(0, endIndex + 1);
+								const unstuffed = unstuffBytes(rawFrame, frame.stuffing);
+								
+								if (unstuffed.length !== frameLength) {
+									logMessage(`❌ Malformed frame. Expected unstuffed length ${frameLength}, got ${unstuffed.length}`);
+									continueProcessing = true;
+									continue;
+								}
+								data = unstuffed;
+								
+								} else { // Original logic for fixed-length frames
+								if (buffer.length < frameLength) break;
+								
+								const potentialFrame = buffer.slice(0, frameLength);
+								
+								const matchesStart = Array.isArray(startByte)
+								? startByte.every((v, i) => potentialFrame[i] === v)
+								: !useStart || potentialFrame[0] === startByte;
+								
+								const matchesEnd = !useEnd || (
+								Array.isArray(endByte)
+								? endByte.every((v, i) => potentialFrame[frameLength - endByte.length + i] === v)
+								: potentialFrame[frameLength - 1] === endByte
+								);
+								
+								if (matchesStart && matchesEnd) {
+									data = potentialFrame;
+									buffer.splice(0, frameLength);
+									} else {
+									buffer.shift();
+									continueProcessing = true;
+									continue;
+								}
+							}
+							
+							if (data) {
 								const valid = eval(checksum.eval) === eval(checksum.compare);
 								if (valid) {
 									const parsed = {};
@@ -664,28 +730,24 @@ function logMessage(msg, linesPerPacket = 1) {
 										parsed[name] = eval(expr);
 									}
 									updateCharts(parsed);
-									const hexPacket = data.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
-									logMessage(`📦 [${hexPacket}]
-Checksum: ✅`, 2);
+									const hexPacket = Array.from(data).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+									logMessage(`📦 [${hexPacket}]\nChecksum: ✅`, 2);
 									} else {
-									logMessage(`❌ Bad checksum`, 1);
+									logMessage(`❌ Bad checksum`);
 								}
-								} else {
-								buffer.shift();
+								continueProcessing = true;
 							}
 						}
 					}
 					} catch (err) {
-					logMessage(`⚠️ ${err.message}`, 1);
+					logMessage(`⚠️ ${err.message}`);
 					
-					// Stop sending commands
 					if (commandInterval) {
 						clearInterval(commandInterval);
 						commandInterval = null;
-						log.textContent += '🛑 Stopped sending commands.\n';
+						logMessage('🛑 Stopped sending commands.');
 					}
 					
-					// Also release reader safely
 					try {
 						await reader?.cancel();
 						reader?.releaseLock();
@@ -694,9 +756,9 @@ Checksum: ✅`, 2);
 					}
 				}
 				
-				// Final cleanup
 				reading = false;
 			}
+			
 			
 			document.getElementById('connect').onclick = async () => {
 				const connectBtn = document.getElementById('connect');
@@ -705,18 +767,21 @@ Checksum: ✅`, 2);
 				
 				if (port) {
 					reading = false;
-					try { await reader?.cancel(); reader?.releaseLock(); } catch (e) {}
-					await port.close();
-					port = null;
-					reader = null;
-					connectBtn.textContent = '🔌 Connect';
-					log.textContent += '🔌 Port closed\n';
 					
 					if (commandInterval) {
 						clearInterval(commandInterval);
 						commandInterval = null;
 					}
 					
+					await sendCommand(config.stop_command);
+
+					try { await reader?.cancel(); reader?.releaseLock(); } catch (e) {}
+					try { await port.close(); } catch(e) {}
+					
+					port = null;
+					reader = null;
+					connectBtn.textContent = '🔌 Connect';
+					logMessage('🔌 Port closed');
 					return;
 				}
 				
@@ -725,13 +790,16 @@ Checksum: ✅`, 2);
 					await port.open(config.port);
 					reader = port.readable.getReader();
 					connectBtn.textContent = '❌ Disconnect';
-					log.textContent += '✅ Port opened\n';
+					logMessage('✅ Port opened');
 					
+					await sendCommand(config.start_command);
 					await sendCommandIfNeeded();
 					await readLoop();
+
 					} catch (err) {
-					log.textContent += `❌ ${err.message}\n`;
+					logMessage(`❌ ${err.message}`);
 					connectBtn.textContent = '🔌 Connect';
+					port = null;
 				}
 			};
 			
@@ -779,7 +847,7 @@ Checksum: ✅`, 2);
 					
 					await loadConfigAndPopulateSelector(json, file.name);
 					} catch (err) {
-					logMessage(`❌ Failed to load custom config: ${err.message}`, 1);
+					logMessage(`❌ Failed to load custom config: ${err.message}`);
 				}
 			});
 		</script>
