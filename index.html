@@ -258,18 +258,18 @@
 		
 		<div id="charts"></div>
 		
-<div style="margin-bottom: 8px;">
-	<label>Display last 
-		<input type="number" id="maxLogPackets" value="1000" min="1" style="width: 80px;" />
-		packets
-	</label>
-	<label style="margin-left: 20px;">
-		<input type="checkbox" id="autoscrollLog" checked />
-		Autoscroll
-	</label>
-</div>
-
-<pre id="log"></pre>
+		<div style="margin-bottom: 8px;">
+			<label>Display last 
+				<input type="number" id="maxLogPackets" value="1000" min="1" style="width: 80px;" />
+				packets
+			</label>
+			<label style="margin-left: 20px;">
+				<input type="checkbox" id="autoscrollLog" checked />
+				Autoscroll
+			</label>
+		</div>
+		
+		<pre id="log"></pre>
 		
 		<script>
 			let port = null, reader = null, writer = null, reading = false;
@@ -279,22 +279,22 @@
 			let defaultSensorNames = [];
 			let defaultSensors = [];
 			const log = document.getElementById('log');
-
+			
 			function logMessage(msg, linesPerPacket = 1) {
 				const maxPackets = parseInt(document.getElementById('maxLogPackets')?.value) || 1000;
 				const autoscroll = document.getElementById('autoscrollLog')?.checked ?? true;
-
+				
 				const logLines = log.textContent.trim().split('\n');
 				msg.trim().split('\n').forEach(line => logLines.push(line));
-
+				
 				while (logLines.length > maxPackets * linesPerPacket) {
 					logLines.shift();
 				}
-
+				
 				log.textContent = logLines.join('\n') + '\n';
 				if (autoscroll) log.scrollTop = log.scrollHeight;
 			}
-
+			
 			const MAX_SECONDS = 600;
 			// Handle inheritance
 			const nameToSensor = {};
@@ -580,7 +580,7 @@
 					chart.update('none');
 				}
 			}
-
+			
 			async function sendCommand(commandString) {
 				if (!port || !commandString || commandString.toLowerCase() === "none") {
 					return;
@@ -592,7 +592,7 @@
 					await localWriter.write(data);
 					localWriter.releaseLock();
 					logMessage(`➡️ Sent: [${bytes.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ')}]`);
-				} catch (e) {
+					} catch (e) {
 					logMessage(`❌ Error sending command: ${e.message}`);
 				}
 			}
@@ -602,7 +602,7 @@
 				const period = config.send_cmd_period;
 				
 				if (!command || command.toLowerCase() === "none") return;
-
+				
 				const sendOnce = async () => await sendCommand(command);
 				
 				await sendOnce();
@@ -731,7 +731,10 @@
 									}
 									updateCharts(parsed);
 									const hexPacket = Array.from(data).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
-									logMessage(`📦 [${hexPacket}]\nChecksum: ✅`, 2);
+									const parsedStr = Object.entries(parsed)
+									.map(([k, v]) => `${k}: ${typeof v === 'number' ? v.toFixed(3) : v}`)
+									.join(', ');
+									logMessage(`📦 [${hexPacket}]\nChecksum: ✅\nParsed: ${parsedStr}`, 3);
 									} else {
 									logMessage(`❌ Bad checksum`);
 								}
@@ -774,7 +777,7 @@
 					}
 					
 					await sendCommand(config.stop_command);
-
+					
 					try { await reader?.cancel(); reader?.releaseLock(); } catch (e) {}
 					try { await port.close(); } catch(e) {}
 					
@@ -795,7 +798,7 @@
 					await sendCommand(config.start_command);
 					await sendCommandIfNeeded();
 					await readLoop();
-
+					
 					} catch (err) {
 					logMessage(`❌ ${err.message}`);
 					connectBtn.textContent = '🔌 Connect';
