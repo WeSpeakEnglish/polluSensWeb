@@ -223,9 +223,6 @@
 			<div>
 				<select id="sensorSelector"></select>
 				<button id="connect">🔌 Connect</button>
-				
-				<button id="clearLog" class="secondary-button">🧹 Clear Log</button>
-				<button id="saveCSV" class="secondary-button">💾 Save CSV</button>
 				<br/>
 				<label>Custom JSON Sensor Configuration: <input type="file" id="jsonUpload" accept=".json" class="secondary-button" /></label>
 			</div>
@@ -259,14 +256,19 @@
 		<div id="charts"></div>
 		
 		<div style="margin-bottom: 8px;">
+			<label> <b>Log: </b>
+			</label>
 			<label>Display last 
-				<input type="number" id="maxLogPackets" value="1000" min="1" style="width: 80px;" />
-				packets
+				<input type="number" id="maxLogPackets" value="1000" min="10" style="width: 80px;" />
+				lines
 			</label>
 			<label style="margin-left: 20px;">
 				<input type="checkbox" id="autoscrollLog" checked />
 				Autoscroll
 			</label>
+			&nbsp;&nbsp;&nbsp;
+			<button id="clearLog" class="secondary-button">🧹 Clear Log</button>
+			<button id="saveCSV" class="secondary-button">💾 Save CSV</button>
 		</div>
 		
 		<pre id="log"></pre>
