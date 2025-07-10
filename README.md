@@ -241,7 +241,7 @@ Example:
 			},
 			"checksum": {
 				"eval": "data.slice(0, 30).reduce((a, b) => (a + b) & 0xFFFF, 0)",
-				"compare": "(data[30] << 8) + data[31]"
+				"compare": "((data[30] << 8) + data[31])>>>0"
 			}
 		}
 	]
