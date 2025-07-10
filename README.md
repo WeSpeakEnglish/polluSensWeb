@@ -185,15 +185,15 @@ Each sensor object describes how to read and interpret data from a UART-connecte
 |------------------|----------|-----------|-------------|
 | `startByte`    | yes       | string | start byte or bytes, ex. `[66, 77]`, `["0x42", "0x4D"]`, `170`, `"0xAA"`, `"none" |
 | `endByte`      | yes       | string | multi-byte terminator; similar to `startByte` |
-| 'length' 	 | yes 	     | string | frame length including start and stop bytes, in bytestuffing case / after unstuffing |
-| 'stuffing'     | no        | object | contain stuffing pairs: what to find and what to place instead, ex. `["7D 5E", "0x7E"], ["7D 5D", "0x7D"]` |
+| `length` 	 | yes 	     | string | frame length including start and stop bytes, in bytestuffing case / after unstuffing |
+| `stuffing`     | no        | object | contain stuffing pairs: what to find and what to place instead, ex. `["7D 5E", "0x7E"], ["7D 5D", "0x7D"]` |
 
 ### Checksum Object Fields (checksum)
 
 | Field             | Required | Type      | Description |
 |------------------|----------|-----------|-------------|
 | `eval`    | yes       | string | valid JS expression, assuming data[i] is i-th byte in received buffer, ex. `"data.slice(1, 30).reduce((a, b) => a ^ b, 0)"` |
-| 'compare' | yes	| string | valid JS expression, assuming data[i] is i-th byte in received buffer, ex. data[30] |
+| `compare` | yes	| string | valid JS expression, assuming data[i] is i-th byte in received buffer, ex. data[30] |
 
 ### Data Object Fields (data)
 Defines how to extract and interpret sensor readings from a binary data frame
