@@ -188,11 +188,14 @@ Each sensor object describes how to read and interpret data from a UART-connecte
 | 'length' 	 | yes 	     | string | frame length including start and stop bytes, in bytestuffing case / after unstuffing |
 | 'stuffing'     | no        | object | contain stuffing pairs: what to find and what to place instead, ex. `["7D 5E", "0x7E"], ["7D 5D", "0x7D"]` |
 
-### Checksum Object Fields
+### Checksum Object Fields (checksum)
+
+| Field             | Required | Type      | Description |
+|------------------|----------|-----------|-------------|
 | `eval`    | yes       | string | valid JS expression, assuming data[i] is i-th byte in received buffer, ex. `"data.slice(1, 30).reduce((a, b) => a ^ b, 0)"` |
 | 'compare' | yes	| string | valid JS expression, assuming data[i] is i-th byte in received buffer, ex. data[30] |
 
-### Data Object Fields
+### Data Object Fields (data)
 Defines how to extract and interpret sensor readings from a binary data frame
 Example:
 ```json
@@ -205,20 +208,7 @@ Example:
 | Field             | Required | Type      | Description |
 |------------------|----------|-----------|-------------|
 | `value`    | yes       | string | valid JS expression, assuming data[i] is i-th byte in received buffer, ex.  "(data[1] << 8) + data[2]"|
-| `unit`      | yes       | string | units like, ex. `"μg/m³"`
-
-## Field Value Examples
-
-| Field       | Example(s)                                              | Notes |
-|-------------|----------------------------------------------------------|-------|
-| `command`   | `"AA 01 00 FF"`, `"none"`                               | Space-separated hex string, or `"none"` to skip sending |
-| `startByte` | `[66, 77]`, `["0x42", "0x4D"]`, `170`, `"0xAA"`, `"none"` | Single or multiple bytes; decimal or string-encoded hex |
-| `endByte`   | `[13, 10]`, `10`, `"0x0A"`, `["0x0D", "0x0A"]`, `"none"`     | Optional single or multi-byte terminator; similar to `startByte` |
-| `parity`    | `"none"`, `"even"`, `"odd"`                             | Must match Web Serial API |
-| `baudRate`  | `9600`, `19200`, `115200`                               | Integer |
-| `dataBits`  | `7`, `8`                                                | Typically `8` |
-| `stopBits`  | `1`, `2`                                                | Typically `1` |
-
+| `unit`      | yes       | string | units like, ex. `"μg/m³"` |
 
 ## Sensor Example (full JSON example, may be used like custom template)
 
