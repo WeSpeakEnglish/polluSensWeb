@@ -200,14 +200,14 @@ Defines how to extract and interpret sensor readings from a binary data frame
 Example:
 ```json
 				"Some parameter": {
-					"value": "(data[1] << 8) + data[2]",
+					"value": "((data[1] << 8) + data[2])>>>0",
 					"unit": "μg/m³"
 				},...
 ```
 
 | Field             | Required | Type      | Description |
 |------------------|----------|-----------|-------------|
-| `value`    | yes       | string | valid JS expression, assuming data[i] is i-th byte in received buffer, ex.  "(data[1] << 8) + data[2]"|
+| `value`    | yes       | string | valid JS expression, assuming data[i] is i-th byte in received buffer, ex.  "((data[1] << 8) + data[2])>>>0"|
 | `unit`      | yes       | string | units like, ex. `"μg/m³"` |
 
 ## Sensor Example (full JSON example, may be used like custom template)
@@ -231,11 +231,11 @@ Example:
 			},
 			"data": {
 				"PM2.5": {
-					"value": "(data[6] << 8) + data[7]",
+					"value": "((data[6] << 8) + data[7])>>>0",
 					"unit": "μg/m³"
 				},
 				"PM10": {
-					"value": "(data[8] << 8) + data[9]",
+					"value": "((data[8] << 8) + data[9])>>>0",
 					"unit": "μg/m³"
 				}
 			},
