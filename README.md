@@ -161,26 +161,54 @@ Each sensor object describes how to read and interpret data from a UART-connecte
 | Field             | Required | Type      | Description |
 |------------------|----------|-----------|-------------|
 | `name`           | yes       | string    | Unique sensor name (shown in dropdown) |
-| `inherits_from`  | ➖       | string    | Name of another sensor to inherit from |
-| `command`        | ➖       | string    | Hex string to send on connect (e.g. `"AA 01 00 FF"`) or `"none"` |
-| `send_cmd_period`| ➖       | number    | If > 0, send `command` every N seconds |
-| `port`           | yes       | object    | UART settings |
-| `frame`          | yes       | object    | Frame length and optional start/end bytes |
-| `checksum`       | yes       | object    | JavaScript expressions to validate data |
-| `data`           | yes       | object    | Signal names, extraction formulas, and units |
+| `inherits_from`  | no       | string    | Name of another sensor to inherit from, ex. `"Plantower PMSA003-S"` |
+| `command`        | no       | string    | Hex string to send after connect (e.g. `"7E 00 03 00 FC 7E"`) or `"none"` |
+| `start_command`  | no       | string    | Hex string to send on connect (e.g. `"7E 00 00 02 01 03 F9 7E"`) |
+| `stop_command`   | no       | string    | Hex string to send on disconnect (e.g. `"7E 00 01 00 FE 7E"`) 
+| `send_cmd_period`| no       | number    | If > 0, send `command` every N seconds, if = 0  - once |
+| `port`           | yes     | object    | fields: see below |
+| `frame`          | yes     | object    | fields: see below |
+| `data`           | yes     | object    | fields: see below |
 
+### Port Object (port)
 
-## 🔧 Field Value Examples
+| Field             | Required | Type      | Description |
+|------------------|----------|-----------|-------------|
+| `baudRate`  | yes | integer | connection speed, ex. `9600`, `19200`, `115200` |
+| `dataBits`  | yes | integer | bits in byte, typically `8` |
+| `stopBits`  | yes | integer | stop bits quantity, typically `1` |
+| `parity`    | yes | integer | parity, ex. `"none"`, `"even"`, `"odd"` |
 
-| Field       | Example(s)                                              | Notes |
-|-------------|----------------------------------------------------------|-------|
-| `command`   | `"AA 01 00 FF"`, `"none"`                               | Space-separated hex string, or `"none"` to skip sending |
-| `startByte` | `[66, 77]`, `["0x42", "0x4D"]`, `170`, `"0xAA"`, `"none"` | Single or multiple bytes; decimal or string-encoded hex |
-| `endByte`   | `[13, 10]`, `10`, `"0x0A"`, `["0x0D", "0x0A"]`, `"none"`     | Optional single or multi-byte terminator; any format accepted by `startByte` |
-| `parity`    | `"none"`, `"even"`, `"odd"`                             | Must match Web Serial API |
-| `baudRate`  | `9600`, `19200`, `115200`                               | Integer |
-| `dataBits`  | `7`, `8`                                                | Typically `8` |
-| `stopBits`  | `1`, `2`                                                | Typically `1` |
+### Frame Object Fields (frame)
+
+| Field             | Required | Type      | Description |
+|------------------|----------|-----------|-------------|
+| `startByte`    | yes       | string | start byte or bytes, ex. `[66, 77]`, `["0x42", "0x4D"]`, `170`, `"0xAA"`, `"none" |
+| `endByte`      | yes       | string | multi-byte terminator; similar to `startByte` |
+| `length` 	 | yes 	     | string | frame length including start and stop bytes, in bytestuffing case / after unstuffing |
+| `stuffing`     | no        | object | contain stuffing pairs: what to find and what to place instead, ex. `["7D 5E", "0x7E"], ["7D 5D", "0x7D"]` |
+
+### Checksum Object Fields (checksum)
+
+| Field             | Required | Type      | Description |
+|------------------|----------|-----------|-------------|
+| `eval`    | yes       | string | valid JS expression, assuming data[i] is i-th byte in received buffer, ex. `"data.slice(1, 30).reduce((a, b) => a ^ b, 0)"` |
+| `compare` | yes	| string | valid JS expression, assuming data[i] is i-th byte in received buffer, ex. data[30] |
+
+### Data Object Fields (data)
+Defines how to extract and interpret sensor readings from a binary data frame
+Example:
+```json
+				"Some parameter": {
+					"value": "((data[1] << 8) + data[2])>>>0",
+					"unit": "μg/m³"
+				},...
+```
+
+| Field             | Required | Type      | Description |
+|------------------|----------|-----------|-------------|
+| `value`    | yes       | string | valid JS expression, assuming data[i] is i-th byte in received buffer, ex.  "((data[1] << 8) + data[2])>>>0"|
+| `unit`      | yes       | string | units like, ex. `"μg/m³"` |
 
 ## Sensor Example (full JSON example, may be used like custom template)
 
@@ -203,17 +231,17 @@ Each sensor object describes how to read and interpret data from a UART-connecte
 			},
 			"data": {
 				"PM2.5": {
-					"value": "(data[6] << 8) + data[7]",
+					"value": "((data[6] << 8) + data[7])>>>0",
 					"unit": "μg/m³"
 				},
 				"PM10": {
-					"value": "(data[8] << 8) + data[9]",
+					"value": "((data[8] << 8) + data[9])>>>0",
 					"unit": "μg/m³"
 				}
 			},
 			"checksum": {
 				"eval": "data.slice(0, 30).reduce((a, b) => (a + b) & 0xFFFF, 0)",
-				"compare": "(data[30] << 8) + data[31]"
+				"compare": "((data[30] << 8) + data[31])>>>0"
 			}
 		}
 	]
