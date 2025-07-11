@@ -231,17 +231,17 @@ Example:
 			},
 			"data": {
 				"PM2.5": {
-					"value": "((data[6] << 8) + data[7])>>>0",
+					"value": "(data[6] << 8) + data[7]",
 					"unit": "μg/m³"
 				},
 				"PM10": {
-					"value": "((data[8] << 8) + data[9])>>>0",
+					"value": "(data[8] << 8) + data[9]",
 					"unit": "μg/m³"
 				}
 			},
 			"checksum": {
 				"eval": "data.slice(0, 30).reduce((a, b) => (a + b) & 0xFFFF, 0)",
-				"compare": "((data[30] << 8) + data[31])>>>0"
+				"compare": "(data[30] << 8) + data[31]"
 			}
 		}
 	]
