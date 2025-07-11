@@ -20,6 +20,24 @@ Works offline after load
 Minimal dependencies  
 No external servers required  
 
+## Supported Sensors
+The following sensors are currently supported by `polluSensWeb`:
+
+1. **Panasonic SN-GCJA5**
+2. **Honeywell HPMA115S0-XXX**
+3. **Air Master AM7 Plus**
+4. **Plantower PMSA003-S**
+5. **Plantower PS3003A** *(inherits from PMSA003-S)*
+6. **Plantower PMS1003** *(inherits from PMSA003-S)*
+7. **Plantower PMS5003** *(inherits from PMSA003-S)*
+8. **Plantower PMS7003** *(inherits from PMSA003-S)*
+9. **Plantower PMS6003** *(inherits from PMSA003-S)*
+10. **Plantower PMS9103** *(inherits from PMSA003-S)*
+11. **Plantower PMS3003** *(inherits from PMSA003-S with custom frame length)*
+12. **Nova PM SDS011**
+13. **Sensirion SPS30 UART**
+14. more coming soon...
+
 ## Supported Browsers
 
 Chrome ≥ 89  
