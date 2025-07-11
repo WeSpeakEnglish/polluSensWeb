@@ -16,15 +16,15 @@
 			},
 			"data": {
 				"PM1": {
-					"value": "data[1] + (data[2] << 8) + (data[3] << 16) + (data[4] << 24)",
+					"value": "(data[1] | (data[2] << 8) | (data[3] << 16) | (data[4] * 0x1000000)) >>> 0",
 					"unit": "μg/m³"
 				},
 				"PM2.5": {
-					"value": "data[5] + (data[6] << 8) + (data[7] << 16) + (data[8] << 24)",
+					"value": "(data[5] | (data[6] << 8) | (data[7] << 16) | (data[8] * 0x1000000)) >>> 0",
 					"unit": "μg/m³"
 				},
 				"PM10": {
-					"value": "data[9] + (data[10] << 8) + (data[11] << 16) + (data[12] << 24)",
+					"value": "(data[9] | (data[10] << 8) | (data[11] << 16) | (data[12] * 0x1000000)) >>> 0",
 					"unit": "μg/m³"
 				}
 			},
