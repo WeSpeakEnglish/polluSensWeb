@@ -1,0 +1,29 @@
+{
+  "sensors": [
+    {
+      "name": "SHUYI SY210",
+      "command": [66, 77],
+      "port": {
+        "baudRate": 9600,
+        "dataBits": 8,
+        "stopBits": 1,
+        "parity": "none"
+      },
+      "frame": {
+        "length": 5,
+        "startByte": [66, 77],
+        "endByte": "none"
+      },
+      "data": {
+        "PM2.5": {
+          "value": "(data[2] << 8) + data[3]",
+          "unit": "μg/m³"
+        }
+      },
+      "checksum": {
+        "eval": "(data[0] + data[1] + data[2] + data[3]) & 0xFF",
+        "compare": "data[4]"
+      }
+    }
+  ]
+}
