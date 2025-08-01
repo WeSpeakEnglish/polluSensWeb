@@ -224,7 +224,7 @@
 			}
 		},
 		{
-			"name": "Sensirion SPS30 UART",
+			"name": "Sensirion SPS30",
 			"start_command": "7E 00 00 02 01 03 F9 7E",
 			"stop_command": "7E 00 01 00 FE 7E",
 			"command": "7E 00 03 00 FC 7E",
