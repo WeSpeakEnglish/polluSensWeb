@@ -35,8 +35,9 @@ The following sensors are currently supported by `polluSensWeb`:
 10. **Plantower PMS9103** *(inherits from PMSA003-S)*
 11. **Plantower PMS3003** *(inherits from PMSA003-S with custom frame length)*
 12. **Nova PM SDS011**
-13. **Sensirion SPS30 UART**
-14. more coming soon...
+13. **Sensirion SPS30**
+14. **SHUYI SY210**
+15. more coming soon...
 
 ## Supported Browsers
 
