@@ -297,6 +297,40 @@
 				"eval": "(-(data[0]+data[1]+data[2]+data[3]))&0xFF",
 				"compare": "data[4]"
 			}
+		},
+		{
+			"name": "TERA NextPM",
+			"command": "81 11 6E",
+			"send_cmd_period": 1,
+			"port": {
+				"baudRate": 115200,
+				"dataBits": 8,
+				"stopBits": 1,
+				"parity": "even"
+			},
+			"frame": {
+				"length": 16,
+				"startByte": "0x81",
+				"endByte": "none"
+			},
+			"data": {
+				"PM1": {
+					"value": "((data[9] << 8) + data[10])*0.1",
+					"unit": "μg/m³"
+				},
+				"PM2.5": {
+					"value": "((data[11] << 8) + data[12])*0.1",
+					"unit": "μg/m³"
+				},
+				"PM10": {
+					"value": "((data[13] << 8) + data[14])*0.1",
+					"unit": "mg/m³"
+				}
+			},
+			"checksum": {
+				"eval": "(256 - data.slice(0, 15).reduce((a, b) => a + b, 0) % 256) % 256",
+				"compare": "data[15]"
+			}
 		}
 	]	
 }
