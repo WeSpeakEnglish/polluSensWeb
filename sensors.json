@@ -324,7 +324,7 @@
 				},
 				"PM10": {
 					"value": "((data[13] << 8) + data[14])*0.1",
-					"unit": "mg/m³"
+					"unit": "μg/m³"
 				}
 			},
 			"checksum": {
