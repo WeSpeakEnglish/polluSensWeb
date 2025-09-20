@@ -331,6 +331,32 @@
 				"eval": "(256 - data.slice(0, 15).reduce((a, b) => a + b, 0) % 256) % 256",
 				"compare": "data[15]"
 			}
+		},
+		{
+			"name": "SenseAir S8 004-0-0053",
+			"command": "FE 04 00 03 00 01 D5 C5",
+			"send_cmd_period": 2,
+			"port": {
+				"baudRate": 9600,
+				"dataBits": 8,
+				"stopBits": 1,
+				"parity": "none"
+			},
+			"frame": {
+				"length": 7,
+				"startByte": ["0xFE", "0x04"],
+				"endByte": "none"
+			},
+			"data": {
+				"CO2": {
+					"value": "(data[3] << 8) + data[4]",
+					"unit": "ppm"
+				}
+			},
+			"checksum": {
+				"eval": "data.slice(0,5).reduce((c,b)=>(c^=b,Array.from({length:8},()=>c=(c&1)?(c>>1)^0xA001:c>>1),c),0xFFFF)",
+				"compare": "(data[6]<<8)|data[5]"
+			}
 		}
 	]	
 }
