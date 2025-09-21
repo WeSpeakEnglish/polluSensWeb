@@ -335,7 +335,7 @@
 		{
 			"name": "SenseAir S8 004-0-0053",
 			"command": "FE 04 00 03 00 01 D5 C5",
-			"send_cmd_period": 2,
+			"send_cmd_period": 4,
 			"port": {
 				"baudRate": 9600,
 				"dataBits": 8,
