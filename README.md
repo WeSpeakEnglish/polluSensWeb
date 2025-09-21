@@ -38,7 +38,8 @@ The following sensors are currently supported by `polluSensWeb`:
 13. **Sensirion SPS30**
 14. **SHUYI SY210**
 15. **TERA NEXTPM** (Thanks for testing to Michael Lažan, [senzorvzduchu.cz](https://senzorvzduchu.cz/))
-16. More coming soon...
+16. **SenseAir S8**
+17. More coming soon...
 
 ## Supported Browsers
 
