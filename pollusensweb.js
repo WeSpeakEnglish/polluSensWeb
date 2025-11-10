@@ -162,9 +162,11 @@ function renderSignalRows() {
 		checkbox.className = 'signalToggle';
 		checkbox.value = key;
 		
-		const label = document.createElement('label');
 		const unit = typeof meta === 'object' && meta.unit ? ` [${meta.unit}]` : '';
+		
+		const label = document.createElement('label');
 		label.textContent = key + unit;
+		label.prepend(checkbox); // wrap checkbox inside label
 		
 		const color = document.createElement('input');
 		color.type = 'color';
@@ -192,7 +194,7 @@ function renderSignalRows() {
 		width.value = '2';
 		width.min = 1;
 		
-		row.append(checkbox, label, color, tension_label, tension, thickness_label, width);
+		row.append(label, color, tension_label, tension, thickness_label, width);
 		container.appendChild(row);
 	});
 }
