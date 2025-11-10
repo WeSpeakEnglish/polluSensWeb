@@ -1,208 +1,135 @@
 body {
-	font-family: 'Segoe UI', sans-serif;
-	background: #f9f9f9;
+	font-family: 'Segoe UI', system-ui, sans-serif;
+	background: #f4f6f8;
 	margin: 0;
-	padding: 20px;
-	color: #333;
+	padding: 24px;
+	color: #222;
 }
 
 header {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	margin-bottom: 20px;
 	flex-wrap: wrap;
-	gap: 10px;
+	gap: 12px;
+	margin-bottom: 24px;
 }
 
 header h1 {
 	margin: 0;
-	font-size: 1.5em;
+	font-size: 1.6em;
+}
+
+button, select, input, label {
+	font-size: 1em;
 }
 
 button, select {
 	padding: 8px 16px;
-	font-size: 1em;
 	border: none;
-	border-radius: 4px;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: background 0.2s, box-shadow 0.2s;
 }
 
 button {
-	background-color: #007bff;
-	color: white;
-	cursor: pointer;
+	background: #0078d4;
+	color: #fff;
 }
 
 button:hover {
-	background-color: #0056b3;
+	background: #005ea6;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .secondary-button {
-	background-color: #6c757d;
+	background: #6c757d;
 }
 
 .secondary-button:hover {
-	background-color: #545b62;
+	background: #5a6268;
 }
 
-#chartControls {
-	background: white;
+#chartControls, .chart-wrapper {
+	background: #fff;
 	border: 1px solid #ddd;
-	padding: 20px;
 	border-radius: 8px;
-	margin-bottom: 20px;
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+	padding: 20px;
+	margin-bottom: 20px;
 }
 
-#chartControls > h3 {
-	margin-bottom: 10px;
+#chartControls h3, #datasetConfigs h4, .chart-header h4 {
+	margin: 0 0 10px;
 	color: #333;
 }
 
-#chartControls .chartParams {
-	display: flex;
-	align-items: center;
-	flex-wrap: wrap;
-	gap: 15px;
-	margin-bottom: 10px;
-}
-
-#chartControls .chartParams label {
-	display: flex;
-	align-items: center;
-	gap: 5px;
-	font-size: 0.95em;
-	color: #333;
-}
-
-#chartControls .chartParams input[type="text"] {
-	flex: 1;
-	min-width: 200px;
-	padding: 1px 1px;
-	height: 25px;
-	border: 1px solid #ccc;
-	border-radius: 4px;
-	font-size: 1.1em;
-}
-
-#chartControls .chartParams input[type="number"] {
-	width: 80px;
-	padding: 1px 1px;
-	height: 25px;
-	border: 1px solid #ccc;
-	border-radius: 4px;
-	font-size: 1.1em;
-	text-align: right;
-}
-
-#chartControls input[type="color"] {
-	padding: 1px;
-	border: 1px solid #ccc;
-	border-radius: 4px;
-	font-size: 0.95em;
-	height: 25px;
-	width: 44px;
-}
-
-#datasetConfigs > h4 {
-	margin-bottom: 5px;
-	color: #444;
-	border-bottom: 1px solid #ddd;
-	padding-bottom: 3px;
-}
-
-.signalRow {
+.chartParams, .signalRow {
 	display: flex;
 	align-items: center;
 	flex-wrap: wrap;
 	gap: 10px;
-	margin-bottom: 6px;
+	margin-bottom: 8px;
+}
+
+input[type="text"], input[type="number"], input[type="color"] {
+	padding: 4px 6px;
+	border: 1px solid #ccc;
+	border-radius: 6px;
+	transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus {
+	border-color: #0078d4;
+	box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
+	outline: none;
+}
+
+input[type="number"] {
+	width: 70px;
+	text-align: right;
+}
+
+.signalRow {
 	padding: 6px 10px;
 	border-bottom: 1px solid #f0f0f0;
 }
 
-.signalRow label {
-	margin-right: 5px;
-	color: #444;
-	font-size: 0.95em;
-}
-
 .signalRow:nth-child(odd) {
-	background-color: #f7f9fc;
-}
-
-.signalRow:nth-child(even) {
-	background-color: #ffffff;
-}
-
-.signalRow input.dsTension,
-.signalRow input.dsWidth {
-	width: 60px;
-	padding: 1px 1px;
-	height: 25px;
-	border: 1px solid #ccc;
-	border-radius: 4px;
-	font-size: 0.95em;
-	text-align: right;
-}
-
-#chartControls button#createChart {
-	margin-top: 10px;
-	background-color: #007bff;
-	color: white;
-}
-
-#chartControls button#createChart:hover {
-	background-color: #0056b3;
+	background: #f9fbfd;
 }
 
 #log {
-	white-space: pre-wrap;
-	background: #f0f0f0;
+	background: #f7f7f7;
+	border: 1px solid #ccc;
+	border-radius: 6px;
 	padding: 10px;
 	height: 200px;
 	overflow-y: auto;
-	border: 1px solid #ccc;
-	border-radius: 4px;
-}
-
-.chart-wrapper {
-	background: white;
-	border-radius: 8px;
-	padding: 5px 40px 40px 40px;
-	margin-bottom: 10px;
-	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+	font-family: monospace;
+	font-size: 0.9em;
+	white-space: pre-wrap;
 }
 
 .chart-header {
-	position: relative;
-	padding: 5px 10px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
 	border-bottom: 1px solid #ddd;
-	background-color: #fafafa;
-	border-top-left-radius: 8px;
-	border-top-right-radius: 8px;
-}
-
-.chart-header h4 {
-	margin: 0;
-	font-size: 1.1em;
-	color: #333;
+	padding-bottom: 5px;
+	margin-bottom: 10px;
 }
 
 .chart-header .delete-button {
-	position: absolute;
-	top: 5px;
-	right: 5px;
-	background: transparent;
+	background: none;
 	border: none;
-	color: #800;
-	font-size: 20px;
+	color: #a00;
+	font-size: 18px;
 	cursor: pointer;
-	padding: 0 4px;
-	border-radius: 4px;
+	transition: color 0.2s;
 }
 
 .chart-header .delete-button:hover {
 	color: #dc3545;
-	background-color: #b09999;
 }
+
