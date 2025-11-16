@@ -2,6 +2,7 @@
 let port = null, reader = null, writer = null, reading = false;
 let config = null, sensors = [], chartSettings = {};
 let commandInterval = null;
+let commandTimeout = null;
 let collectedData = []; 
 let defaultSensorNames = [];
 let defaultSensors = [];
@@ -327,20 +328,30 @@ async function sendCommand(commandString) {
 }
 
 async function sendCommandIfNeeded() {
-	const command = config.command;
-	const period = config.send_cmd_period;
-	
-	if (!command || command.toLowerCase() === "none") return;
-	
-	const sendOnce = async () => await sendCommand(command);
-	
-	await sendOnce();
-	
-	if (typeof period === "number" && period > 0) {
-		if (commandInterval) clearInterval(commandInterval);
-		commandInterval = setInterval(sendOnce, period * 1000);
-	}
+    const command = config.command;
+    const period = config.send_cmd_period;
+
+    if (!command || command.toLowerCase() === "none") return;
+
+    if (commandInterval) {
+        clearInterval(commandInterval);
+        commandInterval = null;
+    }
+    if (commandTimeout) {
+        clearTimeout(commandTimeout);
+        commandTimeout = null;
+    }
+
+    commandTimeout = setTimeout(() => {
+        sendCommand(command);
+
+        commandInterval = setInterval(() => {
+            sendCommand(command);
+        }, period * 1000);
+
+    }, period * 1000);
 }
+
 function parseByteValue(v) {
 	if (typeof v === 'string' && v.startsWith('0x')) {
 		return parseInt(v, 16);

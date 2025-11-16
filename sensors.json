@@ -357,6 +357,41 @@
 				"eval": "data.slice(0,5).reduce((c,b)=>(c^=b,Array.from({length:8},()=>c=(c&1)?(c>>1)^0xA001:c>>1),c),0xFFFF)",
 				"compare": "(data[6]<<8)|data[5]"
 			}
+		},
+		{
+			"name": "Sensirion SCD30",
+			"start_command": "61 06 00 36 00 00 60 64",
+			"command": "61 03 00 28 00 06 4C 60",
+			"send_cmd_period": 2,
+			"port": {
+				"baudRate": 19200,
+				"dataBits": 8,
+				"stopBits": 1,
+				"parity": "none"
+			},
+			"frame": {
+				"length": 17,
+				"startByte": ["0x61", "0x03"],
+				"endByte": "none"
+			},
+			"data": {
+				"CO2": {
+					"value": "new DataView(new Uint8Array(data.slice(3,7)).buffer).getFloat32(0, false)",
+					"unit": "ppm"
+				},
+				"Temperature": {
+					"value": "new DataView(new Uint8Array(data.slice(7,11)).buffer).getFloat32(0, false)",
+					"unit": "°C"
+				},
+				"Humidity": {
+					"value": "new DataView(new Uint8Array(data.slice(11,15)).buffer).getFloat32(0, false)",
+					"unit": "%RH"
+				}
+			},
+			"checksum": {
+				"eval": "data.slice(0,15).reduce((c,b)=>(c^=b,Array.from({length:8},()=>c=(c&1)?(c>>1)^0xA001:c>>1),c),0xFFFF)",
+				"compare": "(data[16]<<8)|data[15]"
+			}
 		}
 	]	
 }
