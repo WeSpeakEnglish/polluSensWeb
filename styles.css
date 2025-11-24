@@ -51,12 +51,11 @@ button:hover {
 }
 
 #chartControls, .chart-wrapper {
-	background: #fff;
-	border: 1px solid #ddd;
+	background: white;
 	border-radius: 8px;
+	padding: 5px 10px 70px 20px;
+	margin-bottom: 10px;
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-	padding: 20px;
-	margin-bottom: 20px;
 }
 
 #chartControls h3, #datasetConfigs h4, .chart-header h4 {
