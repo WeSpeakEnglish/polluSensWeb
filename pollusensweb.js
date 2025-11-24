@@ -8,6 +8,10 @@ let defaultSensorNames = [];
 let defaultSensors = [];
 const log = document.getElementById('log');
 
+window.onload = () => {
+	chartWidth.value = chartControls.offsetWidth;
+};
+
 function logMessage(msg, linesPerPacket = 1) {
 	const maxPackets = parseInt(document.getElementById('maxLogPackets')?.value) || 1000;
 	const autoscroll = document.getElementById('autoscrollLog')?.checked ?? true;
@@ -330,26 +334,26 @@ async function sendCommand(commandString) {
 async function sendCommandIfNeeded() {
     const command = config.command;
     const period = config.send_cmd_period;
-
+	
     if (!command || command.toLowerCase() === "none") return;
-
+	
     if (commandInterval) {
         clearInterval(commandInterval);
         commandInterval = null;
-    }
+	}
     if (commandTimeout) {
         clearTimeout(commandTimeout);
         commandTimeout = null;
-    }
-
+	}
+	
     commandTimeout = setTimeout(() => {
         sendCommand(command);
-
+		
         commandInterval = setInterval(() => {
             sendCommand(command);
-        }, period * 1000);
-
-    }, period * 1000);
+		}, period * 1000);
+		
+	}, period * 1000);
 }
 
 function parseByteValue(v) {
