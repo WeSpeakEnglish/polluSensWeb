@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>polluSensWeb Chart</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .webhook-card { margin-top:25px; padding:15px; border:1px solid #ccc; border-radius:8px; }
+    .header-row { display:flex; gap:6px; margin-top:6px; }
+    .header-row input { flex:1; }
+    .btn-remove { background:#ffe5e5; color:#a00; border:none; padding:4px 8px; border-radius:6px; cursor:pointer; }
+    .btn-secondary { padding:6px 10px; border-radius:6px; border:none; background:#ddd; cursor:pointer; }
+    .btn-primary { padding:6px 10px; border-radius:6px; border:none; background:#4a7afe; color:white; cursor:pointer; }
+    .mode-toggle { display:flex; gap:10px; margin:10px 0; }
+    .mode-btn { flex:1; padding:8px; border:2px solid #ccc; background:white; cursor:pointer; border-radius:8px; font-weight:600; }
+    .mode-btn.active { border-color:#4a7afe; background:#e4e9ff; color:#4a7afe; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Connect your UART pollution sensor via COM port. Easy.</h1>
+    <div>
+      <select id="sensorSelector"></select>
+      <button id="connect">🔌 Connect</button>
+      <br/>
+      <label>Custom JSON Sensor Configuration: <input type="file" id="jsonUpload" accept=".json" class="secondary-button" /></label>
+    </div>
+  </header>
+
+  <div id="chartControls">
+    <h3>Create a Chart</h3>
+    <div class="chartParams">
+      <label>Chart name:<input type="text" id="chartName" value="Chart" /></label>
+      <label>Width:<input type="number" id="chartWidth" value="600" /></label>
+      <label>Height:<input type="number" id="chartHeight" value="300" /></label>
+      <label>Chart datapoints:<input type="number" id="maxDatapoints" value="600" min="2" /></label>
+    </div>
+    <div id="datasetConfigs"><h4>Signals</h4><div id="signalRows"></div></div>
+    <button id="createChart">📈 Create Chart</button>
+  </div>
+
+  <div id="charts"></div>
+
+  <div style="margin-bottom: 8px;">
+    <label><b>Log:</b></label>
+    <label>Display last <input type="number" id="maxLogPackets" value="1000" min="10" style="width:80px;" /> lines</label>
+    <label style="margin-left:20px;"><input type="checkbox" id="autoscrollLog" checked /> Autoscroll</label>
+    <button id="clearLog" class="secondary-button">🧹 Clear Log</button>
+    <button id="saveCSV" class="secondary-button">💾 Save CSV</button>
+  </div>
+
+  <pre id="log"></pre>
+
+  <!-- ──────────────────────────────────────────────── -->
+  <!-- WEBHOOK (Sensor.Community preset + Proxy + Interval) -->
+  <!-- ──────────────────────────────────────────────── -->
+
+  <div class="webhook-card">
+    <h3>Webhook (optional)</h3>
+
+    <label><input type="checkbox" id="enableWebhook"> Enable Webhook Sending</label>
+
+    <div id="webhookConfig" style="display:none; margin-top:12px;">
+
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="whModeDirect">Direct Mode</button>
+        <button class="mode-btn" id="whModeProxy">Proxy Mode</button>
+      </div>
+
+      <label>Webhook URL:
+        <input type="url" id="webhookUrl" value="https://api.sensor.community/v1/push-sensor-data/">
+      </label>
+
+      <label>Proxy URL:
+        <input type="url" id="proxyUrl" value="proxy.php?url=" />
+      </label>
+
+      <label>Sensor ID:
+        <input type="text" id="webhookSensorId" value="pollusensweb-123456">
+      </label>
+
+      <label>Method:
+        <select id="webhookMethod"><option>POST</option><option>PUT</option></select>
+      </label>
+
+      <label>Send every (seconds):
+        <input type="number" id="webhookInterval" value="0" min="0" />
+        <small>(0 = send per packet)</small>
+      </label>
+
+      <h4>Headers</h4>
+      <div id="headersContainer"></div>
+      <button id="addHeader" class="btn-secondary">+ Add header</button>
+
+      <h4>Body Template</h4>
+      <textarea id="webhookBody" rows="14" style="width:100%;">{
+  "software_version": "polluSensWeb 1.0",
+  "timestamp": "{{ts}}",
+  "sensor": "{{sensor}}",
+  "sensordatavalues": [
+    {{#fields}}
+      { "value_type": "{{key}}", "value": "{{value}}" }
+    {{/fields}}
+  ]
+}</textarea>
+
+      <label><input type="checkbox" id="webhookOnPacket" checked> Send webhook on every parsed packet</label>
+    </div>
+  </div>
+
+<script>
+// Show/hide config
+enableWebhook.onchange = () => webhookConfig.style.display = enableWebhook.checked ? "block" : "none";
+
+// Proxy mode toggle
+let useProxy = false;
+whModeDirect.onclick = () => { useProxy = false; whModeDirect.classList.add("active"); whModeProxy.classList.remove("active"); };
+whModeProxy.onclick = () => { useProxy = true; whModeProxy.classList.add("active"); whModeDirect.classList.remove("active"); };
+
+// Dynamic header rows
+function addHeaderRow(key = "", val = "") {
+  const row = document.createElement("div"); row.className = "header-row";
+  row.innerHTML = `<input class="hKey" placeholder="Key" value="${key}"><input class="hVal" placeholder="Value" value="${val}"><button class="btn-remove">X</button>`;
+  row.querySelector(".btn-remove").onclick = () => row.remove();
+  headersContainer.appendChild(row);
+}
+addHeaderRow("X-PIN", "0");
+addHeaderRow("X-Sensor", "{{id}}");
+addHeaderRow("X-Device", "{{id}}");
+addHeaderRow("Content-Type", "application/json");
+addHeader.onclick = () => addHeaderRow();
+
+// Template processors
+function applyHeaders() {
+  const id = webhookSensorId.value;
+  const headers = {};
+  document.querySelectorAll(".header-row").forEach(r => {
+    const k = r.querySelector(".hKey").value.trim();
+    const v = r.querySelector(".hVal").value.replace(/{{id}}/g, id).trim();
+    if (k) headers[k] = v;
+  });
+  return headers;
+}
+
+function applyBody(template, parsed) {
+  let out = template;
+  out = out.replace(/{{ts}}/g, new Date().toISOString());
+  out = out.replace(/{{sensor}}/g, config?.name || "sensor");
+  out = out.replace(/{{id}}/g, webhookSensorId.value);
+
+  // {{field:NAME}}
+  out = out.replace(/{{field:([^}]+)}}/g, (_, f) => parsed[f] !== undefined ? parsed[f] : "null");
+
+  // {{#fields}} ... {{/fields}}
+  out = out.replace(/{{#fields}}([\s\S]*?){{\/fields}}/g, (_, block) => {
+    return Object.entries(parsed)
+      .filter(([k,v]) => v !== null && v !== undefined && isFinite(v))
+      .map(([key,val]) => block.replace(/{{key}}/g, key).replace(/{{value}}/g, val))
+      .join(",\n");
+  });
+  return out;
+}
+
+// Interval handling
+let intervalTimer = null;
+let lastParsed = null;
+
+function sendWebhook(parsed) {
+  const url = useProxy ? proxyUrl.value + encodeURIComponent(webhookUrl.value) : webhookUrl.value;
+  const method = webhookMethod.value;
+  const headers = applyHeaders();
+  const body = applyBody(webhookBody.value, parsed);
+
+  fetch(url, { method, headers, body }).catch(()=>{});
+}
+
+(function(){
+  const orig = window.updateCharts;
+  window.updateCharts = function(parsed){
+    orig(parsed);
+    if (!enableWebhook.checked) return;
+
+    const interval = Number(webhookInterval.value);
+    lastParsed = parsed;
+
+    if (interval > 0) {
+      if (!intervalTimer) {
+        intervalTimer = setInterval(() => {
+          if (lastParsed) sendWebhook(lastParsed);
+        }, interval * 1000);
+      }
+    } else {
+      if (webhookOnPacket.checked) sendWebhook(parsed);
+    }
+  };
+})();
+</script>
+
+  <script src="pollusensweb.js"></script>
+</body>
+</html>
