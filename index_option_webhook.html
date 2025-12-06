@@ -16,6 +16,10 @@
     .mode-toggle { display:flex; gap:10px; margin:10px 0; }
     .mode-btn { flex:1; padding:8px; border:2px solid #ccc; background:white; cursor:pointer; border-radius:8px; font-weight:600; }
     .mode-btn.active { border-color:#4a7afe; background:#e4e9ff; color:#4a7afe; }
+    .status { padding: 10px; margin: 10px 0; border-radius: 4px; font-family: monospace; font-size: 12px; }
+    .status.success { background: #d4edda; color: #155724; }
+    .status.error { background: #f8d7da; color: #721c24; }
+    .status.info { background: #d1ecf1; color: #0c5460; }
   </style>
 </head>
 <body>
@@ -70,15 +74,20 @@
       </div>
 
       <label>Webhook URL:
-        <input type="url" id="webhookUrl" value="https://api.sensor.community/v1/push-sensor-data/">
+        <input type="url" id="webhookUrl" value="https://webhook.site/71e05947-aa4e-4e95-b442-18ef017c9255">
       </label>
 
-      <label>Proxy URL:
-        <input type="url" id="proxyUrl" value="proxy.php?url=" />
+      <label id="proxyLabel" style="display:none;">Proxy URL:
+        <input type="text" id="proxyUrl" value="https://pollutants.eu/proxy/proxy.php" />
+        <small>Using your proxy server</small>
       </label>
 
       <label>Sensor ID:
         <input type="text" id="webhookSensorId" value="pollusensweb-123456">
+      </label>
+
+      <label>Sensor Name:
+        <input type="text" id="webhookSensorName" value="PM Sensor">
       </label>
 
       <label>Method:
@@ -93,12 +102,14 @@
       <h4>Headers</h4>
       <div id="headersContainer"></div>
       <button id="addHeader" class="btn-secondary">+ Add header</button>
+      <button id="clearHeaders" class="btn-secondary">Clear all headers</button>
 
       <h4>Body Template</h4>
       <textarea id="webhookBody" rows="14" style="width:100%;">{
   "software_version": "polluSensWeb 1.0",
   "timestamp": "{{ts}}",
   "sensor": "{{sensor}}",
+  "sensor_id": "{{id}}",
   "sensordatavalues": [
     {{#fields}}
       { "value_type": "{{key}}", "value": "{{value}}" }
@@ -107,30 +118,91 @@
 }</textarea>
 
       <label><input type="checkbox" id="webhookOnPacket" checked> Send webhook on every parsed packet</label>
+
+      <div style="background:#f0f0f0; padding:10px; margin:10px 0; border-radius:4px; font-size:12px;">
+        <strong>📊 Debug Info:</strong>
+        <div>Packets received: <span id="packetCount">0</span></div>
+        <div>Webhooks sent: <span id="webhookCount">0</span></div>
+        <div>Last packet time: <span id="lastPacketTime">-</span></div>
+      </div>
+
+      <button id="testWebhook" class="btn-primary" style="margin-top:10px;">🧪 Test Send Webhook Now</button>
+      <button id="testProxyGet" class="btn-secondary" style="margin-top:10px;">🔍 Test Proxy (GET request)</button>
+      <button id="simulatePacket" class="btn-secondary" style="margin-top:10px;">📦 Simulate Sensor Packet</button>
+
+      <div id="statusLog"></div>
     </div>
   </div>
 
+<script src="pollusensweb.js"></script>
+
+<script>
+window.updateCharts = window.updateCharts || function(){};
+</script>
+
 <script>
 // Show/hide config
-enableWebhook.onchange = () => webhookConfig.style.display = enableWebhook.checked ? "block" : "none";
+enableWebhook.onchange = () => {
+  webhookConfig.style.display = enableWebhook.checked ? "block" : "none";
+};
 
 // Proxy mode toggle
 let useProxy = false;
-whModeDirect.onclick = () => { useProxy = false; whModeDirect.classList.add("active"); whModeProxy.classList.remove("active"); };
-whModeProxy.onclick = () => { useProxy = true; whModeProxy.classList.add("active"); whModeDirect.classList.remove("active"); };
+whModeDirect.onclick = () => { 
+  useProxy = false; 
+  whModeDirect.classList.add("active"); 
+  whModeProxy.classList.remove("active");
+  proxyLabel.style.display = "none";
+  logStatus("Switched to Direct Mode", "info");
+};
+
+whModeProxy.onclick = () => { 
+  useProxy = true; 
+  whModeProxy.classList.add("active"); 
+  whModeDirect.classList.remove("active");
+  proxyLabel.style.display = "block";
+  logStatus("Switched to Proxy Mode", "info");
+};
 
 // Dynamic header rows
 function addHeaderRow(key = "", val = "") {
-  const row = document.createElement("div"); row.className = "header-row";
-  row.innerHTML = `<input class="hKey" placeholder="Key" value="${key}"><input class="hVal" placeholder="Value" value="${val}"><button class="btn-remove">X</button>`;
+  const row = document.createElement("div"); 
+  row.className = "header-row";
+  row.innerHTML = `<input class="hKey" placeholder="Key" value="${key}">
+                   <input class="hVal" placeholder="Value" value="${val}">
+                   <button class="btn-remove">X</button>`;
   row.querySelector(".btn-remove").onclick = () => row.remove();
   headersContainer.appendChild(row);
 }
+
+// Default headers
 addHeaderRow("X-PIN", "0");
 addHeaderRow("X-Sensor", "{{id}}");
 addHeaderRow("X-Device", "{{id}}");
 addHeaderRow("Content-Type", "application/json");
 addHeader.onclick = () => addHeaderRow();
+clearHeaders.onclick = () => {
+  headersContainer.innerHTML = "";
+  addHeaderRow("Content-Type", "application/json");
+  logStatus("Headers reset to default", "info");
+};
+
+// Status logger
+let packetCounter = 0;
+let webhookCounter = 0;
+
+function logStatus(message, type = "info") {
+  const log = document.createElement("div");
+  log.className = `status ${type}`;
+  const timestamp = new Date().toLocaleTimeString();
+  log.textContent = `[${timestamp}] ${message}`;
+  statusLog.insertBefore(log, statusLog.firstChild);
+  
+  // Keep only last 10 messages
+  while (statusLog.children.length > 10) {
+    statusLog.removeChild(statusLog.lastChild);
+  }
+}
 
 // Template processors
 function applyHeaders() {
@@ -147,57 +219,222 @@ function applyHeaders() {
 function applyBody(template, parsed) {
   let out = template;
   out = out.replace(/{{ts}}/g, new Date().toISOString());
-  out = out.replace(/{{sensor}}/g, config?.name || "sensor");
+  out = out.replace(/{{sensor}}/g, webhookSensorName.value || "sensor");
   out = out.replace(/{{id}}/g, webhookSensorId.value);
 
   // {{field:NAME}}
-  out = out.replace(/{{field:([^}]+)}}/g, (_, f) => parsed[f] !== undefined ? parsed[f] : "null");
+  out = out.replace(/{{field:([^}]+)}}/g, (_, f) => {
+    return parsed[f] !== undefined ? parsed[f] : "null";
+  });
 
   // {{#fields}} ... {{/fields}}
   out = out.replace(/{{#fields}}([\s\S]*?){{\/fields}}/g, (_, block) => {
-    return Object.entries(parsed)
-      .filter(([k,v]) => v !== null && v !== undefined && isFinite(v))
-      .map(([key,val]) => block.replace(/{{key}}/g, key).replace(/{{value}}/g, val))
-      .join(",\n");
+    const entries = Object.entries(parsed)
+      .filter(([k,v]) => v !== null && v !== undefined && isFinite(v));
+    
+    if (entries.length === 0) return "";
+    
+    return entries
+      .map(([key,val], idx) => {
+        let line = block.replace(/{{key}}/g, key).replace(/{{value}}/g, val).trim();
+        // Remove trailing comma from last item
+        if (idx === entries.length - 1) {
+          line = line.replace(/,\s*$/, "");
+        }
+        return line;
+      })
+      .join(",\n    ");
   });
+  
   return out;
 }
+
+// Send webhook function
+async function sendWebhook(parsed) {
+  if (!enableWebhook.checked) {
+    return;
+  }
+
+  try {
+    webhookCounter++;
+    if (webhookCount) webhookCount.textContent = webhookCounter;
+    
+    const baseUrl = webhookUrl.value;
+    // Fixed: Build proxy URL correctly
+    const url = useProxy ? `${proxyUrl.value}?url=${encodeURIComponent(baseUrl)}` : baseUrl;
+    const method = webhookMethod.value;
+    const headers = applyHeaders();
+    const body = applyBody(webhookBody.value, parsed);
+
+    logStatus(`Sending ${method} to ${useProxy ? 'proxy → ' : ''}${baseUrl}`, "info");
+    console.log("=== WEBHOOK REQUEST #" + webhookCounter + " ===");
+    console.log("Full URL:", url);
+    console.log("Method:", method);
+    console.log("Headers:", headers);
+    console.log("Body:", body);
+
+    const fetchOptions = { 
+      method, 
+      headers, 
+      body,
+      mode: 'cors'
+    };
+
+    const response = await fetch(url, fetchOptions);
+
+    console.log("Response status:", response.status);
+
+    if (response.ok) {
+      const responseText = await response.text();
+      logStatus(`✅ Success! Status: ${response.status}`, "success");
+      console.log("Response body:", responseText);
+    } else {
+      logStatus(`❌ Failed: ${response.status} ${response.statusText}`, "error");
+      const errorText = await response.text();
+      console.error("Error response body:", errorText);
+    }
+  } catch (error) {
+    logStatus(`❌ Error: ${error.message}`, "error");
+    console.error("=== FETCH ERROR ===");
+    console.error("Error message:", error.message);
+    
+    if (error.message.includes("Failed to fetch")) {
+      logStatus("💡 This is likely a CORS preflight (OPTIONS) issue", "error");
+      logStatus("💡 Check browser Network tab for the OPTIONS request", "info");
+    }
+  }
+}
+
+// Test button - creates fake sensor data
+testWebhook.onclick = async () => {
+  const testData = {
+    PM25: 15.3, 
+    PM10: 23.7, 
+    temperature: 22.5, 
+    humidity: 45
+  };
+  logStatus("Testing webhook with sample data...", "info");
+  console.log("Test data:", testData);
+  await sendWebhook(testData);
+};
+
+// Test proxy with GET request
+testProxyGet.onclick = async () => {
+  try {
+    const baseUrl = webhookUrl.value;
+    const proxyTestUrl = `${proxyUrl.value}?url=${encodeURIComponent(baseUrl)}`;
+    
+    logStatus(`Testing proxy GET: ${proxyTestUrl}`, "info");
+    console.log("Proxy test URL:", proxyTestUrl);
+    
+    const response = await fetch(proxyTestUrl, {
+      method: 'GET',
+      mode: 'cors'
+    });
+    
+    if (response.ok) {
+      const text = await response.text();
+      logStatus(`✅ Proxy works! Status: ${response.status}`, "success");
+      console.log("Proxy response:", text);
+    } else {
+      logStatus(`❌ Proxy returned: ${response.status} ${response.statusText}`, "error");
+      const errorText = await response.text();
+      console.error("Proxy error:", errorText);
+    }
+  } catch (error) {
+    logStatus(`❌ Proxy test failed: ${error.message}`, "error");
+    console.error("Proxy test error:", error);
+  }
+};
+
+// Simulate a sensor packet to test the integration
+simulatePacket.onclick = () => {
+  const fakePacket = {
+    PM25: Math.random() * 50,
+    PM10: Math.random() * 100,
+    temperature: 20 + Math.random() * 10,
+    humidity: 40 + Math.random() * 20
+  };
+  
+  console.log("🎭 Simulating sensor packet:", fakePacket);
+  logStatus("Simulating sensor packet...", "info");
+  
+  // Call updateCharts as if it came from the sensor
+  if (typeof window.updateCharts === 'function') {
+    window.updateCharts(fakePacket);
+    logStatus("Packet sent to updateCharts()", "success");
+  } else {
+    logStatus("❌ window.updateCharts is not defined!", "error");
+    console.error("window.updateCharts is not a function:", window.updateCharts);
+  }
+};
 
 // Interval handling
 let intervalTimer = null;
 let lastParsed = null;
 
-function sendWebhook(parsed) {
-  const url = useProxy ? proxyUrl.value + encodeURIComponent(webhookUrl.value) : webhookUrl.value;
-  const method = webhookMethod.value;
-  const headers = applyHeaders();
-  const body = applyBody(webhookBody.value, parsed);
-
-  fetch(url, { method, headers, body }).catch(()=>{});
-}
-
+// Wait for pollusensweb.js to load, then wrap updateCharts
 (function(){
-  const orig = window.updateCharts;
+  // Save the original updateCharts from pollusensweb.js
+  const originalUpdateCharts = window.updateCharts;
+  
+  // Replace it with our wrapper
   window.updateCharts = function(parsed){
-    orig(parsed);
+    // Update packet counter
+    packetCounter++;
+    if (packetCount) packetCount.textContent = packetCounter;
+    if (lastPacketTime) lastPacketTime.textContent = new Date().toLocaleTimeString();
+    
+    // Call original function from pollusensweb.js
+    if (typeof originalUpdateCharts === 'function') {
+      originalUpdateCharts(parsed);
+    }
+    
+    // Don't send if webhook is disabled
     if (!enableWebhook.checked) return;
 
     const interval = Number(webhookInterval.value);
     lastParsed = parsed;
 
+    console.log("📦 Packet #" + packetCounter + " received:", parsed);
+
     if (interval > 0) {
+      // Interval mode - send every X seconds
       if (!intervalTimer) {
+        console.log(`⏰ Starting interval timer: ${interval} seconds`);
+        logStatus(`Interval mode: sending every ${interval} seconds`, "info");
         intervalTimer = setInterval(() => {
-          if (lastParsed) sendWebhook(lastParsed);
+          if (lastParsed) {
+            console.log("⏰ Interval timer triggered, sending webhook");
+            sendWebhook(lastParsed);
+          }
         }, interval * 1000);
       }
     } else {
-      if (webhookOnPacket.checked) sendWebhook(parsed);
+      // Per-packet mode - send immediately on each packet
+      if (webhookOnPacket.checked) {
+        console.log("🚀 Per-packet mode: sending webhook immediately");
+        sendWebhook(parsed);
+      }
     }
   };
+  
+  console.log("✅ Webhook wrapper installed. Original updateCharts type:", typeof originalUpdateCharts);
 })();
+
+// Clean up interval on disable
+enableWebhook.addEventListener('change', () => {
+  if (!enableWebhook.checked && intervalTimer) {
+    clearInterval(intervalTimer);
+    intervalTimer = null;
+    logStatus("Webhook disabled, interval cleared", "info");
+  }
+});
+
+// Initialize
+logStatus("Webhook system ready", "info");
+console.log("Initial window.updateCharts:", typeof window.updateCharts);
 </script>
 
-  <script src="pollusensweb.js"></script>
 </body>
 </html>
