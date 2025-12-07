@@ -1,70 +1,304 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<title>polluSensWeb Chart</title>
-		<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-		<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
-		<link rel="stylesheet" href="styles.css">
-	</head>
-	<body>
-		<header>
-			<h1>Connect your UART pollution sensor via COM port. Easy.</h1>
-			<div>
-				<select id="sensorSelector"></select>
-				<button id="connect">🔌 Connect</button>
-				<br/>
-				<label>Custom JSON Sensor Configuration: <input type="file" id="jsonUpload" accept=".json" class="secondary-button" /></label>
-			</div>
-		</header>
-		
-		<div id="chartControls">
-			<h3>Create a Chart</h3>
-			<div class="chartParams">
-				<label>Chart name:
-					<input type="text" id="chartName" placeholder="Chart name" value="Chart" />
-				</label>
-				<label>Width:
-					<input type="number" id="chartWidth" value="600" />
-				</label>
-				<label>Height:
-					<input type="number" id="chartHeight" value="300" />
-				</label>
-				<label>Chart datapoints:
-					<input type="number" id="maxDatapoints" value="600" min="2" />
-				</label>
-			</div>
-			<div id="datasetConfigs">
-				<h4>Signals</h4>
-				<div id="signalRows"></div>
-			</div>
-			<div>
-				<button id="createChart">📈 Create Chart</button>
-			</div>
-		</div>
-		
-		<div id="charts"></div>
-		
-		<div style="margin-bottom: 8px;">
-			<label> <b>Log: </b>
-			</label>
-			<label>Display last 
-				<input type="number" id="maxLogPackets" value="1000" min="10" style="width: 80px;" />
-				lines
-			</label>
-			<label style="margin-left: 20px;">
-				<input type="checkbox" id="autoscrollLog" checked />
-				Autoscroll
-			</label>
-			&nbsp;&nbsp;&nbsp;
-			<button id="clearLog" class="secondary-button">🧹 Clear Log</button>
-			<button id="saveCSV" class="secondary-button">💾 Save CSV</button>
-		</div>
-		
-		<pre id="log"></pre>
-		<script src="pollusensweb.js"></script>
-	</body>
-	
+<head>
+  <meta charset="UTF-8" />
+  <title>polluSensWeb Chart</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .webhook-card { margin-top:25px; padding:15px; border:1px solid #ccc; border-radius:8px; }
+    .header-row { display:flex; gap:6px; margin-top:6px; }
+    .header-row input { flex:1; }
+    .btn-remove { background:#ffe5e5; color:#a00; border:none; padding:4px 8px; border-radius:6px; cursor:pointer; }
+    .btn-secondary { padding:6px 10px; border-radius:6px; border:none; background:#ddd; cursor:pointer; }
+    .btn-primary { padding:6px 10px; border-radius:6px; border:none; background:#4a7afe; color:white; cursor:pointer; }
+    .status { padding: 10px; margin: 10px 0; border-radius: 4px; font-family: monospace; font-size: 12px; }
+    .status.success { background: #d4edda; color: #155724; }
+    .status.error { background: #f8d7da; color: #721c24; }
+    .status.info { background: #d1ecf1; color: #0c5460; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Connect your UART pollution sensor via COM port. Easy.</h1>
+    <div>
+      <select id="sensorSelector"></select>
+      <button id="connect">🔌 Connect</button>
+      <br/>
+      <label>Custom JSON Sensor Configuration: <input type="file" id="jsonUpload" accept=".json" class="secondary-button" /></label>
+    </div>
+  </header>
+
+  <div id="chartControls">
+    <h3>Create a Chart</h3>
+    <div class="chartParams">
+      <label>Chart name:<input type="text" id="chartName" value="Chart" /></label>
+      <label>Width:<input type="number" id="chartWidth" value="600" /></label>
+      <label>Height:<input type="number" id="chartHeight" value="300" /></label>
+      <label>Chart datapoints:<input type="number" id="maxDatapoints" value="600" min="2" /></label>
+    </div>
+    <div id="datasetConfigs"><h4>Signals</h4><div id="signalRows"></div></div>
+    <button id="createChart">📈 Create Chart</button>
+  </div>
+
+  <div id="charts"></div>
+
+  <div style="margin-bottom: 8px;">
+    <label><b>Log:</b></label>
+    <label>Display last <input type="number" id="maxLogPackets" value="1000" min="10" style="width:80px;" /> lines</label>
+    <label style="margin-left:20px;"><input type="checkbox" id="autoscrollLog" checked /> Autoscroll</label>
+    <button id="clearLog" class="secondary-button">🧹 Clear Log</button>
+    <button id="saveCSV" class="secondary-button">💾 Save CSV</button>
+  </div>
+
+  <pre id="log"></pre>
+
+  <div class="webhook-card">
+    <label><input type="checkbox" id="enableWebhook"> Enable Webhook Sending</label>
+
+    <div id="webhookConfig" style="display:none; margin-top:12px;">
+      <label>Webhook URL: <input type="url" id="webhookUrl" value="" placeholder="Fetching unique webhook.site URL...">(you may replace it with different)</label>
+      <label>Method: <select id="webhookMethod"><option>GET</option><option selected>POST</option><option>PUT</option></select></label>
+      <label>Send every (seconds): <input type="number" id="webhookInterval" value="10" min="0" /><small>(0 = send on every packet)</small></label>
+
+      <h4>Headers</h4>
+      <div id="headersContainer"></div>
+      <button id="addHeader" class="btn-secondary">+ Add header</button>
+      <button id="clearHeaders" class="btn-secondary">Clear all headers</button>
+
+      <h4>Body Template</h4>
+      <textarea id="webhookBody" rows="14" style="width:100%;">{
+  "software_version": "polluSensWeb 1.0",
+  "timestamp": "{{ts}}",
+  "sensordatavalues": [
+    {{#fields}}
+      { "value_type": "{{key}}", "value": "{{value}}" }
+    {{/fields}}
+  ]
+}</textarea>
+
+      <div style="background:#f0f0f0; padding:10px; margin:10px 0; border-radius:4px; font-size:12px;">
+        <strong>📊 Debug Info:</strong>
+        <div>Packets received: <span id="packetCount">0</span></div>
+        <div>Webhooks sent: <span id="webhookCount">0</span></div>
+      </div>
+      <button id="testWebhook" class="btn-primary" style="margin-top:10px;">🧪 Test Send Webhook Now</button>
+      <div id="statusLog"></div>
+    </div>
+  </div>
+
+<script src="pollusensweb.js"></script>
+
+<script>
+// ============================================================================
+// WEBHOOK LOGIC 
+// ============================================================================
+
+const PROXY_URL = "https://pollutants.eu/proxy/proxy.php";
+let intervalTimer = null;
+let lastParsedData = null; 
+let lastSentLogData = ""; 
+let packetCounter = 0;
+let webhookCounter = 0;
+let isObserverProcessing = false; 
+
+// UI Toggles
+enableWebhook.onchange = () => {
+  webhookConfig.style.display = enableWebhook.checked ? "block" : "none";
+  resetTimer();
+};
+webhookInterval.onchange = resetTimer;
+
+// Header Management
+function addHeaderRow(key = "", val = "") {
+  const row = document.createElement("div"); 
+  row.className = "header-row";
+  row.innerHTML = `<input class="hKey" placeholder="Key" value="${key}"><input class="hVal" placeholder="Value" value="${val}"><button class="btn-remove">X</button>`;
+  row.querySelector(".btn-remove").onclick = () => row.remove();
+  headersContainer.appendChild(row);
+}
+addHeaderRow("X-PIN", "0");
+addHeaderRow("Content-Type", "application/json");
+addHeader.onclick = () => addHeaderRow();
+clearHeaders.onclick = () => { headersContainer.innerHTML = ""; addHeaderRow("Content-Type", "application/json"); };
+
+function logStatus(msg, type = "info") {
+  const d = document.createElement("div");
+  d.className = `status ${type}`;
+  d.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  statusLog.prepend(d);
+  if (statusLog.children.length > 5) statusLog.lastChild.remove();
+}
+
+function getHeaders() {
+  const h = {};
+  document.querySelectorAll(".header-row").forEach(r => {
+    const k = r.querySelector(".hKey").value.trim();
+    if (k) h[k] = r.querySelector(".hVal").value.trim();
+  });
+  return h;
+}
+
+function processTemplate(tmpl, data) {
+  let out = tmpl.replace(/{{ts}}/g, new Date().toISOString());
+  out = out.replace(/{{field:([^}]+)}}/g, (_, f) => (data[f] !== undefined ? data[f] : "null"));
+  out = out.replace(/{{#fields}}([\s\S]*?){{\/fields}}/g, (_, block) => {
+    const entries = Object.entries(data).filter(([k,v]) => v !== null && isFinite(v));
+    if (!entries.length) return "";
+    return entries.map(([k,v], i) => {
+      let line = block.replace(/{{key}}/g, k).replace(/{{value}}/g, v).trim();
+      return i === entries.length - 1 ? line.replace(/,\s*$/, "") : line;
+    }).join(",\n    ");
+  });
+  return out;
+}
+
+async function sendHttpRequest(data) {
+  try {
+    webhookCounter++;
+    if (webhookCount) webhookCount.textContent = webhookCounter;
+    
+    const method = webhookMethod.value;
+    const url = `${PROXY_URL}?url=${encodeURIComponent(webhookUrl.value)}`;
+    const options = { method, headers: getHeaders(), mode: 'cors' };
+    
+    if (method !== 'GET') options.body = processTemplate(webhookBody.value, data);
+
+    logStatus(`Sending ${method}...`, "info");
+    const r = await fetch(url, options);
+    
+    if (r.status === 429) {
+      logStatus(`❌ ERROR: 429 Too Many Requests! Increase Interval or check proxy rate limits.`, "error");
+    } else if (r.ok) {
+      logStatus(`✅ Sent OK (${r.status})`, "success");
+    } else {
+      logStatus(`❌ Error ${r.status}`, "error");
+    }
+  } catch (e) { logStatus(`❌ Network Error: ${e.message}`, "error"); }
+}
+
+// Trigger Logic
+function handleNewPacket(data, dataString) {
+  if (dataString === lastSentLogData) {
+      return;
+  }
+  lastSentLogData = dataString;
+
+  packetCounter++;
+  if (packetCount) packetCount.textContent = packetCounter;
+  lastParsedData = data;
+  
+  // Send immediately only if interval is 0
+  if (enableWebhook.checked && Number(webhookInterval.value) === 0) {
+    sendHttpRequest(data);
+  }
+}
+
+// Timer for Interval Mode
+function resetTimer() {
+  if (intervalTimer) {
+    clearInterval(intervalTimer);
+    intervalTimer = null;
+    logStatus("Previous timer cleared.", "info");
+  }
+
+  const secs = Number(webhookInterval.value);
+  
+  if (enableWebhook.checked && secs > 0) {
+    logStatus(`Timer started: sending every ${secs}s`, "info");
+    intervalTimer = setInterval(() => {
+      if (lastParsedData) sendHttpRequest(lastParsedData);
+    }, secs * 1000);
+  }
+}
+
+// ============================================================================
+// 🔍 LOG PARSER 
+// ============================================================================
+
+const logElement = document.getElementById('log');
+
+const logObserver = new MutationObserver((mutations) => {
+  if (isObserverProcessing) return;
+  isObserverProcessing = true; 
+
+  try {
+    mutations.forEach((mutation) => {
+      if (mutation.addedNodes.length) {
+        const text = mutation.addedNodes[0].textContent;
+        
+        if (text && text.includes("Parsed:")) {
+          const clean = text.replace("Parsed:", "").trim();
+          const parts = clean.split(",");
+          const data = {};
+          
+          parts.forEach(p => {
+            const [k, v] = p.split(":").map(s => s.trim());
+            if (k && v && !isNaN(parseFloat(v))) {
+              data[k] = parseFloat(v);
+            }
+          });
+          
+          if (Object.keys(data).length > 0) {
+            handleNewPacket(data, clean);
+          }
+        }
+      }
+    });
+  } finally {
+    isObserverProcessing = false; 
+  }
+});
+
+logObserver.observe(logElement, { childList: true, subtree: true });
+
+// Manual Test
+testWebhook.onclick = () => {
+  const data = lastParsedData || { PM1_0: 1.5, PM2_5: 1.6, PM10: 1.7 };
+  logStatus("Manual Test Triggered", "info");
+  sendHttpRequest(data);
+};
+
+// ============================================================================
+//  AUTO-GENERATE WEBHOOK URL (FIXED CORS ISSUE)
+// ============================================================================
+
+async function fetchNewWebhookUrl() {
+    const webhookInput = document.getElementById('webhookUrl');
+    
+    webhookInput.value = "";
+    webhookInput.placeholder = "Fetching unique webhook.site URL...";
+
+    // FIX: Route the webhook token request through the existing proxy to avoid CORS block
+    const proxyUrl = `${PROXY_URL}?url=${encodeURIComponent('https://webhook.site/token')}`;
+
+    try {
+        // Send the request via the proxy
+        const response = await fetch(proxyUrl, { method: 'POST' });
+        
+        if (response.ok) {
+            const data = await response.json();
+            const token = data.uuid;
+            const newUrl = `https://webhook.site/${token}`;
+            
+            webhookInput.value = newUrl;
+            webhookInput.placeholder = "Unique URL loaded.";
+            logStatus("New unique Webhook.site URL generated.", "success");
+        } else {
+            webhookInput.placeholder = "Failed to fetch URL. Status: " + response.status;
+            logStatus("❌ Failed to auto-generate Webhook URL.", "error");
+        }
+    } catch (e) {
+        webhookInput.placeholder = "Network error fetching URL.";
+        logStatus(`❌ Network error fetching Webhook URL: ${e.message}`, "error");
+    }
+}
+
+// Initialize timer and fetch URL on load
+fetchNewWebhookUrl();
+resetTimer();
+logStatus("System Ready. Rate-limit protection active.", "success");
+</script>
+</body>
 </html>
-
-
