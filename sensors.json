@@ -359,6 +359,10 @@
 			}
 		},
 		{
+			"name": "SenseAir S88",
+			"inherits_from": "SenseAir S8 004-0-0053"
+		},
+		{
 			"name": "Sensirion SCD30",
 			"start_command": "61 06 00 36 00 00 60 64",
 			"command": "61 03 00 28 00 06 4C 60",
