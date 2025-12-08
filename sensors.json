@@ -359,7 +359,11 @@
 			}
 		},
 		{
-			"name": "SenseAir S88",
+			"name": "SenseAir S88 Residential",
+			"inherits_from": "SenseAir S8 004-0-0053"
+		},
+		{
+			"name": "SenseAir S88 LP",
 			"inherits_from": "SenseAir S8 004-0-0053"
 		},
 		{
