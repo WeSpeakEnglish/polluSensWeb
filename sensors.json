@@ -378,7 +378,7 @@
 					"value": "((data[3] << 8) + data[4])*10",
 					"unit": "ppm"
 				}
-			},
+			}
 		},
 		{
 			"name": "Sensirion SCD30",
