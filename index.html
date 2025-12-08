@@ -19,7 +19,15 @@
     .status.info { background: #d1ecf1; color: #0c5460; }
     /* New style for the link container to make it line up */
     .webhook-url-container { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-    .webhook-url-container input { width: 90%; } /* Wider input */
+.webhook-url-container input {
+    width: 100%;
+    max-width: 500px;
+    padding: 4px 4px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+}
   </style>
 </head>
 <body>
@@ -63,7 +71,7 @@
     <div id="webhookConfig" style="display:none; margin-top:12px;">
       
       <div class="webhook-url-container">
-        <label>Webhook URL: <input type="url" id="webhookUrl" value="" placeholder="Fetching unique webhook.site URL..."></label>
+        <label>Webhook URL (replace with your URL after testing on webhook.site): <br/><input type="url" id="webhookUrl" value="" placeholder="Fetching unique webhook.site URL..."></label>
         <span id="webhookViewLink"></span> 
       </div>
       
@@ -308,7 +316,7 @@ async function fetchNewWebhookUrl() {
             webhookInput.placeholder = "Unique URL loaded.";
             
             // Generate View/Edit link
-            viewLink.innerHTML = `(<a href="https://webhook.site/#!/view/${token}" target="_blank">View/Edit</a>)`;
+            viewLink.innerHTML = `(<a href="https://webhook.site/#!/view/${token}" target="_blank">View/Edit @ webhook.site</a>)`;
 
             logStatus("New unique Webhook.site URL generated.", "success");
         } else {
