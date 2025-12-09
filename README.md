@@ -27,24 +27,28 @@ The following sensors are currently supported by `polluSensWeb`:
 2. **Honeywell HPMA115S0-XXX**
 3. **Air Master AM7 Plus**
 4. **Plantower PMSA003-S**
-5. **Plantower PS3003A** 
-6. **Plantower PMS1003** 
-7. **Plantower PMS5003** 
-8. **Plantower PMS7003** 
-9. **Plantower PMS6003** 
-10. **Plantower PMS9103** 
-11. **Plantower PMS3003** 
+5. **Plantower PS3003A**
+6. **Plantower PMS1003**
+7. **Plantower PMS5003**
+8. **Plantower PMS7003**
+9. **Plantower PMS6003**
+10. **Plantower PMS9103**
+11. **Plantower PMS3003**
 12. **Nova PM SDS011**
 13. **Sensirion SPS30**
 14. **SHUYI SY210**
-15. **TERA NEXTPM** (Thanks for testing to Michael Lažan, [senzorvzduchu.cz](https://senzorvzduchu.cz/))
+15. **TERA NextPM**
 16. **SenseAir S8 004-0-0053**
-17. **Sensirion SCD30**
-18. **SenseAir S88 Residential**
-19. **SenseAir S88 LP**
-20. **SenseAir S88 GH**
-21. **SenseAir S8 004-0-0017**
-22. More coming soon...
+17. **SenseAir S88 Residential**
+18. **SenseAir S88 LP**
+19. **SenseAir S88 GH**
+20. **SenseAir K30**
+21. **SenseAir K33**
+22. **SenseAir eSENSE**
+23. **SenseAir S8 004-0-0017**
+24. **SenseAir K33 ICB**
+25. **Sensirion SCD30**
+ More coming soon...
 
 ## Supported Browsers
 
