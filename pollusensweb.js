@@ -598,3 +598,264 @@ document.getElementById('jsonUpload').addEventListener('change', async (e) => {
 	}
 });
 
+// ============================================================================
+// WEBHOOK LOGIC (FIXED WITH TIME DEBOUNCE)
+// ============================================================================
+
+const PROXY_URL = "https://pollutants.eu/proxy/proxy.php";
+const MIN_PROCESSING_INTERVAL_MS = 50; 
+let intervalTimer = null;
+let lastParsedData = null; 
+let lastSentLogData = ""; 
+let lastProcessedTime = 0; 
+let packetCounter = 0;
+let webhookCounter = 0;
+let isObserverProcessing = false; 
+
+// UI Toggles
+enableWebhook.onchange = () => {
+	  webhookConfig.style.display = enableWebhook.checked ? "block" : "none";
+	  resetTimer();
+};
+webhookInterval.onchange = resetTimer;
+
+// Header Management
+function addHeaderRow(key = "", val = "") {
+	  const row = document.createElement("div"); 
+	  row.className = "header-row";
+	  row.innerHTML = `<input class="hKey" placeholder="Key" value="${key}"><input class="hVal" placeholder="Value" value="${val}"><button class="btn-remove">X</button>`;
+	  row.querySelector(".btn-remove").onclick = () => row.remove();
+	  headersContainer.appendChild(row);
+}
+addHeaderRow("X-PIN", "0");
+addHeaderRow("Content-Type", "application/json");
+addHeader.onclick = () => addHeaderRow();
+clearHeaders.onclick = () => { headersContainer.innerHTML = ""; addHeaderRow("Content-Type", "application/json"); };
+
+function logStatus(msg, type = "info") {
+	  const d = document.createElement("div");
+	  d.className = `status ${type}`;
+	  d.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+	  statusLog.prepend(d);
+	  if (statusLog.children.length > 5) statusLog.lastChild.remove();
+}
+
+function getHeaders() {
+	  const h = {};
+	  document.querySelectorAll(".header-row").forEach(r => {
+		    const k = r.querySelector(".hKey").value.trim();
+		    if (k) h[k] = r.querySelector(".hVal").value.trim();
+	  });
+	  return h;
+}
+
+function processTemplate(tmpl, data) {
+	  let out = tmpl.replace(/{{ts}}/g, new Date().toISOString());
+	  out = out.replace(/{{field:([^}]+)}}/g, (_, f) => (data[f] !== undefined ? data[f] : "null"));
+	  out = out.replace(/{{#fields}}([\s\S]*?){{\/fields}}/g, (_, block) => {
+		    const entries = Object.entries(data).filter(([k,v]) => v !== null && isFinite(v));
+		    if (!entries.length) return "";
+		    return entries.map(([k,v], i) => {
+			      let line = block.replace(/{{key}}/g, k).replace(/{{value}}/g, v).trim();
+			      return i === entries.length - 1 ? line.replace(/,\s*$/, "") : line;
+		    }).join(",\n    ");
+	  });
+	  return out;
+}
+
+async function sendHttpRequest(data) {
+	  try {
+		    webhookCounter++;
+		    if (webhookCount) webhookCount.textContent = webhookCounter;
+		    
+		    const method = webhookMethod.value;
+		    const url = `${PROXY_URL}?url=${encodeURIComponent(webhookUrl.value)}`;
+		    // Apply template processing to header values
+		const rawHeaders = getHeaders();
+		const processedHeaders = {};
+		
+		for (const [k, v] of Object.entries(rawHeaders)) {
+			processedHeaders[k] = processTemplate(v, data);
+		}
+		
+		const options = { method, headers: processedHeaders, mode: 'cors' };
+		    
+		    if (method !== 'GET') options.body = processTemplate(webhookBody.value, data);
+		
+		    logStatus(`Sending ${method}...`, "info");
+		    const r = await fetch(url, options);
+		    
+		    if (r.status === 429) {
+			      logStatus(`❌ ERROR: 429 Too Many Requests! Increase Interval or check proxy rate limits.`, "error");
+			    } else if (r.ok) {
+			      logStatus(`✅ Sent OK (${r.status})`, "success");
+			    } else {
+			      logStatus(`❌ Error ${r.status}`, "error");
+		    }
+	  } catch (e) { logStatus(`❌ Network Error: ${e.message}`, "error"); }
+}
+
+// Trigger Logic
+function handleNewPacket(data, dataString) {
+	const now = Date.now();
+	
+	// 1. Time Debounce Check
+	if (now - lastProcessedTime < MIN_PROCESSING_INTERVAL_MS) {
+		return;
+	}
+	
+	// 2. Data Deduplication Check
+	  if (dataString === lastSentLogData) {
+		      return;
+	  }
+	
+	// 3. Update state and counter for a unique packet
+	  lastSentLogData = dataString;
+	lastProcessedTime = now;
+	
+	  packetCounter++;
+	  if (packetCount) packetCount.textContent = packetCounter;
+	  lastParsedData = data;
+	  
+	  // Send immediately only if interval is 0
+	  if (enableWebhook.checked && Number(webhookInterval.value) === 0) {
+		    sendHttpRequest(data);
+	  }
+}
+
+// Timer for Interval Mode
+function resetTimer() {
+	  if (intervalTimer) {
+		    clearInterval(intervalTimer);
+		    intervalTimer = null;
+		    logStatus("Previous timer cleared.", "info");
+	  }
+	
+	  const secs = Number(webhookInterval.value);
+	  
+	  if (enableWebhook.checked && secs > 0) {
+		    logStatus(`Timer started: sending every ${secs}s`, "info");
+		    intervalTimer = setInterval(() => {
+			      if (lastParsedData) sendHttpRequest(lastParsedData);
+		    }, secs * 1000);
+	  }
+}
+
+// ============================================================================
+// 🔍 LOG PARSER 
+// ============================================================================
+
+const logElement = document.getElementById('log');
+
+const logObserver = new MutationObserver((mutations) => {
+	  if (isObserverProcessing) return;
+	  isObserverProcessing = true; 
+	
+	  try {
+		    mutations.forEach((mutation) => {
+			      if (mutation.addedNodes.length) {
+				        const text = mutation.addedNodes[0].textContent;
+				        
+				        if (text && text.includes("Parsed:")) {
+					          const clean = text.replace("Parsed:", "").trim();
+					          const parts = clean.split(",");
+					          const data = {};
+					          
+					          parts.forEach(p => {
+						            const [k, v] = p.split(":").map(s => s.trim());
+						            if (k && v && !isNaN(parseFloat(v))) {
+							              data[k] = parseFloat(v);
+						            }
+					          });
+					          
+					          if (Object.keys(data).length > 0) {
+						            handleNewPacket(data, clean);
+					          }
+				        }
+			      }
+		    });
+		  } finally {
+		    isObserverProcessing = false; 
+	  }
+});
+
+logObserver.observe(logElement, { childList: true, subtree: true });
+
+// Manual Test
+testWebhook.onclick = () => {
+	  const data = lastParsedData || { PM1_0: 1.5, PM2_5: 1.6, PM10: 1.7 };
+	  logStatus("Manual Test Triggered", "info");
+	  sendHttpRequest(data);
+};
+
+// ============================================================================
+//  AUTO-GENERATE WEBHOOK URL (FIXED CORS ISSUE)
+// ============================================================================
+
+async function fetchNewWebhookUrl() {
+	const webhookInput = document.getElementById('webhookUrl');
+	const viewLink = document.getElementById('webhookViewLink');
+	
+	webhookInput.value = "";
+	webhookInput.placeholder = "Fetching unique webhook.site URL...";
+	viewLink.innerHTML = ""; // Clear old link
+	
+	// FIX: Route the webhook token request through the existing proxy to avoid CORS block
+	const proxyUrl = `${PROXY_URL}?url=${encodeURIComponent('https://webhook.site/token')}`;
+	
+	try {
+		const response = await fetch(proxyUrl, { method: 'POST' });
+		
+		if (response.ok) {
+			const data = await response.json();
+			const token = data.uuid;
+			const newUrl = `https://webhook.site/${token}`;
+			
+			webhookInput.value = newUrl;
+			webhookInput.placeholder = "Unique URL loaded.";
+			
+			// Generate View/Edit link
+			viewLink.innerHTML = `(<a href="https://webhook.site/#!/view/${token}" target="_blank">View/Edit @ webhook.site</a>)`;
+			
+			logStatus("New unique Webhook.site URL generated.", "success");
+			} else {
+			webhookInput.placeholder = "Failed to fetch URL. Status: " + response.status;
+			logStatus("❌ Failed to auto-generate Webhook URL.", "error");
+		}
+		} catch (e) {
+		webhookInput.placeholder = "Network error fetching URL.";
+		logStatus(`❌ Network error fetching Webhook URL: ${e.message}`, "error");
+	}
+}
+
+// Initialize timer and fetch URL on load
+fetchNewWebhookUrl();
+resetTimer();
+logStatus("System Ready. Rate-limit protection active.", "success");
+
+async function insertCommitDate() {
+	const repoUrl = "https://github.com/WeSpeakEnglish/polluSensWeb";
+	const apiUrl = "https://api.github.com/repos/WeSpeakEnglish/polluSensWeb/commits?per_page=1";
+	try {
+		const res = await fetch(apiUrl, {
+			headers: { "Accept": "application/vnd.github+json" }
+		});
+		if (!res.ok) throw new Error("GitHub API error: " + res.status);
+		const data = await res.json();
+		const iso = data[0]?.commit?.committer?.date;
+		if (!iso) {
+			document.getElementById("commit-date").innerHTML = "Last commit: Unknown";
+			return;
+		}
+		// Format ISO date → DD.MM.YYYY HH:MM
+		const d = new Date(iso);
+		const pad = (n) => n.toString().padStart(2, "0");
+		const formatted =`${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ` + `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+		// Insert formatted date with Git icon
+		document.getElementById("commit-date").innerHTML =`Last commit: ${formatted}`;
+	} 
+	catch (err) {
+		console.error(err);
+		document.getElementById("commit-date").innerHTML = " repository";
+	}
+}
