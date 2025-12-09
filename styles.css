@@ -131,4 +131,26 @@ input[type="number"] {
 .chart-header .delete-button:hover {
 	color: #dc3545;
 }
+.webhook-card { margin-top:25px; padding:15px; border:1px solid #ccc; border-radius:8px; }
+.header-row { display:flex; gap:6px; margin-top:6px; }
+.header-row input { flex:1; }
+.btn-remove { background:#ffe5e5; color:#a00; border:none; padding:4px 8px; border-radius:6px; cursor:pointer; }
+.btn-secondary { padding:6px 10px; border-radius:6px; border:none; background:#ddd; cursor:pointer; }
+.btn-primary { padding:6px 10px; border-radius:6px; border:none; background:#4a7afe; color:white; cursor:pointer; }
+.status { padding: 10px; margin: 10px 0; border-radius: 4px; font-family: monospace; font-size: 12px; }
+.status.success { background: #d4edda; color: #155724; }
+.status.error { background: #f8d7da; color: #721c24; }
+.status.info { background: #d1ecf1; color: #0c5460; }
+/* New style for the link container to make it line up */
+.webhook-url-container { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.webhook-url-container input {
+	width: 100%;
+	max-width: 500px;
+	padding: 4px 4px;
+	border: 1px solid #ccc;
+	border-radius: 6px;
+	transition: border-color 0.2s, box-shadow 0.2s;
+	box-sizing: border-box;
+}
+#commit-date {display: inline;}
 
