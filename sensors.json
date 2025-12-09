@@ -371,6 +371,18 @@
 			"inherits_from": "SenseAir S8 004-0-0053"
 		},
 		{
+			"name": "SenseAir K30",
+			"inherits_from": "SenseAir S8 004-0-0053"
+		},
+		{
+			"name": "SenseAir K33",
+			"inherits_from": "SenseAir S8 004-0-0053"
+		},
+		{
+			"name": "SenseAir eSENSE",
+			"inherits_from": "SenseAir S8 004-0-0053"
+		},
+		{
 			"name": "SenseAir S8 004-0-0017",
 			"inherits_from": "SenseAir S8 004-0-0053",
 			"data": {
@@ -379,6 +391,10 @@
 					"unit": "ppm"
 				}
 			}
+		},
+		{
+			"name": "SenseAir K33 ICB",
+			"inherits_from": "SenseAir S8 004-0-0017"
 		},
 		{
 			"name": "Sensirion SCD30",
