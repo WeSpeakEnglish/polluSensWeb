@@ -299,6 +299,141 @@ This example keeps all settings from `Plantower PMSA003` but adds a humidity val
 - You can use decimal values (`66`) or hex strings (`"0x42"`) — **no raw hex like `0x42`**.
 - If your JSON fails to load, check the browser log or validate at [https://jsonlint.com](https://jsonlint.com).
 
+## Webhook Integration – polluSensWeb
+
+polluSensWeb can send parsed sensor data to any HTTP webhook.  
+Webhooks now support **placeholders** in both **body** and **headers**.
+
+---
+
+### Enabling Webhooks
+
+1. Check **Enable Webhook Sending** in the Webhook card.
+2. Enter your **Webhook URL**.
+3. Select **HTTP Method** (`GET`, `POST`, `PUT`).
+4. Set interval in **seconds** (0 = send on every packet).
+
+---
+
+### Headers
+
+Headers can include placeholders, just like the body.  
+Supported placeholders:
+
+- `{{ts}}` – current timestamp (ISO format)  
+- `{{field:<name>}}` – value of a specific sensor field  
+
+#### Example Header Configuration
+
+| Key        | Value             | Result Example               |
+|-----------|-----------------|------------------------------|
+| X-PM25    | {{field:PM2_5}}  | X-PM25: 12.3                 |
+| X-TIME    | {{ts}}           | X-TIME: 2025-12-09T12:34:56Z|
+| X-CUSTOM  | {{field:PM10}}   | X-CUSTOM: 20.1               |
+
+Add headers using the **+ Add header** button.  
+
+---
+
+### Body Template
+
+Body templates are **JSON-based**, supporting placeholders:
+
+- `{{ts}}` – timestamp  
+- `{{field:<name>}}` – sensor value  
+- `{{#fields}} … {{/fields}}` – loop through all sensor fields  
+
+#### Example Body
+
+```json
+{
+  "software_version": "polluSensWeb 1.0",
+  "timestamp": "{{ts}}",
+  "sensordatavalues": [
+  {{#fields}}
+    { "value_type": "{{key}}", "value": "{{value}}" }
+  {{/fields}}
+  ]
+}
+```
+
+#### Result Example
+
+For a packet:
+
+```text
+PM1_0: 1.5, PM2_5: 12.3, PM10: 20.1
+```
+
+The processed body will be:
+
+```json
+{
+  "software_version": "polluSensWeb 1.0",
+  "timestamp": "2025-12-09T12:34:56.789Z",
+  "sensordatavalues": [
+    { "value_type": "PM1_0", "value": 1.5 },
+    { "value_type": "PM2_5", "value": 12.3 },
+    { "value_type": "PM10", "value": 20.1 }
+  ]
+}
+```
+
+---
+
+### Sending Webhooks
+
+- Click **Test Send Webhook Now** to test.
+- Webhooks respect your interval setting. If interval = 0, every parsed packet triggers a request.
+
+#### Example: Headers + Body Together
+
+**Headers**
+
+```
+X-PM25: {{field:PM2_5}}
+X-Time: {{ts}}
+Content-Type: application/json
+```
+
+**Body**
+
+```json
+{
+  "pm25": {{field:PM2_5}},
+  "pm10": {{field:PM10}},
+  "time": "{{ts}}"
+}
+```
+
+**Processed Request Example**
+
+```
+POST https://webhook.site/xxxxxx
+Headers:
+  X-PM25: 12.3
+  X-Time: 2025-12-09T12:34:56Z
+  Content-Type: application/json
+Body:
+{
+  "pm25": 12.3,
+  "pm10": 20.1,
+  "time": "2025-12-09T12:34:56Z"
+}
+```
+
+---
+
+### Notes
+
+- Headers are processed through the **same template engine** as the body.
+- Placeholders not found in the data will be replaced with `"null"` for fields.
+- Rate-limit protection is active by default.
+
+---
+
+**Ready to use with any HTTP endpoint that accepts JSON or custom headers.**
+
 ## See Also
 
 - Default sensors: [`sensors.json`](https://raw.githubusercontent.com/WeSpeakEnglish/polluSensWeb/main/sensors.json)
