@@ -597,4 +597,4 @@ document.getElementById('jsonUpload').addEventListener('change', async (e) => {
 		logMessage(`❌ Failed to load custom config: ${err.message}`);
 	}
 });
-document.write("Last modification: ", document.lastModified);	
+
