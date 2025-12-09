@@ -299,7 +299,7 @@ This example keeps all settings from `Plantower PMSA003` but adds a humidity val
 - You can use decimal values (`66`) or hex strings (`"0x42"`) — **no raw hex like `0x42`**.
 - If your JSON fails to load, check the browser log or validate at [https://jsonlint.com](https://jsonlint.com).
 
-## Webhook Integration – polluSensWeb
+## Webhook Integration 
 
 polluSensWeb can send parsed sensor data to any HTTP webhook.  
 Webhooks now support **placeholders** in both **body** and **headers**.
