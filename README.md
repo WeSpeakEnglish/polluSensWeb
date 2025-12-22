@@ -16,9 +16,10 @@ Multiple simultaneous charts
 Full CSV export (timestamp + all signals)  
 Clearable log with raw serial packets and checksum result  
 Configurable via external JSON file  
-Works offline after load  
+Works offline after load (except webhooks) 
 Minimal dependencies  
 No external servers required  
+Supports webhooks
 
 ## Supported Sensors
 The following sensors are currently supported by `polluSensWeb`:
