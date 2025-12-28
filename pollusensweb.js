@@ -859,3 +859,23 @@ async function insertCommitDate() {
 		document.getElementById("commit-date").innerHTML = " repository";
 	}
 }
+
+function sortSensorSelectorWhenReady() {
+    const select = document.getElementById("sensorSelector");
+    if (!select) return;
+
+    const observer = new MutationObserver(() => {
+        if (select.options.length < 25) return;
+
+        const options = Array.from(select.options).sort((a, b) =>
+            a.text.localeCompare(b.text, undefined, { sensitivity: "base" })
+        );
+
+        select.innerHTML = "";
+        options.forEach(o => select.appendChild(o));
+
+        observer.disconnect(); // run once, then stop
+    });
+
+    observer.observe(select, { childList: true });
+}
