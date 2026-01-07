@@ -50,7 +50,8 @@ The following sensors are currently supported by `polluSensWeb`:
 23. **SenseAir S8 004-0-0017**
 24. **SenseAir K33 ICB**
 25. **Sensirion SCD30**
-26. More coming soon...
+26. **YYS DC01**
+27. More coming soon...
 
 ## Supported Browsers
 

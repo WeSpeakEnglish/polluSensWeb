@@ -865,7 +865,7 @@ function sortSensorSelectorWhenReady() {
     if (!select) return;
 
     const observer = new MutationObserver(() => {
-        if (select.options.length < 25) return;
+        if (select.options.length < 26) return;
 
         const options = Array.from(select.options).sort((a, b) =>
             a.text.localeCompare(b.text, undefined, { sensitivity: "base" })
