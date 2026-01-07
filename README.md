@@ -39,7 +39,7 @@ The following sensors are currently supported by `polluSensWeb`:
 12. **Nova PM SDS011**
 13. **Sensirion SPS30**
 14. **SHUYI SY210**
-15. **TERA NextPM**
+15. **TERA NextPM** Thanks for Michael Lažan for testing! [senzorvzduchu.cz](https://senzorvzduchu.cz/) 
 16. **SenseAir S8 004-0-0053**
 17. **SenseAir S88 Residential**
 18. **SenseAir S88 LP**
