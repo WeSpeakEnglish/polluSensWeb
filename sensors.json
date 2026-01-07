@@ -430,6 +430,35 @@
 				"eval": "data.slice(0,15).reduce((c,b)=>(c^=b,Array.from({length:8},()=>c=(c&1)?(c>>1)^0xA001:c>>1),c),0xFFFF)",
 				"compare": "(data[16]<<8)|data[15]"
 			}
+		},
+		{
+			"name": "YYS DC01",
+			"command": "none",
+			"port": {
+				"baudRate": 9600,
+				"dataBits": 8,
+				"stopBits": 1,
+				"parity": "none"
+			},
+			"frame": {
+				"length": 4,
+				"startByte": "0xA5",
+				"endByte": "none"
+			},
+			"data": {
+				"PM2.5": {
+					"value": "(data[1] << 7) + data[2]",
+					"unit": "μg/m³"
+				},
+				"PM2.5 x0.4 calibrated": {
+					"value": "(data[1] << 7) + data[2]",
+					"unit": "μg/m³"
+				}
+			},
+			"checksum": {
+				"eval": "(data[0] + data[1] + data[2])&0x7F",
+				"compare": "data[3]"
+			}
 		}
 	]	
 }
