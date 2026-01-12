@@ -1,4 +1,3 @@
-
 let port = null, reader = null, writer = null, reading = false;
 let config = null, sensors = [], chartSettings = {};
 let commandInterval = null;
@@ -472,9 +471,21 @@ async function readLoop() {
 						const parsed = {};
 						for (const [name, meta] of Object.entries(dataFields)) {
 							const expr = typeof meta === 'object' ? meta.value : meta;
-							parsed[name] = eval(expr);
+							const val = eval(expr);
+                            // Enforce 3-digit precision for all numeric values
+                            parsed[name] = typeof val === 'number' ? parseFloat(val.toFixed(3)) : val;
 						}
+                        
+                        // 1. Update charts with fresh data
 						updateCharts(parsed);
+                        
+                        // 2. Trigger Webhook directly from data flow
+                        if (enableWebhook.checked && Number(webhookInterval.value) === 0) {
+                            sendHttpRequest(parsed);
+                        } else {
+                            lastParsedData = parsed;
+                        }
+
 						const hexPacket = Array.from(data).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
 						const parsedStr = Object.entries(parsed)
 						.map(([k, v]) => `${k}: ${typeof v === 'number' ? v.toFixed(3) : v}`)
@@ -506,7 +517,6 @@ async function readLoop() {
 	
 	reading = false;
 }
-
 
 document.getElementById('connect').onclick = async () => {
 	const connectBtn = document.getElementById('connect');
@@ -611,7 +621,7 @@ let lastSentLogData = ""; 
 let lastProcessedTime = 0; 
 let packetCounter = 0;
 let webhookCounter = 0;
-let isObserverProcessing = false; 
+
 
 // UI Toggles
 enableWebhook.onchange = () => {
@@ -651,35 +661,32 @@ function getHeaders() {
 }
 
 function processTemplate(tmpl, data) {
-    // Timestamp
     let out = tmpl.replace(/{{ts}}/g, new Date().toISOString());
 
-    // {{field:FIELD_NAME}} — literal key lookup (supports dots)
     out = out.replace(/{{field:([^}]+)}}/g, (_, rawKey) => {
         const key = rawKey.trim();
-        return Object.prototype.hasOwnProperty.call(data, key)
-            ? String(data[key])
-            : "null";
+        if (Object.prototype.hasOwnProperty.call(data, key)) {
+            const val = data[key];
+            return typeof val === 'number' ? val.toFixed(3) : String(val);
+        }
+        return "null";
     });
 
-    // {{#fields}} ... {{/fields}}
     out = out.replace(/{{#fields}}([\s\S]*?){{\/fields}}/g, (_, block) => {
         const entries = Object.entries(data)
-            .filter(([_, v]) =>
-                v !== null &&
-                v !== undefined &&
-                (typeof v === "number" || !isNaN(parseFloat(v)))
-            );
+            .filter(([_, v]) => v !== null && v !== undefined);
 
         if (!entries.length) return "";
 
         return entries.map(([key, value], i) => {
+            // Ensure 3-digit precision for numeric values in the loop
+            const formattedValue = typeof value === 'number' ? value.toFixed(3) : String(value);
+            
             let line = block
                 .replace(/{{key}}/g, String(key))
-                .replace(/{{value}}/g, String(value))
+                .replace(/{{value}}/g, formattedValue)
                 .trim();
 
-            // Remove trailing comma on last item
             if (i === entries.length - 1) {
                 line = line.replace(/,\s*$/, "");
             }
@@ -722,36 +729,6 @@ async function sendHttpRequest(data) {
 	  } catch (e) { logStatus(`❌ Network Error: ${e.message}`, "error"); }
 }
 
-// Trigger Logic
-function handleNewPacket(data, dataString) {
-	const now = Date.now();
-	
-	// 1. Time Debounce Check
-	if (now - lastProcessedTime < MIN_PROCESSING_INTERVAL_MS) {
-		return;
-	}
-	
-	// 2. Data Deduplication Check
-const stableString = JSON.stringify(data);
-if (stableString === lastSentLogData) {
-    return;
-}
-
-	
-	// 3. Update state and counter for a unique packet
-	  lastSentLogData = dataString;
-	lastProcessedTime = now;
-	
-	  packetCounter++;
-	  if (packetCount) packetCount.textContent = packetCounter;
-	  lastParsedData = data;
-	  
-	  // Send immediately only if interval is 0
-	  if (enableWebhook.checked && Number(webhookInterval.value) === 0) {
-		    sendHttpRequest(data);
-	  }
-}
-
 // Timer for Interval Mode
 function resetTimer() {
 	  if (intervalTimer) {
@@ -770,76 +747,16 @@ function resetTimer() {
 	  }
 }
 
-// ============================================================================
-// 🔍 LOG PARSER 
-// ============================================================================
-
-const logElement = document.getElementById('log');
-
-const logObserver = new MutationObserver((mutations) => {
-    if (isObserverProcessing) return;
-    isObserverProcessing = true; 
-
-    try {
-        mutations.forEach((mutation) => {
-            if (mutation.addedNodes.length) {
-                const text = mutation.addedNodes[0].textContent;
-                
-                // 1. Check if this is a "Parsed" log line
-                if (text && text.includes("Parsed:")) {
-                    // 2. Extract only the part AFTER "Parsed:"
-                    const dataStartIndex = text.indexOf("Parsed:") + 7;
-                    const clean = text.substring(dataStartIndex).trim();
-                    const parts = clean.split(",");
-                    const data = {};
-                    
-                    parts.forEach(p => {
-                        // 3. Find the colon that separates the specific Key from its Value
-                        const colonIndex = p.indexOf(":"); 
-                        if (colonIndex !== -1) {
-                            const k = p.substring(0, colonIndex).trim();
-                            const v = p.substring(colonIndex + 1).trim();
-                            
-                            // 4. Ensure we have a valid key and a numeric value
-                            const numericValue = parseFloat(v);
-                            if (k && !isNaN(numericValue)) {
-                                data[k] = numericValue;
-                            }
-                        }
-                    });
-                    
-                    if (Object.keys(data).length > 0) {
-                        handleNewPacket(data, clean);
-                    }
-                }
-            }
-        });
-    } finally {
-        isObserverProcessing = false; 
-    }
-});
-
-logObserver.observe(logElement, { childList: true, subtree: true });
-
 // Manual Test
 testWebhook.onclick = () => {
-	  // Use lastParsedData if available, otherwise generate test data from current sensor config
 	  let data = lastParsedData;
-	  
 	  if (!data && config && config.data) {
 		  data = {};
-		  // Generate realistic test values based on current sensor's fields
 		  Object.entries(config.data).forEach(([fieldName, meta]) => {
-			  // Generate a random test value between 1-100 (avoid 0 to ensure visibility)
 			  data[fieldName] = parseFloat((Math.random() * 99 + 1).toFixed(3));
 		  });
 	  }
-	  
-	  // Fallback if no config is loaded
-	  if (!data) {
-		  data = { PM1_0: 1.5, PM2_5: 1.6, PM10: 1.7 };
-	  }
-	  
+	  if (!data) data = { PM1_0: 1.5, PM2_5: 1.6, PM10: 1.7 };
 	  logStatus("Manual Test Triggered (using " + (lastParsedData ? "last received data" : "generated test data") + ")", "info");
 	  sendHttpRequest(data);
 };
@@ -854,25 +771,19 @@ async function fetchNewWebhookUrl() {
 	
 	webhookInput.value = "";
 	webhookInput.placeholder = "Fetching unique webhook.site URL...";
-	viewLink.innerHTML = ""; // Clear old link
+	viewLink.innerHTML = ""; 
 	
-	// FIX: Route the webhook token request through the existing proxy to avoid CORS block
 	const proxyUrl = `${PROXY_URL}?url=${encodeURIComponent('https://webhook.site/token')}`;
 	
 	try {
 		const response = await fetch(proxyUrl, { method: 'POST' });
-		
 		if (response.ok) {
 			const data = await response.json();
 			const token = data.uuid;
 			const newUrl = `https://webhook.site/${token}`;
-			
 			webhookInput.value = newUrl;
 			webhookInput.placeholder = "Unique URL loaded.";
-			
-			// Generate View/Edit link
 			viewLink.innerHTML = `(<a href="https://webhook.site/#!/view/${token}" target="_blank">View/Edit @ webhook.site</a>)`;
-			
 			logStatus("New unique Webhook.site URL generated.", "success");
 			} else {
 			webhookInput.placeholder = "Failed to fetch URL. Status: " + response.status;
@@ -884,7 +795,6 @@ async function fetchNewWebhookUrl() {
 	}
 }
 
-// Initialize timer and fetch URL on load
 fetchNewWebhookUrl();
 resetTimer();
 logStatus("System Ready. Rate-limit protection active.", "success");
@@ -903,11 +813,9 @@ async function insertCommitDate() {
 			document.getElementById("commit-date").innerHTML = "Last commit: Unknown";
 			return;
 		}
-		// Format ISO date → DD.MM.YYYY HH:MM
 		const d = new Date(iso);
 		const pad = (n) => n.toString().padStart(2, "0");
 		const formatted =`${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ` + `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-		// Insert formatted date with Git icon
 		document.getElementById("commit-date").innerHTML =`Last commit: ${formatted}`;
 	} 
 	catch (err) {
