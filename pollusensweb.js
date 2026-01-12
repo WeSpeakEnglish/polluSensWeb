@@ -544,6 +544,12 @@ document.getElementById('connect').onclick = async () => {
 		
 		await sendCommand(config.start_command);
 		await sendCommandIfNeeded();
+
+        // Resume webhook timer automatically if opted-in
+        if (enableWebhook.checked) {
+            resetTimer();
+        }
+
 		await readLoop();
 		
 		} catch (err) {
