@@ -651,17 +651,43 @@ function getHeaders() {
 }
 
 function processTemplate(tmpl, data) {
-	  let out = tmpl.replace(/{{ts}}/g, new Date().toISOString());
-	  out = out.replace(/{{field:([^}]+)}}/g, (_, f) => (data[f] !== undefined ? data[f] : "null"));
-	  out = out.replace(/{{#fields}}([\s\S]*?){{\/fields}}/g, (_, block) => {
-		    const entries = Object.entries(data).filter(([k,v]) => v !== null && isFinite(v));
-		    if (!entries.length) return "";
-		    return entries.map(([k,v], i) => {
-			      let line = block.replace(/{{key}}/g, k).replace(/{{value}}/g, v).trim();
-			      return i === entries.length - 1 ? line.replace(/,\s*$/, "") : line;
-		    }).join(",\n    ");
-	  });
-	  return out;
+    // Timestamp
+    let out = tmpl.replace(/{{ts}}/g, new Date().toISOString());
+
+    // {{field:FIELD_NAME}} — literal key lookup (supports dots)
+    out = out.replace(/{{field:([^}]+)}}/g, (_, rawKey) => {
+        const key = rawKey.trim();
+        return Object.prototype.hasOwnProperty.call(data, key)
+            ? String(data[key])
+            : "null";
+    });
+
+    // {{#fields}} ... {{/fields}}
+    out = out.replace(/{{#fields}}([\s\S]*?){{\/fields}}/g, (_, block) => {
+        const entries = Object.entries(data)
+            .filter(([_, v]) =>
+                v !== null &&
+                v !== undefined &&
+                (typeof v === "number" || !isNaN(parseFloat(v)))
+            );
+
+        if (!entries.length) return "";
+
+        return entries.map(([key, value], i) => {
+            let line = block
+                .replace(/{{key}}/g, String(key))
+                .replace(/{{value}}/g, String(value))
+                .trim();
+
+            // Remove trailing comma on last item
+            if (i === entries.length - 1) {
+                line = line.replace(/,\s*$/, "");
+            }
+            return line;
+        }).join(",\n    ");
+    });
+
+    return out;
 }
 
 async function sendHttpRequest(data) {
@@ -706,9 +732,11 @@ function handleNewPacket(data, dataString) {
 	}
 	
 	// 2. Data Deduplication Check
-	  if (dataString === lastSentLogData) {
-		      return;
-	  }
+const stableString = JSON.stringify(data);
+if (stableString === lastSentLogData) {
+    return;
+}
+
 	
 	// 3. Update state and counter for a unique packet
 	  lastSentLogData = dataString;
@@ -791,8 +819,8 @@ testWebhook.onclick = () => {
 		  data = {};
 		  // Generate realistic test values based on current sensor's fields
 		  Object.entries(config.data).forEach(([fieldName, meta]) => {
-			  // Generate a random test value between 0-100
-			  data[fieldName] = parseFloat((Math.random() * 100).toFixed(3));
+			  // Generate a random test value between 1-100 (avoid 0 to ensure visibility)
+			  data[fieldName] = parseFloat((Math.random() * 99 + 1).toFixed(3));
 		  });
 	  }
 	  

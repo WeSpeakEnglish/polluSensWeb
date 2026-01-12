@@ -251,7 +251,7 @@
 				"compare": "data[45]"
 			},
 			"data": {
-				"PM1.0": {
+				"PM1": {
 					"value": "new DataView(new Uint8Array(data.slice(5,9)).buffer).getFloat32(0, false)",
 					"unit": "µg/m³"
 				},
