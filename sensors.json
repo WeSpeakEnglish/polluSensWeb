@@ -259,11 +259,11 @@
 					"value": "new DataView(new Uint8Array(data.slice(9,13)).buffer).getFloat32(0, false)",
 					"unit": "µg/m³"
 				},
-				"PM4.0": {
+				"PM4": {
 					"value": "new DataView(new Uint8Array(data.slice(13,17)).buffer).getFloat32(0, false)",
 					"unit": "µg/m³"
 				},
-				"PM10.0": {
+				"PM10": {
 					"value": "new DataView(new Uint8Array(data.slice(17,21)).buffer).getFloat32(0, false)",
 					"unit": "µg/m³"
 				},

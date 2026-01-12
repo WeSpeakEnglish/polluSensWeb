@@ -791,15 +791,21 @@ const logObserver = new MutationObserver((mutations) => {
 					          const data = {};
 					          
 					          parts.forEach(p => {
-						            const [k, v] = p.split(":").map(s => s.trim());
-						            if (k && v && !isNaN(parseFloat(v))) {
-							              data[k] = parseFloat(v);
-						            }
-					          });
+    // We split by the first colon only to protect values that might contain colons
+    const colonIndex = p.indexOf(":");
+    if (colonIndex !== -1) {
+        const k = p.substring(0, colonIndex).trim();
+        const v = p.substring(colonIndex + 1).trim();
+        if (k && v && !isNaN(parseFloat(v))) {
+            data[k] = parseFloat(v);
+        }
+    }
+});
 					          
 					          if (Object.keys(data).length > 0) {
 						            handleNewPacket(data, clean);
 					          }
+						console.log("OBSERVER TEXT:", text);
 				        }
 			      }
 		    });
