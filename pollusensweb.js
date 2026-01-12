@@ -85,10 +85,8 @@ async function loadConfigAndPopulateSelector(customConfig = null, customName = n
 	let rawSensors = Array.isArray(rawConfig.sensors) ? rawConfig.sensors : [rawConfig];
 	sensors = rawSensors.map(resolveInheritance).filter(s => s && s.name && s.data);
 	
-	// Convert to map for easy override
 	const sensorMap = {};
 	
-	// Load default sensors first (if not custom load)
 	if (!customConfig) {
 		defaultSensors = rawSensors;
 		defaultSensorNames = rawSensors.map(s => s.name);
@@ -96,26 +94,21 @@ async function loadConfigAndPopulateSelector(customConfig = null, customName = n
 			if (s.name) sensorMap[s.name] = s;
 		});
 		} else {
-		// Merge custom sensors into existing map (override if same name)
 		rawSensors.forEach(s => {
 			if (s.name) sensorMap[s.name] = s;
 		});
 		
-		// Reconstruct sensor list: customs first, then defaults not overridden
 		const customNames = rawSensors.map(s => s.name);
 		const allNames = [...customNames, ...defaultSensorNames.filter(n => !customNames.includes(n))];
 		rawSensors = allNames.map(name => sensorMap[name]).filter(s => s && s.name);
 	}
 	
-	
 	rawSensors.forEach(sensor => {
 		if (sensor.name) nameToSensor[sensor.name] = sensor;
 	});
 	
-	
 	sensors = rawSensors.map(resolveInheritance);
 	
-	// Populate dropdown
 	const selector = document.getElementById('sensorSelector');
 	selector.innerHTML = '';
 	sensors.forEach((sensor, i) => {
@@ -142,7 +135,6 @@ async function loadConfigAndPopulateSelector(customConfig = null, customName = n
 	logMessage(`✅ Sensor list loaded${sourceLabel} (${sensors.length} sensors)`, 1);
 	sortSensorSelectorWhenReady();
 }
-
 
 function renderSignalRows() {
 	const container = document.getElementById('signalRows');
@@ -171,7 +163,7 @@ function renderSignalRows() {
 		
 		const label = document.createElement('label');
 		label.textContent = key + unit;
-		label.prepend(checkbox); // wrap checkbox inside label
+		label.prepend(checkbox); 
 		
 		const color = document.createElement('input');
 		color.type = 'color';
@@ -203,7 +195,6 @@ function renderSignalRows() {
 		container.appendChild(row);
 	});
 }
-
 
 document.getElementById('createChart').onclick = () => {
 	const name = document.getElementById('chartName').value || "Chart";
@@ -387,7 +378,7 @@ function unstuffBytes(data, stuffingTable) {
 			const key = `${data[i]},${data[i + 1]}`;
 			if (key in stuffedMap) {
 				result.push(stuffedMap[key]);
-				i++; // skip stuffed byte
+				i++; 
 				continue;
 			}
 		}
@@ -440,7 +431,7 @@ async function readLoop() {
 					}
 					data = unstuffed;
 					
-					} else { // Original logic for fixed-length frames
+					} else { 
 					if (buffer.length < frameLength) break;
 					
 					const potentialFrame = buffer.slice(0, frameLength);
@@ -472,18 +463,15 @@ async function readLoop() {
 						for (const [name, meta] of Object.entries(dataFields)) {
 							const expr = typeof meta === 'object' ? meta.value : meta;
 							const val = eval(expr);
-                            // Enforce 3-digit precision for all numeric values
                             parsed[name] = typeof val === 'number' ? parseFloat(val.toFixed(3)) : val;
 						}
                         
-                        // 1. Update charts with fresh data
 						updateCharts(parsed);
                         
-                        // 2. Trigger Webhook directly from data flow
+                        lastParsedData = parsed;
+
                         if (enableWebhook.checked && Number(webhookInterval.value) === 0) {
                             sendHttpRequest(parsed);
-                        } else {
-                            lastParsedData = parsed;
                         }
 
 						const hexPacket = Array.from(data).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
@@ -510,9 +498,7 @@ async function readLoop() {
 		try {
 			await reader?.cancel();
 			reader?.releaseLock();
-			} catch (e) {
-			// ignore
-		}
+			} catch (e) {}
 	}
 	
 	reading = false;
@@ -526,6 +512,12 @@ document.getElementById('connect').onclick = async () => {
 	if (port) {
 		reading = false;
 		
+		if (intervalTimer) {
+			clearInterval(intervalTimer);
+			intervalTimer = null;
+			logStatus("Webhook timer stopped.", "info");
+		}
+
 		if (commandInterval) {
 			clearInterval(commandInterval);
 			commandInterval = null;
@@ -588,7 +580,7 @@ document.getElementById('saveCSV').onclick = () => {
 	document.body.removeChild(link);
 };
 document.addEventListener('DOMContentLoaded', async () => {
-	await loadConfigAndPopulateSelector(); // load default first
+	await loadConfigAndPopulateSelector(); 
 });
 document.getElementById('jsonUpload').addEventListener('change', async (e) => {
 	const file = e.target.files[0];
@@ -598,9 +590,8 @@ document.getElementById('jsonUpload').addEventListener('change', async (e) => {
 		const text = await file.text();
 		const json = JSON.parse(text);
 		
-		// Ensure default sensors were loaded (for merging)
 		if (!defaultSensorNames.length || !defaultSensors.length) {
-			await loadConfigAndPopulateSelector(); // fallback load
+			await loadConfigAndPopulateSelector(); 
 		}
 		
 		await loadConfigAndPopulateSelector(json, file.name);
@@ -609,28 +600,19 @@ document.getElementById('jsonUpload').addEventListener('change', async (e) => {
 	}
 });
 
-// ============================================================================
-// WEBHOOK LOGIC (FIXED WITH TIME DEBOUNCE)
-// ============================================================================
-
 const PROXY_URL = "https://pollutants.eu/proxy/proxy.php";
 const MIN_PROCESSING_INTERVAL_MS = 50; 
 let intervalTimer = null;
 let lastParsedData = null; 
-let lastSentLogData = ""; 
 let lastProcessedTime = 0; 
-let packetCounter = 0;
 let webhookCounter = 0;
 
-
-// UI Toggles
 enableWebhook.onchange = () => {
 	  webhookConfig.style.display = enableWebhook.checked ? "block" : "none";
 	  resetTimer();
 };
 webhookInterval.onchange = resetTimer;
 
-// Header Management
 function addHeaderRow(key = "", val = "") {
 	  const row = document.createElement("div"); 
 	  row.className = "header-row";
@@ -679,7 +661,6 @@ function processTemplate(tmpl, data) {
         if (!entries.length) return "";
 
         return entries.map(([key, value], i) => {
-            // Ensure 3-digit precision for numeric values in the loop
             const formattedValue = typeof value === 'number' ? value.toFixed(3) : String(value);
             
             let line = block
@@ -704,7 +685,6 @@ async function sendHttpRequest(data) {
 		    
 		    const method = webhookMethod.value;
 		    const url = `${PROXY_URL}?url=${encodeURIComponent(webhookUrl.value)}`;
-		    // Apply template processing to header values
 		const rawHeaders = getHeaders();
 		const processedHeaders = {};
 		
@@ -729,25 +709,26 @@ async function sendHttpRequest(data) {
 	  } catch (e) { logStatus(`❌ Network Error: ${e.message}`, "error"); }
 }
 
-// Timer for Interval Mode
 function resetTimer() {
-	  if (intervalTimer) {
-		    clearInterval(intervalTimer);
-		    intervalTimer = null;
-		    logStatus("Previous timer cleared.", "info");
-	  }
+	if (intervalTimer) {
+		clearInterval(intervalTimer);
+		intervalTimer = null;
+		logStatus("Previous timer cleared.", "info");
+	}
 	
-	  const secs = Number(webhookInterval.value);
-	  
-	  if (enableWebhook.checked && secs > 0) {
-		    logStatus(`Timer started: sending every ${secs}s`, "info");
-		    intervalTimer = setInterval(() => {
-			      if (lastParsedData) sendHttpRequest(lastParsedData);
-		    }, secs * 1000);
-	  }
+	const secs = Number(webhookInterval.value);
+	
+	if (enableWebhook.checked && secs > 0) {
+		logStatus(`Timer started: sending every ${secs}s`, "info");
+		intervalTimer = setInterval(() => {
+			if (reading && lastParsedData) {
+				sendHttpRequest(lastParsedData);
+				lastParsedData = null;
+			}
+		}, secs * 1000);
+	}
 }
 
-// Manual Test
 testWebhook.onclick = () => {
 	  let data = lastParsedData;
 	  if (!data && config && config.data) {
@@ -760,10 +741,6 @@ testWebhook.onclick = () => {
 	  logStatus("Manual Test Triggered (using " + (lastParsedData ? "last received data" : "generated test data") + ")", "info");
 	  sendHttpRequest(data);
 };
-
-// ============================================================================
-//  AUTO-GENERATE WEBHOOK URL 
-// ============================================================================
 
 async function fetchNewWebhookUrl() {
 	const webhookInput = document.getElementById('webhookUrl');
@@ -800,7 +777,6 @@ resetTimer();
 logStatus("System Ready. Rate-limit protection active.", "success");
 
 async function insertCommitDate() {
-	const repoUrl = "https://github.com/WeSpeakEnglish/polluSensWeb";
 	const apiUrl = "https://api.github.com/repos/WeSpeakEnglish/polluSensWeb/commits?per_page=1";
 	try {
 		const res = await fetch(apiUrl, {
@@ -827,10 +803,10 @@ async function insertCommitDate() {
 function sortSensorSelectorWhenReady() {
     const select = document.getElementById("sensorSelector");
     if (!select) return;
-        const options = Array.from(select.options).sort((a, b) =>
-            a.text.localeCompare(b.text, undefined, { sensitivity: "base" })
-        );
+    const options = Array.from(select.options).sort((a, b) =>
+        a.text.localeCompare(b.text, undefined, { sensitivity: "base" })
+    );
 
-        select.innerHTML = "";
-        options.forEach(o => select.appendChild(o));
+    select.innerHTML = "";
+    options.forEach(o => select.appendChild(o));
 }
