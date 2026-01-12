@@ -784,9 +784,25 @@ logObserver.observe(logElement, { childList: true, subtree: true });
 
 // Manual Test
 testWebhook.onclick = () => {
-	  const data = lastParsedData || { PM1_0: 1.5, PM2_5: 1.6, PM10: 1.7 };
-	  logStatus("Manual Test Triggered", "info");
-	  sendHttpRequest(data);
+	  // Use lastParsedData if available, otherwise generate test data from current sensor config
+	  let data = lastParsedData;
+	  
+	  if (!data && config && config.data) {
+		  data = {};
+		  // Generate realistic test values based on current sensor's fields
+		  Object.entries(config.data).forEach(([fieldName, meta]) => {
+			  // Generate a random test value between 0-100
+			  data[fieldName] = parseFloat((Math.random() * 100).toFixed(3));
+		  });
+	  }
+	  
+	  // Fallback if no config is loaded
+	  if (!data) {
+		  data = { PM1_0: 1.5, PM2_5: 1.6, PM10: 1.7 };
+	  }
+	  
+	  logStatus("Manual Test Triggered (using " + (lastParsedData ? "last received data" : "generated test data") + ")", "info");
+	  sendHttpRequest(data);
 };
 
 // ============================================================================
