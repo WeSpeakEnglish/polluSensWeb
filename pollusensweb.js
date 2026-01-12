@@ -777,41 +777,46 @@ function resetTimer() {
 const logElement = document.getElementById('log');
 
 const logObserver = new MutationObserver((mutations) => {
-	  if (isObserverProcessing) return;
-	  isObserverProcessing = true; 
-	
-	  try {
-		    mutations.forEach((mutation) => {
-			      if (mutation.addedNodes.length) {
-				        const text = mutation.addedNodes[0].textContent;
-				        
-				        if (text && text.includes("Parsed:")) {
-					          const clean = text.replace("Parsed:", "").trim();
-					          const parts = clean.split(",");
-					          const data = {};
-					          
-					          parts.forEach(p => {
-    // We split by the first colon only to protect values that might contain colons
-    const colonIndex = p.indexOf(":");
-    if (colonIndex !== -1) {
-        const k = p.substring(0, colonIndex).trim();
-        const v = p.substring(colonIndex + 1).trim();
-        if (k && v && !isNaN(parseFloat(v))) {
-            data[k] = parseFloat(v);
-        }
+    if (isObserverProcessing) return;
+    isObserverProcessing = true; 
+
+    try {
+        mutations.forEach((mutation) => {
+            if (mutation.addedNodes.length) {
+                const text = mutation.addedNodes[0].textContent;
+                
+                // 1. Check if this is a "Parsed" log line
+                if (text && text.includes("Parsed:")) {
+                    // 2. Extract only the part AFTER "Parsed:"
+                    const dataStartIndex = text.indexOf("Parsed:") + 7;
+                    const clean = text.substring(dataStartIndex).trim();
+                    const parts = clean.split(",");
+                    const data = {};
+                    
+                    parts.forEach(p => {
+                        // 3. Find the colon that separates the specific Key from its Value
+                        const colonIndex = p.indexOf(":"); 
+                        if (colonIndex !== -1) {
+                            const k = p.substring(0, colonIndex).trim();
+                            const v = p.substring(colonIndex + 1).trim();
+                            
+                            // 4. Ensure we have a valid key and a numeric value
+                            const numericValue = parseFloat(v);
+                            if (k && !isNaN(numericValue)) {
+                                data[k] = numericValue;
+                            }
+                        }
+                    });
+                    
+                    if (Object.keys(data).length > 0) {
+                        handleNewPacket(data, clean);
+                    }
+                }
+            }
+        });
+    } finally {
+        isObserverProcessing = false; 
     }
-});
-					          
-					          if (Object.keys(data).length > 0) {
-						            handleNewPacket(data, clean);
-					          }
-						console.log("OBSERVER TEXT:", text);
-				        }
-			      }
-		    });
-		  } finally {
-		    isObserverProcessing = false; 
-	  }
 });
 
 logObserver.observe(logElement, { childList: true, subtree: true });
