@@ -347,10 +347,10 @@ Add headers using the **+ Add header** button.
 Body templates are **JSON-based**, supporting placeholders:
 
 - `{{ts}}` – timestamp  
-- `{{field:<name>}}` – sensor value  
+- `{{field:<signal name>}}` – sensor value  
 - `{{#fields}} … {{/fields}}` – loop through all sensor fields  
 
-#### Example Body
+#### Example Body passing all the fields
 
 ```json
 {
@@ -369,7 +369,7 @@ Body templates are **JSON-based**, supporting placeholders:
 For a packet:
 
 ```text
-PM1_0: 1.5, PM2_5: 12.3, PM10: 20.1
+PM1: 1.5, PM2.5: 12.3, PM10: 20.1
 ```
 
 The processed body will be:
@@ -379,13 +379,26 @@ The processed body will be:
   "software_version": "polluSensWeb 1.0",
   "timestamp": "2025-12-09T12:34:56.789Z",
   "sensordatavalues": [
-    { "value_type": "PM1_0", "value": 1.5 },
-    { "value_type": "PM2_5", "value": 12.3 },
+    { "value_type": "PM1", "value": 1.5 },
+    { "value_type": "PM2.5", "value": 12.3 },
     { "value_type": "PM10", "value": 20.1 }
   ]
 }
 ```
+#### Example Body passing specific field (sinal)
 
+```json
+{
+	"software_version": "polluSensWeb 1.0",
+	"timestamp": "{{ts}}",
+	"sensordatavalues": [
+	{"PM2.5": "{{field:PM2.5 x0.4 calibrated}}"}
+	]
+}
+```
+Here *PM2.5 x0.4 calibrated* is the signal (signal names you see in the form where you select them for chart at the top of UI), before [units],
+for this example it was:
+*PM2.5 x0.4 calibrated [μg/m³]*
 ---
 
 ### Sending Webhooks
@@ -398,7 +411,7 @@ The processed body will be:
 **Headers**
 
 ```
-X-PM25: {{field:PM2_5}}
+X-PM25: {{field:PM2.5}}
 X-Time: {{ts}}
 Content-Type: application/json
 ```
@@ -407,7 +420,7 @@ Content-Type: application/json
 
 ```json
 {
-  "pm25": {{field:PM2_5}},
+  "pm25": {{field:PM2.5}},
   "pm10": {{field:PM10}},
   "time": "{{ts}}"
 }
