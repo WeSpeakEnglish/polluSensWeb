@@ -4,7 +4,7 @@
 Try it out yourself: [here](https://wespeakenglish.github.io/polluSensWeb/) 
 
 
-<img src="https://raw.githubusercontent.com/WeSpeakEnglish/images/main/xmas_polluSensWeb.png" alt="polluSensWeb" align="center">
+<div align="center"><img src="https://raw.githubusercontent.com/WeSpeakEnglish/images/main/xmas_polluSensWeb.png" alt="polluSensWeb"></div>
 
 
 ## Features
