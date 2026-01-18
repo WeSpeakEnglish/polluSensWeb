@@ -396,9 +396,11 @@ The processed body will be:
 	]
 }
 ```
+
 Here *PM2.5 x0.4 calibrated* is the signal (signal names you see in the form where you select them for chart at the top of UI), before [units],
 for this example it was:
 *PM2.5 x0.4 calibrated [μg/m³]*
+
 ---
 
 ### Sending Webhooks
