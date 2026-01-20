@@ -456,13 +456,3 @@ Body:
 
 - Default sensors: [`sensors.json`](https://raw.githubusercontent.com/WeSpeakEnglish/polluSensWeb/main/sensors.json)
 - Project homepage: [pollutants.eu/sensor](https://pollutants.eu/sensor)
-
-## Contribute
-
-If you've created and sucessfully tested a sensor config (you may test it by uploading custom JSON via web interface), feel free to submit it in pull request adding to sensor list JSON.
-
-
-
-
-
-
