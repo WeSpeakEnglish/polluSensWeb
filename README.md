@@ -39,7 +39,7 @@ The following sensors are currently supported by `polluSensWeb`:
 12. **Nova PM SDS011**
 13. **Sensirion SPS30**
 14. **SHUYI SY210**
-15. **TERA NextPM** - thanks for Michael Lažan for testing! ([senzorvzduchu.cz](https://senzorvzduchu.cz/))
+15. **TERA NextPM** - thanks to Michael Lažan for testing! ([senzorvzduchu.cz](https://senzorvzduchu.cz/))
 16. **SenseAir S8 004-0-0053**
 17. **SenseAir S88 Residential**
 18. **SenseAir S88 LP**
@@ -456,3 +456,4 @@ Body:
 
 - Default sensors: [`sensors.json`](https://raw.githubusercontent.com/WeSpeakEnglish/polluSensWeb/main/sensors.json)
 - Project homepage: [pollutants.eu/sensor](https://pollutants.eu/sensor)
+- Hackaday project:  [Connect any UART sensor in your browser](https://hackaday.io/project/203369-uart-air-pollution-sensor-in-browser-easy)
