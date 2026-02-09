@@ -4,7 +4,9 @@
 Try it out yourself: [here](https://wespeakenglish.github.io/polluSensWeb/) 
 
 
-<div align="center"><img src="https://raw.githubusercontent.com/WeSpeakEnglish/images/main/xmas_polluSensWeb.png" alt="polluSensWeb"></div>
+<div align="center">[![Watch the video](https://img.youtube.com/vi/6iKBp7bFT0Q/maxresdefault.jpg)](https://youtu.be/6iKBp7bFT0Q)
+
+### [Watch this video on YouTube](https://youtu.be/6iKBp7bFT0Q)</div>
 
 
 ## Features
