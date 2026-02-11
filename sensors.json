@@ -458,11 +458,11 @@
 		},
 		{
 			"name": "YYS D01",
-			"inherits_from": "YYS DC01",
+			"inherits_from": "YYS DC01"
 		},
 		{
 			"name": "YYS D01-P",
-			"inherits_from": "YYS DC01",
+			"inherits_from": "YYS DC01"
 		}
 	]	
 }
