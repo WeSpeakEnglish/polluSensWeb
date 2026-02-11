@@ -496,6 +496,22 @@
 				"eval": "data.slice(0, 30).reduce((a, b) => (a + b) & 0xFFFF, 0)",
 				"compare": "(data[30] << 8) + data[31]"
 			}
+		},
+		{
+			"name": "YYS D3",
+			"inherits_from": "YYS D9"
+		},
+		{
+			"name": "YYS D5",
+			"inherits_from": "YYS D9"
+		},
+		{
+			"name": "YYS D7",
+			"inherits_from": "YYS D9"
+		},
+		{
+			"name": "YYS D7B",
+			"inherits_from": "YYS D9"
 		}
 	]	
 }
