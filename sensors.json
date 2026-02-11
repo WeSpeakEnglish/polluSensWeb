@@ -449,16 +449,20 @@
 				"PM2.5": {
 					"value": "(data[1] << 7) + data[2]",
 					"unit": "μg/m³"
-				},
-				"PM2.5 x0.4 calibrated": {
-					"value": "(data[1] << 7) + data[2]",
-					"unit": "μg/m³"
 				}
 			},
 			"checksum": {
 				"eval": "(data[0] + data[1] + data[2])&0x7F",
 				"compare": "data[3]"
 			}
+		},
+		{
+			"name": "YYS D01",
+			"inherits_from": "YYS DC01",
+		},
+		{
+			"name": "YYS D01-P",
+			"inherits_from": "YYS DC01",
 		}
 	]	
 }
