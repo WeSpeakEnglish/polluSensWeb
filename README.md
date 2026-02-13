@@ -55,7 +55,14 @@ The following sensors are currently supported by `polluSensWeb`:
 24. **SenseAir K33 ICB**
 25. **Sensirion SCD30**
 26. **YYS DC01**
-27. More coming soon...
+27. **YYS D01**
+28. **YYS D01-P**
+29. **YYS D9**
+30. **YYS D3**
+31. **YYS D5**
+32. **YYS D7**
+33. **YYS D7B**
+    ...more coming soon!
 
 ## Supported Browsers
 
