@@ -206,8 +206,8 @@ Each sensor object describes how to read and interpret data from a UART-connecte
 |------------------|----------|-----------|-------------|
 | `name`           | yes       | string    | Unique sensor name (shown in dropdown) |
 | `inherits_from`  | no       | string    | Name of another sensor to inherit from, ex. `"Plantower PMSA003-S"` |
-| `command`        | no       | string    | Hex string to send after connect (e.g. `"7E 00 03 00 FC 7E"`) or `"none"` |
-| `start_command`  | no       | string    | Hex string to send on connect (e.g. `"7E 00 00 02 01 03 F9 7E"`) |
+| `command`        | no       | string    | Hex string to send during connection (e.g. `"7E 00 03 00 FC 7E"`) or `"none"` |
+| `start_command`  | no       | string    | Hex string to send after connect event (e.g. `"7E 00 00 02 01 03 F9 7E"`) |
 | `stop_command`   | no       | string    | Hex string to send on disconnect (e.g. `"7E 00 01 00 FE 7E"`) 
 | `send_cmd_period`| no       | number    | If > 0, send `command` every N seconds, if = 0  - once |
 | `port`           | yes     | object    | fields: see below |
