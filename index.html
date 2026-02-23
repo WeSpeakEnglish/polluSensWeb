@@ -46,21 +46,21 @@ h1 {
 				<label>Chart datapoints:<input type="number" id="maxDatapoints" value="600" min="2" /></label>
 			</div>
 			<div id="datasetConfigs"><h4>Signals</h4><div id="signalRows"></div></div>
-			<button id="createChart">📈 Create Chart</button>
+			<button id="createChart">📈 Create a Chart</button>
 		</div>
 		
 		<div id="charts"></div>
+		<div class="packets-log">
+			<div style="margin-bottom: 8px;">
+				<label><b>Log:</b></label>
+				<label>Display last <input type="number" id="maxLogPackets" value="1000" min="10" style="width:80px;" /> lines</label>
+				<label style="margin-left:20px;"><input type="checkbox" id="autoscrollLog" checked /> Autoscroll</label>
+				<button id="clearLog" class="secondary-button">🧹 Clear Log</button>
+				<button id="saveCSV" class="secondary-button">💾 Save CSV</button>
+			</div>
 		
-		<div style="margin-bottom: 8px;">
-			<label><b>Log:</b></label>
-			<label>Display last <input type="number" id="maxLogPackets" value="1000" min="10" style="width:80px;" /> lines</label>
-			<label style="margin-left:20px;"><input type="checkbox" id="autoscrollLog" checked /> Autoscroll</label>
-			<button id="clearLog" class="secondary-button">🧹 Clear Log</button>
-			<button id="saveCSV" class="secondary-button">💾 Save CSV</button>
+			<pre id="log"></pre>
 		</div>
-		
-		<pre id="log"></pre>
-		
 		<div class="webhook-card">
 			<label><input type="checkbox" id="enableWebhook"> Enable Webhook Sending</label> (<a href="https://github.com/WeSpeakEnglish/polluSensWeb/blob/main/README.md#webhook-integration--pollusensweb" target="blank">examples</a>)
 			
