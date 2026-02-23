@@ -25,14 +25,17 @@ h1 {
 	</head>
 	<body>
 		<header>
-			<h1><b>polluSensWeb</b><br/>Connect your UART pollution sensor directly in the browser. Easy.</h1>
-			<div>
+			<h1><b>polluSensWeb</b><br/>Connect your UART pollution sensor directly in the browser. Easy.</h1></header>
+			<div class="sensor-connect">
+				<h3>Connect a Sensor</h3>
 				<select id="sensorSelector"></select>
 				<button id="connect">🔌 Connect</button>
-				<br/>
+				<br/><br/>
+				<div>
 				<label>Custom JSON Sensor Configuration (<a href="https://github.com/WeSpeakEnglish/polluSensWeb/blob/main/README.md#sensor-example-full-json-example-may-be-used-like-custom-template" target="blank">example</a>): <input type="file" id="jsonUpload" accept=".json" class="secondary-button" /></label>
+				</div>
 			</div>
-		</header>
+		
 		
 		<div id="chartControls">
 			<h3>Create a Chart</h3>

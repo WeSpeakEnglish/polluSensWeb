@@ -31,6 +31,14 @@ header h1 {
 	font-size: 1.6em;
 }
 
+#sensorSelector {
+    padding: 10px 10px 10px 10px;
+    font-size: 16px;
+    border: 1px solid #2563eb;
+    border-radius: 6px;
+    background: #fff;
+}
+
 button, select, input, label {
 	font-size: 1em;
 }
@@ -61,10 +69,10 @@ button:hover {
 	background: #5a6268;
 }
 
-#chartControls, .chart-wrapper {
+#chartControls, .chart-wrapper, .sensor-connect {
 	background: white;
 	border-radius: 8px;
-	padding: 5px 10px 70px 20px;
+	padding: 5px 10px 20px 20px;
 	margin-bottom: 10px;
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
