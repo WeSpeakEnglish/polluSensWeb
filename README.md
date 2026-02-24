@@ -22,7 +22,6 @@ Try it out yourself: [here](https://wespeakenglish.github.io/polluSensWeb/)
 - Configurable via external JSON file
 - Supports webhooks
 - Works offline after load (except webhooks)
-- Minimal dependencies
 - No external servers required
 
 
