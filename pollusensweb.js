@@ -246,42 +246,55 @@ function createChart(name, size, datasets, maxDatapoints) {
 	wrapper.appendChild(canvas);
 	document.getElementById('charts').appendChild(wrapper);
 	
-	const chart = new Chart(canvas, {
-		type: 'line',
-		data: {
-			datasets: datasets.map(([_, field, color, tension, width]) => ({
-				label: `${field}${config.data[field]?.unit ? ' [' + config.data[field].unit + ']' : ''}`,
-				data: [],
-				borderColor: color,
-				tension: parseFloat(tension),
-				borderWidth: parseInt(width),
-				fill: false,
-				pointRadius: 0
-			}))
-		},
-		options: {
-			responsive: true,
-			maintainAspectRatio: false,
-			animation: false,
-			scales: {
-				x: {
-					type: 'time',
-					time: {
-						unit: 'second',
-						tooltipFormat: 'HH:mm:ss',
-						displayFormats: { second: 'HH:mm:ss' }
-					},
-					title: { display: true, text: 'Time' },
-					ticks: { autoSkip: true }
-				},
-				y: {
-					beginAtZero: true,
-					title: { display: true, text: name }
-				}
-			},
-			plugins: { legend: { position: 'top' } }
-		}
-	});
+const chart = new Chart(canvas, {
+  type: 'line',
+  data: {
+    datasets: datasets.map(([_, field, color, tension, width]) => ({
+      label: `${field}${config.data[field]?.unit ? ' [' + config.data[field].unit + ']' : ''}`,
+      data: [],
+      borderColor: color,
+      backgroundColor: color,      // ← solid circles in legend
+      tension: parseFloat(tension),
+      borderWidth: parseInt(width),
+      fill: false,
+      pointRadius: 0,
+      pointStyle: 'circle'         // ← explicit circle
+    }))
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: false,
+    scales: { 
+      x: { 
+        type: 'time', 
+        time: { 
+          unit: 'second', 
+          tooltipFormat: 'HH:mm:ss', 
+          displayFormats: { second: 'HH:mm:ss' } 
+        }, 
+        title: { display: true, text: 'Time' }, 
+        ticks: { autoSkip: true } 
+      }, 
+      y: { 
+        beginAtZero: true, 
+        title: { display: true, text: name } 
+      } 
+    },
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          usePointStyle: true,   // ← circles instead of rectangles
+          boxWidth: 8,           // tiny & compact
+          boxHeight: 8,
+          padding: 8,            // minimal spacing
+          font: { size: 12 }
+        }
+      }
+    }
+  }
+});
 	
 	chartSettings[chartId] = { chart, datasets, maxDatapoints };
 }
