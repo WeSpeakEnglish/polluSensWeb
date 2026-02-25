@@ -62,10 +62,7 @@ The following sensors are currently supported by `polluSensWeb`:
 31. **YYS D5**
 32. **YYS D7**
 33. **YYS D7B**
-34. **Winsen ZH03B**
-
- 
-    ...more coming soon!
+34. **Winsen ZH03B** ...more coming soon!
 
 ## Supported Browsers
 
