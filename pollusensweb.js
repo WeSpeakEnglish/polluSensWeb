@@ -119,7 +119,6 @@ async function loadConfigAndPopulateSelector(customConfig = null, customName = n
 		const isCustom = customConfig && (!defaultSensorNames.includes(sensor.name) || sourceLabel !== " (default)");
 		if (isCustom) {
 			opt.textContent += " 🆕";
-			opt.style.backgroundColor = "#d1ffd1";
 			opt.title = "Custom uploaded sensor";
 		}
 		
