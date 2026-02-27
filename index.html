@@ -10,34 +10,107 @@
 	<body>
 		<header>
 				<div class="header-content">
-					<div class="header-icon">
 						<!-- Sensor icon inspired by favicon style -->
-						<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-							<!-- Sensor body -->
-							<rect x="3" y="6" width="18" height="12" rx="2" fill="white" stroke="none"/>
-							<!-- Vertical bars inside -->
-							<line x1="7" y1="10" x2="7" y2="14" stroke="#3b82f6" stroke-width="2"/>
-							<line x1="11" y1="9" x2="11" y2="15" stroke="#3b82f6" stroke-width="2"/>
-							<line x1="15" y1="10" x2="15" y2="14" stroke="#3b82f6" stroke-width="2"/>
-							<!-- Sensor waves/lines on right -->
-							<path d="M19 9c1.5 1 1.5 5 0 6" stroke="white" stroke-width="1.5" fill="none"/>
-							<path d="M21 7c2.5 2 2.5 8 0 10" stroke="white" stroke-width="1.5" fill="none" opacity="0.6"/>
-						</svg>
-					</div>
-					<div >
-						<h1 class="header-title">polluSensWeb</h1>
-						<p class="header-tagline">Connect your <strong>UART sensor</strong> directly in the browser. Easy.</p>
-					</div>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 140" width="720" height="140" style="max-width: 100%; height: auto;">
+  <defs>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    
+    <filter id="textGlow" x="-10%" y="-40%" width="120%" height="180%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    
+    <filter id="haze" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="1.8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Container circle outline -->
+  <circle id="logo-circle" cx="68" cy="70" r="42" fill="none" stroke-width="1.5" opacity="0.4"/>
+  
+  <!-- Pollution particles -->
+  <g id="logo-particles" filter="url(#haze)">
+    <!-- Large particles (PM10) -->
+    <circle class="particle-large" cx="52" cy="54" r="6.5"/>
+    <circle class="particle-large" cx="78" cy="65" r="7"/>
+    <circle class="particle-large" cx="60" cy="82" r="5.5"/>
+    
+    <!-- Medium particles (PM2.5) -->
+    <circle class="particle-medium" cx="72" cy="48" r="4"/>
+    <circle class="particle-medium" cx="85" cy="74" r="4.5"/>
+    <circle class="particle-medium" cx="50" cy="70" r="3.8"/>
+    <circle class="particle-medium" cx="66" cy="90" r="4.2"/>
+    
+    <!-- Small particles (PM1) -->
+    <circle class="particle-small" cx="58" cy="62" r="2.5"/>
+    <circle class="particle-small" cx="80" cy="56" r="2.8"/>
+    <circle class="particle-small" cx="70" cy="77" r="2.2"/>
+    <circle class="particle-small" cx="48" cy="64" r="2.6"/>
+    <circle class="particle-small" cx="76" cy="82" r="2.4"/>
+    <circle class="particle-small" cx="62" cy="50" r="2.1"/>
+    
+    <!-- Ultra-fine particles -->
+    <circle class="particle-tiny" cx="55" cy="57" r="1.4"/>
+    <circle class="particle-tiny" cx="74" cy="60" r="1.2"/>
+    <circle class="particle-tiny" cx="68" cy="85" r="1.5"/>
+    <circle class="particle-tiny" cx="82" cy="68" r="1.3"/>
+    <circle class="particle-tiny" cx="64" cy="72" r="1.1"/>
+  </g>
+  
+  <!-- Waveform signal overlay -->
+  <g id="logo-waveform" filter="url(#glow)">
+    <path d="M30,70 Q35,70 40,58 T50,70 T60,85 T70,60 T80,75 T90,68 T100,70" stroke-width="2.2" fill="none" opacity="0.85"/>
+    <path d="M32,72 Q37,72 42,84 T52,72 T62,60 T72,80 T82,65 T92,72 T102,72" stroke-width="1.8" fill="none" opacity="0.6"/>
+  </g>
+  
+  <!-- Sensor nodes -->
+  <g id="logo-nodes" filter="url(#glow)">
+    <circle cx="40" cy="58" r="2.5" opacity="0.9"/>
+    <circle cx="60" cy="85" r="2.5" opacity="0.9"/>
+    <circle cx="80" cy="75" r="2.5" opacity="0.9"/>
+  </g>
+ 
+  <text id="logo-text-main" x="120" y="82"
+    font-family="'Courier New', Courier, monospace"
+    font-size="56" font-weight="bold"
+    filter="url(#textGlow)"
+    letter-spacing="-1">polluSensWeb</text>
+  
+  <text id="logo-text-tagline" x="105" y="112"
+    font-family="'Courier New', Courier, monospace"
+    font-size="11"
+    letter-spacing="1.0">Connect your UART sensor directly in the browser. Easy.</text>
+</svg>
+
 				</div>
+				<button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
+					<span id="themeIcon">🌙</span>
+				</button>
 		</header>
+		<style>
+			/* SVG logo theme adaptation */
+			#logo-circle { stroke: var(--border); }
+			#logo-particles .particle-large { fill: var(--accent); opacity: 0.35; }
+			#logo-particles .particle-medium { fill: var(--accent); opacity: 0.48; }
+			#logo-particles .particle-small { fill: var(--accent); opacity: 0.6; }
+			#logo-particles .particle-tiny { fill: var(--accent); opacity: 0.72; }
+			#logo-waveform path { stroke: var(--accent); }
+			#logo-nodes circle { fill: var(--accent); }
+			#logo-text-main { fill: var(--accent); }
+			#logo-text-tagline { fill: var(--accent); opacity: 0.42; }
+		</style>
 			<div class="sensor-connect">
 				<h3>Connect a Sensor</h3>
 				<select id="sensorSelector"></select>
 				<button id="connect">🔌 Connect</button>
-				<br/><br/>
-				<div>
-				<label>Custom JSON Sensor Configuration (<a href="https://github.com/WeSpeakEnglish/polluSensWeb/blob/main/README.md#sensor-example-full-json-example-may-be-used-like-custom-template" target="blank">example</a>): <input type="file" id="jsonUpload" accept=".json" class="secondary-button" /></label>
-				</div>
+				&nbsp;
+				<span>
+				Custom JSON Sensor Configuration (<a href="https://github.com/WeSpeakEnglish/polluSensWeb/blob/main/README.md#sensor-example-full-json-example-may-be-used-like-custom-template" target="blank">example</a>): <label><input type="file" id="jsonUpload" accept=".json" class="secondary-button" /></label>
+				</span>
 			</div>
 
 
@@ -94,10 +167,10 @@
 	]
 }</textarea>
 
-				<div style="background:#f0f0f0; padding:10px; margin:10px 0; border-radius:4px; font-size:12px;">
-					<strong>📊 Debug Info:</strong>
-					<div>Packets received: <span id="packetCount">0</span></div>
-					<div>Webhooks sent: <span id="webhookCount">0</span></div>
+				<div style="background: var(--bg-card-alt); padding:10px; margin:10px 0; border-radius:4px; font-size:12px; border: 1px solid var(--border);">
+					<strong style="color: var(--text-primary);">📊 Debug Info:</strong>
+					<div style="color: var(--text-secondary);">Packets received: <span id="packetCount">0</span></div>
+					<div style="color: var(--text-secondary);">Webhooks sent: <span id="webhookCount">0</span></div>
 				</div>
 				<button id="testWebhook" class="btn-primary" style="margin-top:10px;">🧪 Test Send Webhook Now</button>
 				<div id="statusLog"></div>
@@ -113,6 +186,60 @@
 					</svg><div id="commit-date">Loading…</div></a>
 
 		<script>
+			// ── Theme toggle ──────────────────────────────────────────────────
+			let isDayTheme = false;
+
+			function toggleTheme() {
+				isDayTheme = !isDayTheme;
+				document.body.classList.toggle('day', isDayTheme);
+				document.getElementById('themeIcon').textContent = isDayTheme ? '☀️' : '🌙';
+				
+				// Update chart colors
+				updateChartColors();
+				
+				try { 
+					localStorage.setItem('polluSensWeb-theme', isDayTheme ? 'day' : 'night'); 
+				} catch(e) {}
+			}
+
+			// Update all existing charts with new theme colors
+			function updateChartColors() {
+				const style = getComputedStyle(document.body);
+				const chartText = style.getPropertyValue('--chart-text').trim();
+				const chartGrid = style.getPropertyValue('--chart-grid').trim();
+				
+				// Update all charts in chartSettings
+				if (typeof chartSettings !== 'undefined') {
+					Object.values(chartSettings).forEach(({ chart }) => {
+						if (chart && chart.options) {
+							// Update scales
+							if (chart.options.scales.x) {
+								chart.options.scales.x.title.color = chartText;
+								chart.options.scales.x.ticks.color = chartText;
+								chart.options.scales.x.grid.color = chartGrid;
+							}
+							if (chart.options.scales.y) {
+								chart.options.scales.y.title.color = chartText;
+								chart.options.scales.y.ticks.color = chartText;
+								chart.options.scales.y.grid.color = chartGrid;
+							}
+							// Update legend
+							if (chart.options.plugins?.legend?.labels) {
+								chart.options.plugins.legend.labels.color = chartText;
+							}
+							chart.update('none'); // Update without animation
+						}
+					});
+				}
+			}
+
+			// Restore saved theme on load
+			try {
+				if (localStorage.getItem('polluSensWeb-theme') === 'day') {
+					toggleTheme();
+				}
+			} catch(e) {}
+
 			insertCommitDate();
 			sortSensorSelectorWhenReady();
 		</script>

@@ -246,6 +246,17 @@ function createChart(name, size, datasets, maxDatapoints) {
 	wrapper.appendChild(canvas);
 	document.getElementById('charts').appendChild(wrapper);
 	
+// Get chart theme colors from CSS variables
+const getChartColors = () => {
+	const style = getComputedStyle(document.body);
+	return {
+		text: style.getPropertyValue('--chart-text').trim(),
+		grid: style.getPropertyValue('--chart-grid').trim()
+	};
+};
+
+const chartColors = getChartColors();
+
 const chart = new Chart(canvas, {
   type: 'line',
   data: {
@@ -273,12 +284,15 @@ const chart = new Chart(canvas, {
           tooltipFormat: 'HH:mm:ss', 
           displayFormats: { second: 'HH:mm:ss' } 
         }, 
-        title: { display: true, text: 'Time' }, 
-        ticks: { autoSkip: true } 
+        title: { display: true, text: 'Time', color: chartColors.text }, 
+        ticks: { autoSkip: true, color: chartColors.text },
+        grid: { color: chartColors.grid }
       }, 
       y: { 
         beginAtZero: true, 
-        title: { display: true, text: name } 
+        title: { display: true, text: name, color: chartColors.text },
+        ticks: { color: chartColors.text },
+        grid: { color: chartColors.grid }
       } 
     },
     plugins: {
@@ -289,7 +303,8 @@ const chart = new Chart(canvas, {
           boxWidth: 8,           // tiny & compact
           boxHeight: 8,
           padding: 8,            // minimal spacing
-          font: { size: 12 }
+          font: { size: 12 },
+          color: chartColors.text
         }
       }
     }

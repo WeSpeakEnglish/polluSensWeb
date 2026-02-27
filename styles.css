@@ -1,57 +1,59 @@
+/* ── Theme variables ──────────────────────────────────────────────── */
+:root {
+	/* Night (default) */
+	--bg-main:           #0d1810;
+	--bg-card:           #1a2820;
+	--bg-card-alt:       #14201a;
+	--text-primary:      #d0f0e0;
+	--text-secondary:    #88bb99;
+	--accent:            #55ff99;
+	--accent-hover:      #44dd88;
+	--border:            #2a4a3a;
+	--input-bg:          #1a2820;
+	--input-border:      #2a4a3a;
+	--button-primary:    #55ff99;
+	--button-primary-fg: #0d1810;
+	--button-secondary:  #2a4a3a;
+	--log-bg:            #0d1810;
+	--log-border:        #2a4a3a;
+	--signal-row-odd:    #14201a;
+	--chart-text:        #b0d0c0;
+	--chart-grid:        rgba(176, 208, 192, 0.15);
+}
+
+body.day {
+	/* Day theme */
+	--bg-main:           #f4f8f6;
+	--bg-card:           #ffffff;
+	--bg-card-alt:       #f0f6f3;
+	--text-primary:      #1a2820;
+	--text-secondary:    #3a5a48;
+	--accent:            #2a9d5f;
+	--accent-hover:      #248a54;
+	--border:            #c8e0d4;
+	--input-bg:          #ffffff;
+	--input-border:      #c8e0d4;
+	--button-primary:    #2a9d5f;
+	--button-primary-fg: #ffffff;
+	--button-secondary:  #d4e8dc;
+	--log-bg:            #f9fcfb;
+	--log-border:        #c8e0d4;
+	--signal-row-odd:    #f6faf8;
+	--chart-text:        #2a4a3a;
+	--chart-grid:        rgba(42, 74, 58, 0.1);
+}
+
 body {
 	font-family: 'Segoe UI', system-ui, sans-serif;
-	background: #f4f6f8;
+	background: var(--bg-main);
 	margin: 0;
 	padding: 24px;
-	color: #222;
-}
-
-.header-content {
-	display: flex;
-	align-items: center;
-	gap: 16px;
-	position: relative;
-	z-index: 1;
-}
-
-.header-icon {
-	flex-shrink: 0;
-	width: 48px;
-	height: 48px;
-	background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
-	border-radius: 12px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-.header-icon svg {
-	width: 28px;
-	height: 28px;
-}
-
-.header-title {
-	font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-	font-size: 1.5rem;
-	font-weight: 700;
-	color: #1e40af;
-	letter-spacing: -0.5px;
-	line-height: 1.2;
-	margin: 0;
-}
-
-.header-tagline {
-	font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-	font-size: 0.95rem;
-	font-weight: 400;
-	color: #64748b;
-	line-height: 1.5;
-	margin: 0;
+	color: var(--text-primary);
+	transition: background 0.3s ease, color 0.3s ease;
 }
 
 .header-tagline strong {
-	color: #3b82f6;
+	color: var(--accent);
 	font-weight: 600;
 }
 
@@ -62,86 +64,246 @@ h1 {
 
 header {
 	display: flex;
-	justify-content: space-between;
+	justify-content: center;
 	align-items: center;
 	flex-wrap: wrap;
 	margin-bottom: 24px;
+	position: relative;
 }
 
+.header-content {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	position: relative;
+	z-index: 1;
+}
+
+/* Theme toggle button - positioned absolutely to top right */
+.theme-toggle {
+	position: absolute;
+	right: 0;
+	top: 0;
+	background: var(--bg-card);
+	border: 1px solid var(--border);
+	border-radius: 20px;
+	padding: 6px 12px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	transition: background 0.2s, border-color 0.2s;
+	color: var(--text-primary);
+}
+
+.theme-toggle:hover {
+	border-color: var(--accent);
+}
 
 #sensorSelector {
     padding: 10px 10px 10px 10px;
     font-size: 16px;
-    border: 1px solid #2563eb;
+    border: 1px solid var(--accent);
     border-radius: 6px;
-    background: #fff;
+    background: var(--input-bg);
+    color: var(--text-primary);
 }
 
 button, select, input, label {
 	font-size: 1em;
 }
 
-button, select {
+select {
 	padding: 8px 16px;
 	border: none;
 	border-radius: 6px;
 	cursor: pointer;
 	transition: background 0.2s, box-shadow 0.2s;
+	background: var(--input-bg);
+	color: var(--text-primary);
+	border: 1px solid var(--input-border);
+}
+
+select:focus {
+	border-color: var(--accent);
+	outline: none;
+	box-shadow: 0 0 0 2px rgba(85, 255, 153, 0.2);
+}
+
+input[type="file"] {
+	background: var(--button-secondary);
+	color: var(--text-primary);
+	padding: 8px 16px;
+	border-radius: 6px;
+	border: 1px solid var(--border);
+	cursor: pointer;
+	transition: background 0.2s, border-color 0.2s;
+}
+
+input[type="file"]:hover {
+	background: var(--accent-hover);
+	color: var(--button-primary-fg);
+	border-color: var(--accent);
+}
+
+input[type="file"]::file-selector-button {
+	background: var(--button-primary);
+	color: var(--button-primary-fg);
+	border: none;
+	padding: 6px 12px;
+	border-radius: 4px;
+	cursor: pointer;
+	font-weight: 600;
+	margin-right: 8px;
+	transition: background 0.2s;
+}
+
+input[type="file"]::file-selector-button:hover {
+	background: var(--accent-hover);
 }
 
 button {
-	background: #0078d4;
-	color: #fff;
+	padding: 8px 16px;
+	border: none;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: background 0.2s, box-shadow 0.2s;
+	background: var(--button-primary);
+	color: var(--button-primary-fg);
+	font-weight: 600;
 }
 
 button:hover {
-	background: #005ea6;
+	background: var(--accent-hover);
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .secondary-button {
-	background: #6c757d;
+	background: var(--button-secondary);
+	color: var(--text-primary);
 }
 
 .secondary-button:hover {
-	background: #5a6268;
+	background: var(--accent-hover);
+	color: var(--button-primary-fg);
 }
 
 .chart-wrapper{
-	background: white;
+	background: var(--bg-card);
 	border-radius: 8px;
 	padding: 5px 10px 70px 20px;
 	margin-bottom: 10px;
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+	border: 1px solid var(--border);
+	transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .sensor-connect {
-	background: #eeeeee;
+	background: var(--bg-card-alt);
 	border-radius: 8px;
 	padding: 5px 10px 20px 20px;
 	margin-bottom: 10px;
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+	border: 1px solid var(--border);
+	transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.sensor-connect h3 {
+	color: var(--text-primary);
+}
+
+.sensor-connect > span {
+	display: inline-block;
+	white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+	.sensor-connect > span {
+		display: block;
+		white-space: normal;
+		margin-top: 12px;
+	}
+}
+
+.sensor-controls {
+	display: flex;
+	gap: 12px;
+	align-items: center;
+	flex-wrap: wrap;
+	margin-bottom: 16px;
+}
+
+.sensor-controls select {
+	flex: 1;
+	min-width: 200px;
+}
+
+.custom-json-wrapper {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 12px;
+	background: var(--bg-card);
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.custom-json-label {
+	color: var(--text-primary);
+	font-size: 0.95em;
+	line-height: 1.4;
+}
+
+.custom-json-label a {
+	white-space: nowrap;
+}
+
+.custom-json-wrapper input[type="file"] {
+	align-self: flex-start;
+	max-width: 100%;
+}
+
+/* Responsive: stack everything on smaller screens */
+@media (max-width: 768px) {
+	.sensor-controls {
+		flex-direction: column;
+		align-items: stretch;
+	}
+	
+	.sensor-controls select,
+	.sensor-controls button {
+		width: 100%;
+	}
+	
+	.custom-json-wrapper input[type="file"] {
+		width: 100%;
+	}
 }
 
 .packets-log {
-	background: #eeeeee;
+	background: var(--bg-card-alt);
 	border-radius: 8px;
 	padding: 5px 10px 20px 20px;
 	margin-bottom: 10px;
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+	border: 1px solid var(--border);
+	transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 #chartControls{
-	background: white;
+	background: var(--bg-card);
 	border-radius: 8px;
 	padding: 5px 10px 20px 20px;
 	margin-bottom: 10px;
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+	border: 1px solid var(--border);
+	transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 #chartControls h3, #datasetConfigs h4, .chart-header h4 {
 	margin: 0 0 10px;
-	color: #333;
+	color: var(--text-primary);
 }
 
 .chartParams, .signalRow {
@@ -154,14 +316,16 @@ button:hover {
 
 input[type="text"], input[type="number"], input[type="color"] {
 	padding: 4px 6px;
-	border: 1px solid #ccc;
+	border: 1px solid var(--input-border);
 	border-radius: 6px;
 	transition: border-color 0.2s, box-shadow 0.2s;
+	background: var(--input-bg);
+	color: var(--text-primary);
 }
 
 input:focus {
-	border-color: #0078d4;
-	box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
+	border-color: var(--accent);
+	box-shadow: 0 0 0 2px rgba(85, 255, 153, 0.2);
 	outline: none;
 }
 
@@ -172,16 +336,16 @@ input[type="number"] {
 
 .signalRow {
 	padding: 6px 10px;
-	border-bottom: 1px solid #f0f0f0;
+	border-bottom: 1px solid var(--border);
 }
 
 .signalRow:nth-child(odd) {
-	background: #f9fbfd;
+	background: var(--signal-row-odd);
 }
 
 #log {
-	background: #f7f7f7;
-	border: 1px solid #ccc;
+	background: var(--log-bg);
+	border: 1px solid var(--log-border);
 	border-radius: 6px;
 	padding: 10px;
 	height: 200px;
@@ -189,13 +353,15 @@ input[type="number"] {
 	font-family: monospace;
 	font-size: 0.9em;
 	white-space: pre-wrap;
+	color: var(--text-primary);
+	transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .chart-header {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	border-bottom: 1px solid #ddd;
+	border-bottom: 1px solid var(--border);
 	padding-bottom: 5px;
 	margin-bottom: 10px;
 }
@@ -203,7 +369,7 @@ input[type="number"] {
 .chart-header .delete-button {
 	background: none;
 	border: none;
-	color: #a00;
+	color: #ff6b6b;
 	font-size: 18px;
 	cursor: pointer;
 	transition: color 0.2s;
@@ -212,12 +378,74 @@ input[type="number"] {
 .chart-header .delete-button:hover {
 	color: #dc3545;
 }
-.webhook-card { margin-top:25px; padding:15px; border:1px solid #ccc; border-radius:8px; }
+.webhook-card { 
+	margin-top: 10px;
+	margin-bottom: 10px;
+	padding: 5px 10px 20px 20px;
+	border: 1px solid var(--border); 
+	border-radius: 8px; 
+	background: var(--bg-card);
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+	transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.webhook-card h4 {
+	color: var(--text-primary);
+	margin: 12px 0 8px 0;
+}
+
+.webhook-card label {
+	color: var(--text-primary);
+}
+
+.webhook-card small {
+	color: var(--text-secondary);
+}
 .header-row { display:flex; gap:6px; margin-top:6px; }
-.header-row input { flex:1; }
-.btn-remove { background:#ffe5e5; color:#a00; border:none; padding:4px 8px; border-radius:6px; cursor:pointer; }
-.btn-secondary { padding:6px 10px; border-radius:6px; border:none; background:#ddd; cursor:pointer; }
-.btn-primary { padding:6px 10px; border-radius:6px; border:none; background:#4a7afe; color:white; cursor:pointer; }
+.header-row input { 
+	flex:1; 
+	background: var(--input-bg);
+	color: var(--text-primary);
+	border: 1px solid var(--input-border);
+	padding: 6px 8px;
+	border-radius: 6px;
+	transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+.header-row input:focus {
+	border-color: var(--accent);
+	box-shadow: 0 0 0 2px rgba(85, 255, 153, 0.2);
+	outline: none;
+}
+.btn-remove { 
+	background: rgba(255, 100, 100, 0.15); 
+	color: #ff6b6b; 
+	border: 1px solid rgba(255, 100, 100, 0.3); 
+	padding: 4px 8px; 
+	border-radius: 6px; 
+	cursor: pointer;
+	transition: background 0.2s, border-color 0.2s;
+}
+.btn-remove:hover {
+	background: rgba(255, 100, 100, 0.25);
+	border-color: #ff6b6b;
+}
+.btn-secondary { 
+	padding:6px 10px; 
+	border-radius:6px; 
+	border:none; 
+	background: var(--button-secondary); 
+	color: var(--text-primary);
+	cursor:pointer; 
+}
+.btn-primary { 
+	padding:6px 10px; 
+	border-radius:6px; 
+	border:none; 
+	background: var(--button-primary); 
+	color: var(--button-primary-fg);
+	cursor:pointer; 
+	font-weight: 600;
+}
 .status { padding: 10px; margin: 10px 0; border-radius: 4px; font-family: monospace; font-size: 12px; }
 .status.success { background: #d4edda; color: #155724; }
 .status.error { background: #f8d7da; color: #721c24; }
@@ -228,10 +456,42 @@ input[type="number"] {
 	width: 100%;
 	max-width: 500px;
 	padding: 4px 4px;
-	border: 1px solid #ccc;
+	border: 1px solid var(--input-border);
 	border-radius: 6px;
 	transition: border-color 0.2s, box-shadow 0.2s;
 	box-sizing: border-box;
+	background: var(--input-bg);
+	color: var(--text-primary);
 }
 #commit-date {display: inline;}
+
+textarea {
+	background: var(--input-bg);
+	color: var(--text-primary);
+	border: 1px solid var(--input-border);
+	border-radius: 6px;
+	padding: 8px;
+	font-family: monospace;
+	transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+textarea:focus {
+	border-color: var(--accent);
+	outline: none;
+	box-shadow: 0 0 0 2px rgba(85, 255, 153, 0.2);
+}
+
+select option {
+	background: var(--input-bg);
+	color: var(--text-primary);
+}
+
+a {
+	color: var(--accent);
+	transition: color 0.2s;
+}
+
+a:hover {
+	color: var(--accent-hover);
+}
 
