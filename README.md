@@ -461,7 +461,7 @@ Body:
 
 **Ready to use with any HTTP endpoint that accepts JSON or custom headers.**
 
-## Run Self-hosted
+## To Run Self-hosted
 
 To run is selfhosted:
 Replace CORS proxy and sensor list addresses in **pollusensweb.js** (at the very top) with your actual addresses:
