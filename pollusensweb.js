@@ -1,3 +1,6 @@
+const DEFAULT_SENSOR_LIST = "https://raw.githubusercontent.com/WeSpeakEnglish/polluSensWeb/refs/heads/main/sensors.json";
+const PROXY_URL = "https://pollutants.eu/proxy/proxy.php";
+
 let port = null, reader = null, writer = null, reading = false;
 let config = null, sensors = [], chartSettings = {};
 let commandInterval = null;
@@ -73,7 +76,7 @@ async function loadConfigAndPopulateSelector(customConfig = null, customName = n
 			rawConfig = customConfig;
 			sourceLabel = ` (from ${customName})`;
 			} else {
-			const res = await fetch("https://raw.githubusercontent.com/WeSpeakEnglish/polluSensWeb/refs/heads/main/sensors.json");
+			const res = await fetch(DEFAULT_SENSOR_LIST);
 			rawConfig = await res.json();
 			sourceLabel = " (default)";
 		}
@@ -633,7 +636,7 @@ document.getElementById('jsonUpload').addEventListener('change', async (e) => {
 	}
 });
 
-const PROXY_URL = "https://pollutants.eu/proxy/proxy.php";
+
 const MIN_PROCESSING_INTERVAL_MS = 50; 
 let intervalTimer = null;
 let lastParsedData = null; 

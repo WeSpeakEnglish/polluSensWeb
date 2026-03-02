@@ -461,6 +461,19 @@ Body:
 
 **Ready to use with any HTTP endpoint that accepts JSON or custom headers.**
 
+## Run Self-hosted
+
+To run is selfhosted:
+Replace CORS proxy and sensor list addresses in **pollusensweb.js** (at the very top) with your actual addresses:
+```js
+const DEFAULT_SENSOR_LIST = "ADDRESS_TO_sensors.json";
+const PROXY_URL = "ADDRESS_TO_proxy.php";
+```
+
+## To Run Locally
+
+Extact release archive or open git clone, open index.html in browser and load JSON file **sensors.js** via Custom JSON Sensor Configuration in UI.
+
 ## See Also
 
 - Default sensors: [`sensors.json`](https://raw.githubusercontent.com/WeSpeakEnglish/polluSensWeb/main/sensors.json)
