@@ -464,9 +464,9 @@ Body:
 ## To Run Self-hosted
 
 To run is selfhosted:
-Replace CORS proxy and sensor list addresses in **pollusensweb.js** (at the very top) with your actual addresses:
+replace CORS proxy and sensor list addresses in **pollusensweb.js** (at the very top) with your actual addresses:
 ```js
-const DEFAULT_SENSOR_LIST = "ADDRESS_TO_sensors.json";
+const DEFAULT_SENSOR_LIST = "ADDRESS_TO_sensors.json"; 
 const PROXY_URL = "ADDRESS_TO_proxy.php";
 ```
 
