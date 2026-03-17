@@ -47,7 +47,7 @@ body {
 	font-family: 'Segoe UI', system-ui, sans-serif;
 	background: var(--bg-main);
 	margin: 0;
-	padding: 24px;
+	padding: 8px 24px 24px;
 	color: var(--text-primary);
 	transition: background 0.3s ease, color 0.3s ease;
 }
@@ -162,6 +162,11 @@ input[type="file"]::file-selector-button:hover {
 	background: var(--accent-hover);
 }
 
+input[type="file"]::file-selector-button:active {
+	filter: brightness(0.82);
+	transform: scale(0.97);
+}
+
 button {
 	padding: 8px 16px;
 	border: none;
@@ -176,6 +181,12 @@ button {
 button:hover {
 	background: var(--accent-hover);
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+button:active {
+	filter: brightness(0.82);
+	transform: scale(0.97);
+	box-shadow: none;
 }
 
 .secondary-button {
@@ -428,6 +439,10 @@ input[type="number"] {
 .btn-remove:hover {
 	background: rgba(255, 100, 100, 0.25);
 	border-color: #ff6b6b;
+}
+.btn-remove:active {
+	filter: brightness(0.80);
+	transform: scale(0.97);
 }
 .btn-secondary { 
 	padding:6px 10px; 
