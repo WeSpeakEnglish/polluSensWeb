@@ -1,4 +1,8 @@
 # polluSensWeb
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Web Serial API](https://img.shields.io/badge/Web%20Serial%20API-Supported-green)](https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API)
+[![Browser: Chrome](https://img.shields.io/badge/Browser-Chrome%20|%20Edge%20|%20Opera-orange)](https://caniuse.com/web-serial)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Online-success)](https://wespeakenglish.github.io/polluSensWeb/)
 
 **polluSensWeb** is a lightweight web-based serial interface and charting tool for visualizing and logging data from UART pollution sensors (PM2.5, VOC, etc).
 Try it out yourself: [here](https://wespeakenglish.github.io/polluSensWeb/) 
