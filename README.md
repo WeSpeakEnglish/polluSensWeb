@@ -4,7 +4,8 @@
 [![Browser: Chrome](https://img.shields.io/badge/Browser-Chrome%20|%20Edge%20|%20Opera-orange)](https://caniuse.com/web-serial)
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Online-success)](https://wespeakenglish.github.io/polluSensWeb/)
 
-**polluSensWeb** is a lightweight web-based serial interface and charting tool for visualizing and logging data from UART pollution sensors (PM2.5, VOC, etc).
+**polluSensWeb** is a free and open-source browser-based tool for connecting and visualizing real air quality sensor data directly from UART devices via Web Serial API.
+It is designed for education, teaching labs, and rapid IoT prototyping.
 Try it out yourself: [here](https://wespeakenglish.github.io/polluSensWeb/) 
 
 *"polluSensWeb" is an independent project. Any similarity to other software names is coincidental.*
