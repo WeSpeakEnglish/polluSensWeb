@@ -47,7 +47,7 @@ body {
 	font-family: 'Segoe UI', system-ui, sans-serif;
 	background: var(--bg-main);
 	margin: 0;
-	padding: 8px 24px 24px;
+	padding: 4px 24px 24px;
 	color: var(--text-primary);
 	transition: background 0.3s ease, color 0.3s ease;
 }
@@ -67,7 +67,7 @@ header {
 	justify-content: center;
 	align-items: center;
 	flex-wrap: wrap;
-	margin-bottom: 24px;
+	margin-bottom: 12px;
 	position: relative;
 }
 
