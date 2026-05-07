@@ -187,7 +187,7 @@
 
 		<script>
 			// ── Theme toggle ──────────────────────────────────────────────────
-			let isDayTheme = false;
+			let isDayTheme = true;
 
 			function toggleTheme() {
 				isDayTheme = !isDayTheme;
@@ -233,12 +233,19 @@
 				}
 			}
 
-			// Restore saved theme on load
+			// Restore saved theme on load (day is default)
 			try {
-				if (localStorage.getItem('polluSensWeb-theme') === 'day') {
-					toggleTheme();
+				if (localStorage.getItem('polluSensWeb-theme') === 'night') {
+					isDayTheme = false;
+					document.body.classList.remove('day');
+					document.getElementById('themeIcon').textContent = '🌙';
+				} else {
+					document.body.classList.add('day');
+					document.getElementById('themeIcon').textContent = '☀️';
 				}
-			} catch(e) {}
+			} catch(e) {
+				document.body.classList.add('day');
+			}
 
 			insertCommitDate();
 			sortSensorSelectorWhenReady();
