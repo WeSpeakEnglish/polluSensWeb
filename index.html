@@ -119,9 +119,12 @@
 			<h3>Create a Chart</h3>
 			<div class="chartParams">
 				<label>Chart name:<input type="text" id="chartName" value="Chart" /></label>
-				<label>Width:<input type="number" id="chartWidth" value="600" /></label>
-				<label>Height:<input type="number" id="chartHeight" value="300" /></label>
-				<label>Chart datapoints:<input type="number" id="maxDatapoints" value="600" min="2" /></label>
+				<button class="signal-gear-btn" id="chartParamsGear" title="Toggle chart settings">⚙</button>
+				<span class="signal-settings" id="chartParamsSettings" style="display:none;">
+					<label>Width:<input type="number" id="chartWidth" value="600" /></label>
+					<label>Height:<input type="number" id="chartHeight" value="300" /></label>
+					<label>Chart datapoints:<input type="number" id="maxDatapoints" value="600" min="2" /></label>
+				</span>
 			</div>
 			<div id="datasetConfigs"><h4>Signals</h4><div id="signalRows"></div></div>
 			<button id="createChart">📈 Create a Chart</button>

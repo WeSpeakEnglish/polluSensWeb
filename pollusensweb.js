@@ -193,7 +193,22 @@ function renderSignalRows() {
 		width.value = '2';
 		width.min = 1;
 		
-		row.append(label, color, tension_label, tension, thickness_label, width);
+		const signalSettings = document.createElement('span');
+		signalSettings.className = 'signal-settings';
+		signalSettings.style.display = 'none';
+		signalSettings.append(tension_label, tension, thickness_label, width);
+		
+		const gearBtn = document.createElement('button');
+		gearBtn.className = 'signal-gear-btn';
+		gearBtn.title = 'Toggle signal settings';
+		gearBtn.textContent = '⚙';
+		gearBtn.addEventListener('click', function() {
+			const hidden = signalSettings.style.display === 'none';
+			signalSettings.style.display = hidden ? 'inline-flex' : 'none';
+			gearBtn.classList.toggle('active', hidden);
+		});
+		
+		row.append(label, color, gearBtn, signalSettings);
 		container.appendChild(row);
 	});
 }
@@ -846,3 +861,15 @@ function sortSensorSelectorWhenReady() {
     select.innerHTML = "";
     options.forEach(o => select.appendChild(o));
 }
+// Chart params gear toggle
+document.addEventListener('DOMContentLoaded', function() {
+	var gear = document.getElementById('chartParamsGear');
+	var settings = document.getElementById('chartParamsSettings');
+	if (gear && settings) {
+		gear.addEventListener('click', function() {
+			var hidden = settings.style.display === 'none';
+			settings.style.display = hidden ? 'inline-flex' : 'none';
+			gear.classList.toggle('active', hidden);
+		});
+	}
+});

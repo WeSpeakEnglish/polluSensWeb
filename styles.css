@@ -348,10 +348,58 @@ input[type="number"] {
 .signalRow {
 	padding: 6px 10px;
 	border-bottom: 1px solid var(--border);
+	flex-wrap: wrap;
 }
 
 .signalRow:nth-child(odd) {
 	background: var(--signal-row-odd);
+}
+
+.signal-gear-btn {
+	background: none;
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	color: var(--text-secondary);
+	cursor: pointer;
+	font-size: 14px;
+	line-height: 1;
+	padding: 3px 6px;
+	transition: border-color 0.2s, color 0.2s, transform 0.3s;
+	box-shadow: none;
+	font-weight: normal;
+}
+
+.signal-gear-btn:hover {
+	border-color: var(--accent);
+	color: var(--accent);
+	background: none;
+	box-shadow: none;
+}
+
+.signal-gear-btn.active {
+	border-color: var(--accent);
+	color: var(--accent);
+	transform: rotate(60deg);
+}
+
+.signal-settings {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	margin-left: 6px;
+}
+
+.signal-settings label {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	color: var(--text-secondary);
+	font-size: 0.9em;
+	white-space: nowrap;
+}
+
+.signal-settings input[type="number"] {
+	width: 56px;
 }
 
 #log {
