@@ -1,0 +1,74 @@
+{
+    "sensors": [
+        {
+            "name": "Sensirion SEN63C via KEL I2C to UART",
+            "send_cmd_period_ms": 5000,
+            "port": {
+                "baudRate": 9600,
+                "dataBits": 8,
+                "stopBits": 1,
+                "parity": "even"
+            },
+            "commands": [
+                {
+                    "command": "1B 41 6B 57 02 77 00 21 52 00 53",
+                    "postDelay_ms": 2000,
+                    "times": 1
+                },
+                {
+                    "command": "41 6B 57 02 77 02 02 52 00 53",
+                    "postDelay_ms": 500,
+                    "times": 1
+                },
+                {
+                    "command": "41 6B 57 00 52 03 53",
+                    "postDelay_ms": 500,
+                    "times": 1
+                },
+                {
+                    "command": "72",
+                    "frame": {
+                        "length": 3,
+                        "startByte": "none",
+                        "endByte": "none"
+                    },
+                    "checksum": {
+                        "eval": "0",
+                        "compare": "0"
+                    },
+                    "data": {},
+                    "times": 1
+                },
+                {
+                    "command": "41 6B 57 02 77 04 71 52 00 53",
+                    "postDelay_ms": 500,
+                    "times": 1
+                },
+                {
+                    "command": "41 6B 57 00 52 15 53",
+                    "postDelay_ms": 500,
+                    "times": 1
+                },
+                {
+                    "command": "72",
+                    "frame": {
+                        "length": 21,
+                        "startByte": "none",
+                        "endByte": "none"
+                    },
+                    "checksum": {
+                        "eval": "0",
+                        "compare": "0"
+                    },
+                    "data": {
+                        "PM1.0": {
+                            "value": "((data[0] << 8) + data[5])/10.0",
+                            "unit": "μg/m³"
+                        }
+                    },
+                    "times": 1
+                }
+            ]
+        }
+    ]
+}
