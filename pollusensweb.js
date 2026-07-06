@@ -464,12 +464,29 @@ function startPeriodicRead() {
 	commandInterval = setInterval(cycleAllCommands, periodMs);
 }
 
+// Track which blocks have been sent at least once (for repeat: 0)
+let blocksSentOnce = new Set();
+
 async function cycleAllCommands() {
 	if (!config.commands || config.commands.length === 0) return;
 
-	for (const block of config.commands) {
-		const times = block.times || 1;
-		for (let i = 0; i < times; i++) {
+	for (let idx = 0; idx < config.commands.length; idx++) {
+		const block = config.commands[idx];
+		const repeat = block.repeat !== undefined ? block.repeat : 1;
+
+		// repeat: 0 → send only once ever (first cycle only)
+		if (repeat === 0) {
+			if (blocksSentOnce.has(idx)) {
+				continue; // Skip: already sent in a previous cycle
+			}
+			blocksSentOnce.add(idx);
+			await executeCommandBlock(block);
+			continue;
+		}
+
+		// repeat: 1,2,3... → send N times per cycle
+		const count = Math.max(1, repeat);
+		for (let i = 0; i < count; i++) {
 			await executeCommandBlock(block);
 		}
 	}
@@ -707,6 +724,7 @@ document.getElementById('connect').onclick = async () => {
 		currentCommandBlock = null;
 		activeBlock = null;
 		isInitPhase = false;
+		blocksSentOnce = new Set();
 
 		await sendCommand(config.stop_command);
 
