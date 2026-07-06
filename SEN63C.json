@@ -39,7 +39,7 @@
                     "repeat": 1
                 },
                 {
-                    "command": "1B 41 6B 57 02 77 04 71 52 00 53",
+                    "command": "41 6B 57 02 77 04 71 52 00 53",
                     "postDelay_ms": 1200,
                     "repeat": 1
                 },
@@ -49,7 +49,7 @@
                     "repeat": 1
                 },
                 {
-                    "command": "1B 41 6B 57 00 52 15 53",
+                    "command": "41 6B 57 00 52 15 53",
                     "postDelay_ms": 1200,
                     "repeat": 1
                 },
