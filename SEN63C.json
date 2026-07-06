@@ -4,7 +4,7 @@
             "name": "Sensirion SEN63C via KEL I2C to UART",
             "send_cmd_period_ms": 5000,
             "port": {
-                "baudRate": 4800,
+                "baudRate": 38400,
                 "dataBits": 8,
                 "stopBits": 1,
                 "parity": "none"
@@ -39,7 +39,7 @@
                     "repeat": 1
                 },
                 {
-                    "command": "41 6B 57 02 77 04 71 52 00 53",
+                    "command": "1B 41 6B 57 02 77 04 71 52 00 53",
                     "postDelay_ms": 1200,
                     "repeat": 1
                 },
@@ -49,7 +49,7 @@
                     "repeat": 1
                 },
                 {
-                    "command": "41 6B 57 00 52 15 53",
+                    "command": "1B 41 6B 57 00 52 15 53",
                     "postDelay_ms": 1200,
                     "repeat": 1
                 },
