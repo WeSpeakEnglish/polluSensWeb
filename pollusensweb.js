@@ -10,12 +10,8 @@ let defaultSensorNames = [];
 let defaultSensors = [];
 const log = document.getElementById('log');
 
-// ── Multi-block command state ─────────────────────────────────────
-let currentCommandBlockIndex = 0;
-let commandBlocks = [];        // Array of resolved command blocks
-let activeBlock = null;        // Currently active block for parsing
-let currentCommandBlock = null; // The command block that was just sent
-let isInitPhase = false;       // Whether we're in the init sequence
+// ── Frame-length scanning state ────────────────────────────────────
+let blocksSentOnce = new Set();
 
 window.onload = () => {
 	chartWidth.value = chartControls.offsetWidth;
@@ -25,8 +21,26 @@ function logMessage(msg, linesPerPacket = 1) {
 	const maxPackets = parseInt(document.getElementById('maxLogPackets')?.value) || 1000;
 	const autoscroll = document.getElementById('autoscrollLog')?.checked ?? true;
 
+	// Strip AI/emoji symbols from log messages, replace with text equivalents
+	const stripSymbols = (str) => str
+		.replace(/\u2705/g, 'OK')
+		.replace(/\u274c/g, 'FAIL')
+		.replace(/\u26a0\ufe0f/g, 'WARN')
+		.replace(/\u26a0/g, 'WARN')
+		.replace(/\ud83d\udce6/g, 'PACKET')
+		.replace(/\u27a1\ufe0f/g, '->')
+		.replace(/\u27a1/g, '->')
+		.replace(/\u23f1\ufe0f/g, '')
+		.replace(/\u23f1/g, '')
+		.replace(/\u23ed\ufe0f/g, '')
+		.replace(/\u23ed/g, '')
+		.replace(/\ud83d\uded1/g, '')
+		.replace(/\ud83d\udd0c/g, '')
+		.replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE0F}\u{200D}]/gu, '')
+		.trim();
+
 	const logLines = log.textContent.trim().split('\n');
-	msg.trim().split('\n').forEach(line => logLines.push(line));
+	msg.trim().split('\n').forEach(line => logLines.push(stripSymbols(line)));
 
 	while (logLines.length > maxPackets * linesPerPacket) {
 		logLines.shift();
@@ -149,11 +163,9 @@ async function loadConfigAndPopulateSelector(customConfig = null, customName = n
 // ── Helper: Get merged data config from all command blocks ──────────
 function getEffectiveDataConfig() {
 	if (!config) return null;
-	// Legacy: top-level data
 	if (config.data && Object.keys(config.data).length > 0) {
 		return config.data;
 	}
-	// Multi-command: merge data from all blocks that have it
 	if (config.commands && config.commands.length > 0) {
 		const merged = {};
 		for (const block of config.commands) {
@@ -174,7 +186,6 @@ function hasData(block) {
 // ── Helper: Find the primary (read) command block ──────────────────
 function findPrimaryCommand() {
 	if (!config || !config.commands || config.commands.length === 0) return null;
-	// Find the last command with data fields (typically the read command)
 	for (let i = config.commands.length - 1; i >= 0; i--) {
 		if (hasData(config.commands[i])) {
 			return config.commands[i];
@@ -186,6 +197,44 @@ function findPrimaryCommand() {
 // ── Helper: Sleep for ms ───────────────────────────────────────────
 function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// ── Build a map of frame lengths to command blocks ─────────────────
+function getFrameConfigs() {
+	if (!config) return [];
+	const configs = [];
+
+	if (config.commands && config.commands.length > 0) {
+		for (const block of config.commands) {
+			if (block.frame && typeof block.frame.length === 'number' && block.frame.length > 0) {
+				if (!configs.some(c => c.frame.length === block.frame.length)) {
+					configs.push({
+						frame: block.frame,
+						checksum: block.checksum || config.checksum,
+						data: block.data || config.data,
+						command: block.command
+					});
+				}
+			}
+		}
+	}
+
+	if (configs.length === 0 && config.frame && config.frame.length > 0) {
+		configs.push({
+			frame: config.frame,
+			checksum: config.checksum,
+			data: config.data
+		});
+	}
+
+	// Sort: data-bearing frames first (longer = more likely real data), then by length desc
+	return configs.sort((a, b) => {
+		const aHasData = a.data && Object.keys(a.data).length > 0;
+		const bHasData = b.data && Object.keys(b.data).length > 0;
+		if (aHasData && !bHasData) return -1;
+		if (!aHasData && bHasData) return 1;
+		return b.frame.length - a.frame.length;
+	});
 }
 
 function renderSignalRows() {
@@ -272,9 +321,11 @@ document.getElementById('createChart').onclick = () => {
 	const height = parseInt(document.getElementById('chartHeight').value);
 	const rows = document.querySelectorAll('.signalRow');
 	const datasets = [];
+	const checkedRows = [];
 
 	rows.forEach(row => {
 		if (!row.querySelector('.signalToggle').checked) return;
+		checkedRows.push(row);
 		datasets.push([
 			'',
 			row.dataset.field,
@@ -288,6 +339,15 @@ document.getElementById('createChart').onclick = () => {
 		alert("At least one signal should be selected to create a chart.");
 		return;
 	}
+
+	// Highlight selected signals, then uncheck after delay
+	checkedRows.forEach(row => row.classList.add('signal-highlight'));
+	setTimeout(() => {
+		checkedRows.forEach(row => {
+			row.classList.remove('signal-highlight');
+			row.querySelector('.signalToggle').checked = false;
+		});
+	}, 2000);
 
 	createChart(name, [width, height], datasets, maxDatapoints);
 };
@@ -419,72 +479,60 @@ async function sendCommand(commandString) {
 	}
 }
 
-// ── Execute a single command block (send + optional delay) ─────────
+// ── Execute a single command block (send + delay) ────────────────────
+// ── Shared RX buffer: cleared before any command expecting a framed
+// response, so stale bytes from earlier/skipped cycles can't get
+// stitched together with a later response into a false "valid" frame.
+let rxBuffer = [];
+
 async function executeCommandBlock(block) {
-	currentCommandBlock = block;
+	if (block.frame) {
+		rxBuffer.length = 0;
+	}
 	await sendCommand(block.command);
 	if (block.postDelay_ms && block.postDelay_ms > 0) {
 		await sleep(block.postDelay_ms);
 	}
 }
 
-// ── Run the init sequence (all commands without data fields) ───────
-async function runInitSequence() {
-	if (!config.commands || config.commands.length === 0) return;
-
-	isInitPhase = true;
-	logMessage('🔧 Running init sequence...');
-
-	for (const block of config.commands) {
-		// Skip commands that have data fields (those are read commands, not init)
-		if (hasData(block)) {
-			continue;
-		}
-
-		const times = block.times || 1;
-		for (let i = 0; i < times; i++) {
-			logMessage(`  → Init cmd: ${block.command}`);
-			await executeCommandBlock(block);
-		}
-	}
-
-	isInitPhase = false;
-	logMessage('✅ Init sequence complete');
-}
-
-// ── Start periodic reading of the primary command ──────────────────
+// ── Start periodic reading of all commands ─────────────────────────
 function startPeriodicRead() {
-	// Resolve period: prefer send_cmd_period_ms, fallback to send_cmd_period (seconds), default 5s
 	const periodMs = config.send_cmd_period_ms || ((config.send_cmd_period || 5) * 1000);
-
 	logMessage(`⏱️ Cycling all ${config.commands.length} commands every ${periodMs}ms`);
-
-	// Start the periodic cycle immediately, then repeat
 	cycleAllCommands();
 	commandInterval = setInterval(cycleAllCommands, periodMs);
 }
 
-// Track which blocks have been sent at least once (for repeat: 0)
-let blocksSentOnce = new Set();
+// ── Re-entrancy guard: prevents overlapping cycles if one pass takes
+// longer than send_cmd_period_ms (e.g. due to serial latency/jitter) ─
+let cycleRunning = false;
 
 async function cycleAllCommands() {
 	if (!config.commands || config.commands.length === 0) return;
 
+	if (cycleRunning) {
+		logMessage('⏭️ Skipped cycle: previous command sequence still running');
+		return;
+	}
+	cycleRunning = true;
+
+	try {
+		await runAllCommandBlocks();
+	} finally {
+		cycleRunning = false;
+	}
+}
+
+async function runAllCommandBlocks() {
 	for (let idx = 0; idx < config.commands.length; idx++) {
 		const block = config.commands[idx];
 		const repeat = block.repeat !== undefined ? block.repeat : 1;
 
-		// repeat: 0 → send only once ever (first cycle only)
 		if (repeat === 0) {
-			if (blocksSentOnce.has(idx)) {
-				continue; // Skip: already sent in a previous cycle
-			}
+			if (blocksSentOnce.has(idx)) continue;
 			blocksSentOnce.add(idx);
-			await executeCommandBlock(block);
-			continue;
 		}
 
-		// repeat: 1,2,3... → send N times per cycle
 		const count = Math.max(1, repeat);
 		for (let i = 0; i < count; i++) {
 			await executeCommandBlock(block);
@@ -494,17 +542,12 @@ async function cycleAllCommands() {
 
 // ── Unified command sender: handles both legacy and multi-command ────
 async function sendCommandSequence() {
-	// Clear any existing timers
-	if (commandInterval) {
-		clearInterval(commandInterval);
-		commandInterval = null;
-	}
-	if (commandTimeout) {
-		clearTimeout(commandTimeout);
-		commandTimeout = null;
-	}
+	if (commandInterval) { clearInterval(commandInterval); commandInterval = null; }
+	if (commandTimeout) { clearTimeout(commandTimeout); commandTimeout = null; }
+	blocksSentOnce = new Set();
+	cycleRunning = false;
+	rxBuffer.length = 0;
 
-	// Multi-command mode (new): cycle ALL commands with their delays on every period
 	if (config.commands && config.commands.length > 0) {
 		startPeriodicRead();
 		return;
@@ -513,16 +556,13 @@ async function sendCommandSequence() {
 	// Legacy single-command mode
 	const command = config.command;
 	const period = config.send_cmd_period;
-
 	if (!command || command.toLowerCase() === "none") return;
 
 	commandTimeout = setTimeout(() => {
 		sendCommand(command);
-
 		commandInterval = setInterval(() => {
 			sendCommand(command);
 		}, period * 1000);
-
 	}, period * 1000);
 }
 
@@ -539,7 +579,7 @@ function parseByteField(field) {
 		return field.map(parseByteValue);
 	}
 	return parseByteValue(field);
-}			
+}				
 
 function unstuffBytes(data, stuffingTable) {
 	if (!stuffingTable || stuffingTable.length === 0) {
@@ -566,136 +606,258 @@ function unstuffBytes(data, stuffingTable) {
 	return result;
 }
 
+// ── Check if a frame "looks like" it belongs to a given config ─────
+// Acceptance is driven entirely by what the JSON declares: a real
+// checksum and/or an explicit startByte. No hardcoded byte-pattern
+// guessing, so this works generically for any sensor's config.
+function frameLooksLikeConfig(buffer, frameConfig) {
+	const frame = frameConfig.frame;
+	const dataFields = frameConfig.data;
+	const hasRealData = dataFields && Object.keys(dataFields).length > 0;
+
+	// Data-bearing frames: accept here, actual validation happens via
+	// the configured checksum in tryParseFrame.
+	if (hasRealData) return true;
+
+	// Frames without data fields (status/ACK): only accept if the
+	// config gives us something concrete to match against.
+	if (frame.startByte !== "none") {
+		const sb = parseByteField(frame.startByte);
+		if (Array.isArray(sb)) {
+			return sb.every((v, i) => buffer[i] === v);
+		}
+		return buffer[0] === sb;
+	}
+
+	// No startByte configured and no data fields to validate against:
+	// rely solely on the configured checksum (checked afterward in
+	// tryParseFrame) rather than guessing a byte pattern.
+	return true;
+}
+
+// ── Try to parse a frame with a given config ───────────────────────
+// Returns { parsed, data, frameLength } or null
+function tryParseFrame(buffer, frameConfig) {
+	const frame = frameConfig.frame;
+	const checksum = frameConfig.checksum;
+	const dataFields = frameConfig.data;
+
+	if (!frame || buffer.length < frame.length) {
+		return null;
+	}
+
+	// Quick heuristic: does this look like the right frame type?
+	if (!frameLooksLikeConfig(buffer, frameConfig)) {
+		return null;
+	}
+
+	const useStart = frame.startByte !== "none";
+	const useEnd = frame.endByte !== "none";
+	const useStuffing = Array.isArray(frame.stuffing) && frame.stuffing.length > 0;
+	const frameLength = frame.length;
+	const startByte = parseByteField(frame.startByte);
+	const endByte = parseByteField(frame.endByte);
+
+	let data = null;
+
+	if (useStuffing) {
+		const startIndex = Array.isArray(startByte) ? -1 : buffer.indexOf(startByte);
+		if (startIndex === -1) return null;
+		if (startIndex > 0) return null;
+		const endIndex = Array.isArray(endByte) ? -1 : buffer.indexOf(endByte, 1);
+		if (endIndex === -1) return null;
+		const rawFrame = buffer.slice(0, endIndex + 1);
+		const unstuffed = unstuffBytes(rawFrame, frame.stuffing);
+		if (unstuffed.length !== frameLength) return null;
+		data = unstuffed;
+	} else {
+		const potentialFrame = buffer.slice(0, frameLength);
+
+		const matchesStart = Array.isArray(startByte)
+			? startByte.every((v, i) => potentialFrame[i] === v)
+			: !useStart || potentialFrame[0] === startByte;
+
+		const matchesEnd = !useEnd || (
+			Array.isArray(endByte)
+				? endByte.every((v, i) => potentialFrame[frameLength - endByte.length + i] === v)
+				: potentialFrame[frameLength - 1] === endByte
+		);
+
+		if (!matchesStart || !matchesEnd) {
+			return null;
+		}
+		data = potentialFrame;
+	}
+
+	if (!data) return null;
+
+	// Check checksum
+	const valid = eval(checksum.eval) === eval(checksum.compare);
+	if (!valid) return null;
+
+	// Parse data fields
+	const parsed = {};
+	for (const [name, meta] of Object.entries(dataFields)) {
+		const expr = typeof meta === 'object' ? meta.value : meta;
+		const val = eval(expr);
+		parsed[name] = typeof val === 'number' ? parseFloat(val.toFixed(3)) : val;
+	}
+
+	return { parsed, data, frameLength };
+}
+
 async function readLoop() {
-	let buffer = [];
+	rxBuffer.length = 0;
 	reading = true;
+	const frameConfigs = getFrameConfigs();
+
+	if (frameConfigs.length === 0) {
+		logMessage("WARN No frame configs available for parsing");
+		reading = false;
+		return;
+	}
+
+	// ── Inter-frame gap support (JSON config only) ───────────────────
+	// Reads inter_frame_gap_ms from sensor JSON port settings.
+	// If set (>0), bytes arriving within this gap are treated as one packet.
+	const interFrameGapMs = config?.port?.inter_frame_gap_ms ?? 0;
+	const useInterFrameGap = interFrameGapMs > 0;
+	let rawChunk = [];
+	let lastByteTime = 0;
+	let gapTimer = null;
+
+	function processRxBuffer(fromGapTimer = false) {
+		if (rxBuffer.length === 0) return;
+
+		// ── Try to parse ANY frame first (regardless of buffer size) ────
+		let bestMatch = null;
+
+		for (const cfg of frameConfigs) {
+			if (rxBuffer.length < cfg.frame.length) continue;
+
+			const result = tryParseFrame(rxBuffer, cfg);
+			if (!result) continue;
+
+			const hasRealData = cfg.data && Object.keys(cfg.data).length > 0;
+			const score = hasRealData ? 1000 + cfg.frame.length : cfg.frame.length;
+
+			if (!bestMatch || score > bestMatch.score) {
+				bestMatch = {
+					parsed: result.parsed,
+					data: result.data,
+					frameLength: result.frameLength,
+					config: cfg,
+					score: score
+				};
+			}
+		}
+
+		if (bestMatch) {
+			// Valid frame found — consume exactly its declared length from JSON
+			rxBuffer.splice(0, bestMatch.frameLength);
+
+			updateCharts(bestMatch.parsed);
+			lastParsedData = bestMatch.parsed;
+
+			if (enableWebhook.checked && Number(webhookInterval.value) === 0) {
+				sendHttpRequest(bestMatch.parsed);
+			}
+
+			const hexPacket = Array.from(bestMatch.data).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+			const parsedStr = Object.entries(bestMatch.parsed)
+				.map(([k, v]) => `${k}: ${typeof v === 'number' ? v.toFixed(3) : v}`)
+				.join(', ');
+			logMessage(`[${hexPacket}]\nChecksum: OK\nParsed: ${parsedStr}`, 3);
+
+			return; // One frame per call. Tail stays for caller to clear.
+		}
+
+		// ── No frame matched ────────────────────────────────────────────
+		// maxLen comes from JSON configs only
+		const maxLen = Math.max(...frameConfigs.map(c => c.frame.length), 0);
+
+		// Buffer is too small for the largest configured frame — might be incomplete
+		if (rxBuffer.length < maxLen) {
+			if (fromGapTimer) {
+				// Gap expired: no more bytes coming. This is garbage.
+				const droppedHex = rxBuffer.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+				logMessage(`WARN Incomplete packet (${rxBuffer.length} bytes < ${maxLen}), clearing: [${droppedHex}]`);
+				rxBuffer.length = 0;
+			}
+			// Not from gap timer: keep waiting for more bytes
+			return;
+		}
+
+		// Buffer >= maxLen but no valid frame: sync lost
+		// Log the entire buffer, no truncation, no hardcoded numbers
+		const droppedHex = rxBuffer.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+		logMessage(`WARN No valid frame in ${rxBuffer.length} bytes, clearing: [${droppedHex}]`);
+		rxBuffer.length = 0;
+	}
 
 	try {
 		while (reading) {
 			const { value, done } = await reader.read();
 			if (done) break;
 
-			buffer.push(...value);
+			if (useInterFrameGap) {
+				// ── Inter-frame gap mode: accumulate until gap exceeds threshold ─
+				const now = performance.now();
+				rawChunk.push(...value);
+				lastByteTime = now;
 
-			let continueProcessing = true;
-			while (continueProcessing) {
-				continueProcessing = false;
-
-				// ── Dynamic config resolution ──────────────────────────
-				// Use the command block that was just sent, or the active read block, or legacy config
-				const block = currentCommandBlock || activeBlock;
-				const frame = block?.frame || config.frame;
-				const checksum = block?.checksum || config.checksum;
-				const dataFields = block?.data || config.data;
-
-				// If no frame config available, skip frame parsing for now
-				if (!frame) {
-					break;
-				}
-
-				const useStart = frame.startByte !== "none";
-				const useEnd = frame.endByte !== "none";
-				const useStuffing = Array.isArray(frame.stuffing) && frame.stuffing.length > 0;
-				const frameLength = frame.length;
-				const startByte = parseByteField(frame.startByte);
-				const endByte = parseByteField(frame.endByte);
-
-				let data = null;
-
-				if (useStuffing) {
-					const startIndex = Array.isArray(startByte) ? -1 : buffer.indexOf(startByte);
-					if (startIndex === -1) break; 
-
-					if (startIndex > 0) {
-						buffer.splice(0, startIndex);
-					}
-
-					const endIndex = Array.isArray(endByte) ? -1 : buffer.indexOf(endByte, 1);
-					if (endIndex === -1) break;
-
-					const rawFrame = buffer.splice(0, endIndex + 1);
-					const unstuffed = unstuffBytes(rawFrame, frame.stuffing);
-
-					if (unstuffed.length !== frameLength) {
-						logMessage(`❌ Malformed frame. Expected unstuffed length ${frameLength}, got ${unstuffed.length}`);
-						continueProcessing = true;
-						continue;
-					}
-					data = unstuffed;
-
-					} else { 
-					if (buffer.length < frameLength) break;
-
-					const potentialFrame = buffer.slice(0, frameLength);
-
-					const matchesStart = Array.isArray(startByte)
-					? startByte.every((v, i) => potentialFrame[i] === v)
-					: !useStart || potentialFrame[0] === startByte;
-
-					const matchesEnd = !useEnd || (
-						Array.isArray(endByte)
-						? endByte.every((v, i) => potentialFrame[frameLength - endByte.length + i] === v)
-						: potentialFrame[frameLength - 1] === endByte
-					);
-
-					if (matchesStart && matchesEnd) {
-						data = potentialFrame;
-						buffer.splice(0, frameLength);
-						} else {
-						buffer.shift();
-						continueProcessing = true;
-						continue;
-					}
-				}
-
-				if (data) {
-					const valid = eval(checksum.eval) === eval(checksum.compare);
-					if (valid) {
-						const parsed = {};
-						for (const [name, meta] of Object.entries(dataFields)) {
-							const expr = typeof meta === 'object' ? meta.value : meta;
-							const val = eval(expr);
-							parsed[name] = typeof val === 'number' ? parseFloat(val.toFixed(3)) : val;
+				if (gapTimer) clearTimeout(gapTimer);
+				gapTimer = setTimeout(() => {
+					const elapsed = performance.now() - lastByteTime;
+					if (elapsed >= interFrameGapMs && rawChunk.length > 0) {
+						// rxBuffer should be empty after each previous gap cycle.
+						// If it has bytes, they are stale tails from a previous over-long frame.
+						// Clear them before processing the new packet.
+						if (rxBuffer.length > 0) {
+							const staleHex = rxBuffer.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+							logMessage(`WARN Clearing stale tail (${rxBuffer.length} bytes): [${staleHex}]`);
+							rxBuffer.length = 0;
 						}
 
-						updateCharts(parsed);
+						rxBuffer.push(...rawChunk);
+						rawChunk = [];
+						processRxBuffer(true);
 
-						lastParsedData = parsed;
-
-						if (enableWebhook.checked && Number(webhookInterval.value) === 0) {
-							sendHttpRequest(parsed);
+						// After parsing this packet, any leftover bytes are trailing
+						// garbage (e.g., the 22nd byte of a 21-byte frame). They belong
+						// to THIS packet, not the next. Clear them.
+						if (rxBuffer.length > 0) {
+							const tailHex = rxBuffer.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+							logMessage(`WARN Discarding ${rxBuffer.length} trailing byte(s): [${tailHex}]`);
+							rxBuffer.length = 0;
 						}
-
-						const hexPacket = Array.from(data).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
-						const parsedStr = Object.entries(parsed)
-						.map(([k, v]) => `${k}: ${typeof v === 'number' ? v.toFixed(3) : v}`)
-						.join(', ');
-						logMessage(`📦 [${hexPacket}]\nChecksum: ✅\nParsed: ${parsedStr}`, 3);
-						} else {
-						logMessage(`❌ Bad checksum`);
 					}
-					continueProcessing = true;
-				}
+				}, interFrameGapMs);
+			} else {
+				// ── Legacy mode: bytes may accumulate across multiple reads()
+				// until a complete frame is formed. Do NOT clear leftovers.
+				rxBuffer.push(...value);
+				processRxBuffer(false);
 			}
 		}
-		} catch (err) {
-		logMessage(`⚠️ ${err.message}`);
+	} catch (err) {
+		logMessage(`WARN ${err.message}`);
 
 		if (commandInterval) {
 			clearInterval(commandInterval);
 			commandInterval = null;
-			logMessage('🛑 Stopped sending commands.');
+			logMessage('Stopped sending commands.');
 		}
 
 		try {
 			await reader?.cancel();
 			reader?.releaseLock();
-			} catch (e) {}
+		} catch (e) {}
 	}
 
+	if (gapTimer) clearTimeout(gapTimer);
 	reading = false;
 }
-
 document.getElementById('connect').onclick = async () => {
 	const connectBtn = document.getElementById('connect');
 	const sensorIndex = parseInt(document.getElementById('sensorSelector').value);
@@ -720,11 +882,14 @@ document.getElementById('connect').onclick = async () => {
 			commandTimeout = null;
 		}
 
-		// Reset multi-command state
-		currentCommandBlock = null;
-		activeBlock = null;
-		isInitPhase = false;
 		blocksSentOnce = new Set();
+		cycleRunning = false;
+
+		// Clear any pending inter-frame gap timer
+		if (typeof gapTimer !== 'undefined' && gapTimer) {
+			clearTimeout(gapTimer);
+			gapTimer = null;
+		}
 
 		await sendCommand(config.stop_command);
 
@@ -745,11 +910,9 @@ document.getElementById('connect').onclick = async () => {
 		connectBtn.textContent = '❌ Disconnect';
 		logMessage('✅ Port opened');
 
-		// Use new unified command sequence (supports both legacy and multi-command)
 		await sendCommand(config.start_command);
 		await sendCommandSequence();
 
-		// Resume webhook timer automatically if opted-in
 		if (enableWebhook.checked) {
 			resetTimer();
 		}
@@ -764,16 +927,35 @@ document.getElementById('connect').onclick = async () => {
 };
 
 document.getElementById('clearLog').onclick = () => { log.textContent = ''; };
+
 document.getElementById('saveCSV').onclick = () => {
 	if (collectedData.length === 0) {
 		alert("No data to save.");
 		return;
 	}
 
-	const fields = Object.keys(collectedData[0]);
-	const csvRows = [fields.join(",")];
+	const dataConfig = getEffectiveDataConfig();
+	const namedFields = dataConfig ? Object.keys(dataConfig) : [];
+	if (namedFields.length === 0) {
+		alert("No data fields configured for this sensor.");
+		return;
+	}
 
-	collectedData.forEach(row => {
+	// Filter out rows that have no named data at all (only timestamp)
+	const rowsWithData = collectedData.filter(row => {
+		return namedFields.some(f => row[f] !== undefined);
+	});
+
+	if (rowsWithData.length === 0) {
+		alert("No data rows with actual sensor values to save.");
+		return;
+	}
+
+	const fields = ['timestamp', ...namedFields];
+	const headers = fields;
+	const csvRows = [headers.join(",")];
+
+	rowsWithData.forEach(row => {
 		const values = fields.map(f => `"${row[f] !== undefined ? row[f] : ''}"`);
 		csvRows.push(values.join(","));
 	});
@@ -789,9 +971,43 @@ document.getElementById('saveCSV').onclick = () => {
 	link.click();
 	document.body.removeChild(link);
 };
+
+document.getElementById('saveLog').onclick = () => {
+	const logText = log.textContent;
+	if (!logText || !logText.trim()) {
+		alert("No log content to save.");
+		return;
+	}
+	const blob = new Blob([logText], { type: "text/plain;charset=utf-8;" });
+	const url = URL.createObjectURL(blob);
+	const link = document.createElement("a");
+	link.setAttribute("href", url);
+	link.setAttribute("download", `polluSens_log_${new Date().toISOString().replace(/[:.]/g, '-')}.txt`);
+	document.body.appendChild(link);
+	link.click();
+	document.body.removeChild(link);
+};
+
+document.getElementById('saveLog').onclick = () => {
+	const logText = log.textContent;
+	if (!logText || !logText.trim()) {
+		alert("No log content to save.");
+		return;
+	}
+	const blob = new Blob([logText], { type: "text/plain;charset=utf-8;" });
+	const url = URL.createObjectURL(blob);
+	const link = document.createElement("a");
+	link.setAttribute("href", url);
+	link.setAttribute("download", `polluSens_log_${new Date().toISOString().replace(/[:.]/g, '-')}.txt`);
+	document.body.appendChild(link);
+	link.click();
+	document.body.removeChild(link);
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
 	await loadConfigAndPopulateSelector(); 
 });
+
 document.getElementById('jsonUpload').addEventListener('change', async (e) => {
 	const file = e.target.files[0];
 	if (!file) return;
@@ -915,7 +1131,7 @@ async function sendHttpRequest(data) {
 			      logStatus(`✅ Sent OK (${r.status})`, "success");
 			    } else {
 			      logStatus(`❌ Error ${r.status}`, "error");
-		    }
+			    }
 	  } catch (e) { logStatus(`❌ Network Error: ${e.message}`, "error"); }
 }
 
