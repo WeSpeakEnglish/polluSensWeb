@@ -61,7 +61,15 @@
                 },
                 {
                     "command": "72",
-                    "frame": { "length": 21, "startByte": "none", "endByte": "none" },
+                    "frame": { 
+						"length": 21, 
+						"startByte": "none", 
+						"endByte": "none",
+						"stuffing": [
+							["5C B1", "1B"],
+							["5C C5", "5C"]
+						]
+					},
                     "checksum": {
                         "eval": "[0,3,6,9,12,15,18].reduce((sum,i)=>sum+data.slice(i,i+2).reduce((c,b)=>(c^=b,Array.from({length:8},()=>c=(c&0x80)?((c<<1)^0x31)&0xFF:(c<<1)&0xFF),c),0xFF),0)",
                         "compare": "[2,5,8,11,14,17,20].reduce((sum,i)=>sum+data[i],0)"

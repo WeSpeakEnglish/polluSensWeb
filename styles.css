@@ -558,34 +558,3 @@ a:hover {
 	color: var(--accent-hover);
 }
 
-/* Signal row highlight animation after chart creation */
-.signalRow.signal-highlight {
-	animation: signalFlash 2s ease-out;
-}
-
-@keyframes signalFlash {
-	0% { background-color: var(--accent); color: var(--button-primary-fg); }
-	70% { background-color: var(--accent); color: var(--button-primary-fg); }
-	100% { background-color: transparent; }
-}
-
-.signalRow.signal-highlight label,
-.signalRow.signal-highlight input[type="color"] {
-	color: var(--button-primary-fg);
-}
-
-/* Signal row highlight animation after chart creation */
-.signalRow.signal-highlight {
-	animation: signalFlash 2s ease-out;
-}
-
-@keyframes signalFlash {
-	0% { background-color: var(--accent); color: var(--button-primary-fg); }
-	70% { background-color: var(--accent); color: var(--button-primary-fg); }
-	100% { background-color: transparent; }
-}
-
-.signalRow.signal-highlight label,
-.signalRow.signal-highlight input[type="color"] {
-	color: var(--button-primary-fg);
-}
