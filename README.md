@@ -11,16 +11,16 @@ Try it out yourself: [here](https://wespeakenglish.github.io/polluSensWeb/)
 *"polluSensWeb" is an independent project. Any similarity to other software names is coincidental.*
 
 <div align="center">
-	
+    
 ![Watch the video](https://github.com/WeSpeakEnglish/images/blob/main/pollusensweb1.7.gif)
  
 </div>
-
 
 ## Features
 
 - Live serial data acquisition
 - Frame parsing with startByte / endByte / checksum
+- **Multi-command support** - sequential command sequences with configurable repeats
 - Dynamic charts with customizable signal style (color, thickness, tension)
 - Multiple simultaneous charts
 - Full CSV export (timestamp + all signals)
@@ -29,7 +29,6 @@ Try it out yourself: [here](https://wespeakenglish.github.io/polluSensWeb/)
 - Supports webhooks
 - Works offline after load (except webhooks)
 - No external servers required
-
 
 ## Supported Sensors
 The following sensors are currently supported by `polluSensWeb`:
@@ -67,8 +66,10 @@ The following sensors are currently supported by `polluSensWeb`:
 31. **YYS D5**
 32. **YYS D7**
 33. **YYS D7B**
-34. **Winsen ZH03B** ...more coming soon!
-
+34. **Winsen ZH03B** 
+35. **Sensirion SEN63C** (via [KEL I2C to USB adapter](https://www.tindie.com/products/kel/usb-i2c-module/) ...more coming soon!  
+  
+  
 ## Supported Browsers
 
 Chrome ≥ 89  
@@ -113,6 +114,76 @@ Each sensor config defines:
 - Raw packet logged
   
 7. If invalid → error logged
+
+## Multi-Command Support
+
+polluSensWeb now supports complex sensor initialization and measurement sequences using the `commands` array. This is essential for sensors that require multiple commands to configure, calibrate, or read data.
+
+### When to Use Multi-Command
+
+- Sensors requiring initialization sequences (e.g., SCD30, SEN63C)
+- Sensors with multiple measurement modes
+- Sensors needing configuration before reading
+- Complex sensors with calibration routines
+
+### Command Structure
+
+Each command in the `commands` array can have:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `command` | string | yes | Hex command to send (e.g., `"1B 41 6B 57 00 52 03 53"`) |
+| `frame` | object | no | Frame specification for response parsing |
+| `checksum` | object | no | Checksum validation for response frame |
+| `data` | object | no | Data extraction rules for response frame |
+| `repeat` | number | no | 0 = init (run once), ≥1 = repeat N times per cycle |
+| `postDelay_ms` | number | no | Delay in milliseconds after command execution |
+
+### Multi-Command Flow
+
+1. **Init Phase** (`repeat: 0`): Commands run once before measurement loop
+2. **Measurement Cycle** (`repeat: ≥1`): Commands repeated continuously
+
+### Multi-Command Behavior
+
+**Init Commands** (`repeat: 0`):
+- Run once when connection starts
+- Used for sensor configuration, calibration, or setup
+- Can include their own frame parsing
+
+**Cycle Commands** (`repeat: ≥1`):
+- Run continuously in a loop
+- Each command can have its own repeat count and delay
+- The entire cycle repeats while connection is active
+
+**Frame Handling**:
+- Each command can define its own frame structure
+- Responses are parsed independently
+- Data from any command can update charts
+
+**Multi-command example:**
+```json
+{
+  "commands": [
+    {
+      "command": "7E 00 03 00 FC 7E",
+      "repeat": 1,
+      "postDelay_ms": 50,
+      "frame": { ... },
+      "data": { ... },
+      "checksum": { ... }
+    },
+	{
+      "command": "67 00 05 00 FE 7E",
+      "repeat": 1,
+      "postDelay_ms": 50,
+      "frame": { ... },
+      "data": { ... },
+      "checksum": { ... }
+    }
+  ]
+}
+```
 
 ## User Interface
 
@@ -203,7 +274,7 @@ Each sensor object describes how to read and interpret data from a UART-connecte
 
 ---
 
-##  Sensor Object Fields
+## Sensor Object Fields
 
 | Field             | Required | Type      | Description |
 |------------------|----------|-----------|-------------|
@@ -211,8 +282,9 @@ Each sensor object describes how to read and interpret data from a UART-connecte
 | `inherits_from`  | no       | string    | Name of another sensor to inherit from, ex. `"Plantower PMSA003-S"` |
 | `command`        | no       | string    | Hex string to send during connection (e.g. `"7E 00 03 00 FC 7E"`) or `"none"` |
 | `start_command`  | no       | string    | Hex string to send after connect event (e.g. `"7E 00 00 02 01 03 F9 7E"`) |
-| `stop_command`   | no       | string    | Hex string to send on disconnect (e.g. `"7E 00 01 00 FE 7E"`) 
+| `stop_command`   | no       | string    | Hex string to send on disconnect (e.g. `"7E 00 01 00 FE 7E"`) |
 | `send_cmd_period`| no       | number    | If > 0, send `command` every N seconds, if = 0  - once |
+| `commands`       | no       | array     | Array of command objects for multi-command sequences (see below) |
 | `port`           | yes     | object    | fields: see below |
 | `frame`          | yes     | object    | fields: see below |
 | `data`           | yes     | object    | fields: see below |
@@ -230,7 +302,7 @@ Each sensor object describes how to read and interpret data from a UART-connecte
 
 | Field             | Required | Type      | Description |
 |------------------|----------|-----------|-------------|
-| `startByte`    | yes       | string | start byte or bytes, ex. `[66, 77]`, `["0x42", "0x4D"]`, `170`, `"0xAA"`, `"none" |
+| `startByte`    | yes       | string | start byte or bytes, ex. `[66, 77]`, `["0x42", "0x4D"]`, `170`, `"0xAA"`, `"none"` |
 | `endByte`      | yes       | string | multi-byte terminator; similar to `startByte` |
 | `length` 	 | yes 	     | string | frame length including start and stop bytes, in bytestuffing case / after unstuffing |
 | `stuffing`     | no        | object | contain stuffing pairs: what to find and what to place instead, ex. `["7D 5E", "0x7E"], ["7D 5D", "0x7D"]` |
@@ -256,6 +328,17 @@ Example:
 |------------------|----------|-----------|-------------|
 | `value`    | yes       | string | valid JS expression, assuming data[i] is i-th byte in received buffer, ex.  "((data[1] << 8) + data[2])>>>0"|
 | `unit`      | yes       | string | units like, ex. `"μg/m³"` |
+
+### Command Object Fields (commands array)
+
+| Field | Required | Type | Description |
+|-------|----------|------|-------------|
+| `command` | yes | string | Hex command string (e.g., `"1B 41 6B 57 00 52 03 53"`) |
+| `repeat` | no | number | `0` = init (run once), `≥1` = repeat N times per measurement cycle |
+| `postDelay_ms` | no | number | Delay in milliseconds after command before next operation |
+| `frame` | no | object | Frame specification for response parsing (same as main frame) |
+| `checksum` | no | object | Checksum validation for response (same as main checksum) |
+| `data` | no | object | Data extraction rules for response (same as main data) |
 
 ## Sensor Example (full JSON example, may be used like custom template)
 
@@ -319,6 +402,9 @@ This example keeps all settings from `Plantower PMSA003` but adds a humidity val
 - All `value`, `eval`, and `compare` fields are evaluated using JavaScript `eval()`.
 - You can use decimal values (`66`) or hex strings (`"0x42"`) — **no raw hex like `0x42`**.
 - If your JSON fails to load, check the browser log or validate at [https://jsonlint.com](https://jsonlint.com).
+- For multi-command sensors, ensure proper `postDelay_ms` values to allow sensor processing time.
+- Use `repeat: 0` for one-time initialization commands.
+- Use `repeat: ≥1` for continuous measurement commands.
 
 ## Webhook Integration – polluSensWeb
 
