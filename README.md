@@ -334,6 +334,7 @@ Example:
 | Field | Required | Type | Description |
 |-------|----------|------|-------------|
 | `command` | yes | string | Hex command string (e.g., `"1B 41 6B 57 00 52 03 53"`) |
+| `id` | no | number | 0-based position index used by child sensors to override this command via inheritance (see [Per-command override](#per-command-override-in-multi-command-mode)) |
 | `repeat` | no | number | `0` = init (run once), `≥1` = repeat N times per measurement cycle |
 | `postDelay_ms` | no | number | Delay in milliseconds after command before next operation |
 | `frame` | no | object | Frame specification for response parsing (same as main frame) |
@@ -396,6 +397,30 @@ You can reuse and override parts of existing sensors:
 ```
 
 This example keeps all settings from `Plantower PMSA003` but adds a humidity value.
+
+### Per-command override in multi-command mode
+
+When the parent sensor uses a `commands` array, a child sensor can override individual commands without repeating the entire array. Use the `id` field on a child command to specify which position (0-based) in the parent's `commands` array to merge into.
+
+**Rules:**
+- `id` is a 0-based integer index into the parent's `commands` array
+- Only the fields listed in the child command are overridden; all other fields are inherited from the parent command
+- A child command with no `id`, or with an `id` that is out of range, is **appended** as a new command after the inherited ones
+- Parent commands need no `id` field — only child overrides use it
+
+**Example:** parent defines two commands; child only changes `postDelay_ms` on the second one (`id: 1`):
+
+```json
+{
+  "name": "MySensor Fast",
+  "inherits_from": "MySensor",
+  "commands": [
+    { "id": 1, "postDelay_ms": 100 }
+  ]
+}
+```
+
+All other fields of command at position 1 (`command`, `frame`, `data`, `checksum`, `repeat`, etc.) are inherited unchanged from `MySensor`.
 
 ## Tips & Troubleshooting
 

@@ -52,6 +52,28 @@ function getConfigData() {
 // Handle inheritance
 const nameToSensor = {};
 
+// Merges child command overrides into the base commands array.
+// id on a child command is a 0-based index pointing to the position in baseCmds to override.
+// Base commands need no id field — only child overrides use id.
+// Child commands with no id, a non-integer id, or an out-of-range id are appended as new commands.
+function mergeCommands(baseCmds, childCmds) {
+	if (!childCmds) return baseCmds;
+	if (!baseCmds)  return childCmds;
+
+	const merged = baseCmds.map((baseCmd, i) => {
+		const override = childCmds.find(c => c.id === i);
+		return override ? { ...baseCmd, ...override } : baseCmd;
+	});
+
+	// Append child commands that aren't targeting an existing position
+	for (const c of childCmds) {
+		const isValidIdx = Number.isInteger(c.id) && c.id >= 0 && c.id < baseCmds.length;
+		if (!isValidIdx) merged.push(c);
+	}
+
+	return merged;
+}
+
 function resolveInheritance(sensor, stack) {
 	stack = Array.isArray(stack) ? stack : [];
 	
@@ -78,7 +100,7 @@ function resolveInheritance(sensor, stack) {
 		start_command: sensor.start_command ?? resolvedBase.start_command,
 		stop_command: sensor.stop_command ?? resolvedBase.stop_command,
 		command: sensor.command ?? resolvedBase.command,
-		commands: sensor.commands ?? resolvedBase.commands,
+		commands: mergeCommands(resolvedBase.commands, sensor.commands),
 		send_cmd_period: sensor.send_cmd_period ?? resolvedBase.send_cmd_period,
 		send_cmd_period_ms: sensor.send_cmd_period_ms ?? resolvedBase.send_cmd_period_ms,
 		port: { ...resolvedBase.port, ...(sensor.port || {}) },
