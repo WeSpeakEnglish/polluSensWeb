@@ -355,6 +355,16 @@ input[type="number"] {
 	background: var(--signal-row-odd);
 }
 
+@keyframes signalRowFlash {
+	0%   { background-color: var(--accent); color: var(--button-primary-fg); }
+	25%  { background-color: var(--accent); color: var(--button-primary-fg); }
+	100% { background-color: transparent;   color: var(--text-primary); }
+}
+
+.signalRow.row-highlight {
+	animation: signalRowFlash 650ms ease-out;
+}
+
 .signal-gear-btn {
 	background: none;
 	border: 1px solid var(--border);

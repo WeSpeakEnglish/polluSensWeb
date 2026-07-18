@@ -264,9 +264,11 @@ document.getElementById('createChart').onclick = () => {
 	const height = parseInt(document.getElementById('chartHeight').value);
 	const rows = document.querySelectorAll('.signalRow');
 	const datasets = [];
-	
+	const selectedRows = [];
+
 	rows.forEach(row => {
 		if (!row.querySelector('.signalToggle').checked) return;
+		selectedRows.push(row);
 		datasets.push([
 			'',
 			row.dataset.field,
@@ -282,6 +284,15 @@ document.getElementById('createChart').onclick = () => {
 	}
 	
 	createChart(name, [width, height], datasets, maxDatapoints);
+
+	// Flash-highlight selected rows, then uncheck them once the animation ends
+	selectedRows.forEach(row => {
+		row.classList.add('row-highlight');
+		row.addEventListener('animationend', () => {
+			row.classList.remove('row-highlight');
+			row.querySelector('.signalToggle').checked = false;
+		}, { once: true });
+	});
 };
 
 function createChart(name, size, datasets, maxDatapoints) {
@@ -636,12 +647,17 @@ async function runMultiCommandSequence() {
 			let data = null;
 
 			if (useStuffing) {
+				// Escape byte used to detect incomplete escape sequences at candidate frame boundaries.
+				// A raw slice ending with this byte is always incomplete (the encoding is always 2 bytes).
+				const escByte = parseInt(stuffing[0][0].split(' ')[0], 16);
 				// For stuffed frames with NO start/end bytes, just find by length
 				if (!useStart && !useEnd) {
 					// Try different raw lengths until we find one that unstuffs to 'length'
 					let found = false;
 					for (let rawLen = length; rawLen <= rxBuffer.length; rawLen++) {
 						const rawFrame = rxBuffer.slice(0, rawLen);
+						// A trailing escape byte means the slice cuts mid-sequence; wait for the next byte
+						if (rawFrame[rawFrame.length - 1] === escByte) continue;
 						const unstuffed = unstuffBytes(rawFrame, stuffing);
 						if (unstuffed.length === length) {
 							data = unstuffed;
@@ -671,6 +687,8 @@ async function runMultiCommandSequence() {
 					let found = false;
 					for (let rawLen = length; rawLen <= rxBuffer.length; rawLen++) {
 						const rawFrame = rxBuffer.slice(0, rawLen);
+						// A trailing escape byte means the slice cuts mid-sequence; wait for the next byte
+						if (rawFrame[rawFrame.length - 1] === escByte) continue;
 						const unstuffed = unstuffBytes(rawFrame, stuffing);
 						if (unstuffed.length === length) {
 							data = unstuffed;
@@ -961,6 +979,25 @@ document.getElementById('saveCSV').onclick = () => {
 	link.click();
 	document.body.removeChild(link);
 };
+document.getElementById('saveLog').onclick = () => {
+	const logText = log.textContent.trim();
+	if (!logText) {
+		alert("Log is empty, nothing to save.");
+		return;
+	}
+
+	const blob = new Blob([logText], { type: "text/plain;charset=utf-8;" });
+	const url = URL.createObjectURL(blob);
+
+	const link = document.createElement("a");
+	link.setAttribute("href", url);
+	link.setAttribute("download", `polluSens_log_${new Date().toISOString().replace(/[:.]/g, '-')}.txt`);
+	document.body.appendChild(link);
+	link.click();
+	document.body.removeChild(link);
+	URL.revokeObjectURL(url);
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
 	await loadConfigAndPopulateSelector(); 
 });
