@@ -564,7 +564,7 @@
                 {
                     "command": "72",
                     "frame": { "length": 3, "startByte": "none", "endByte": "none" },
-                    "checksum": { "eval": "data[1]", "compare": "1" },
+                    "checksum": { "eval": "data[2]", "compare": "176" },
                     "data": {},
                     "postDelay_ms": 30000,
                     "repeat": 0
