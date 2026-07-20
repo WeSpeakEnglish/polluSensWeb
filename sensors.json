@@ -534,7 +534,94 @@
 				"eval": "data.slice(0, 22).reduce((a, b) => (a + b) & 0xFFFF, 0)",
 				"compare": "(data[22] << 8) + data[23]"
 			}
-		}
-		
+		},
+		{
+            "name": "Sensirion SEN63C via KEL I2C to UART",
+            "send_cmd_period_ms": 10000,
+            "port": {
+                "baudRate": 9600,
+                "dataBits": 8,
+                "stopBits": 1,
+                "parity": "none",
+				"inter_frame_gap_ms": 30
+            },
+            "commands": [
+                {
+                    "command": "1B 41 6B 57 02 77 00 21 52 00 53",
+                    "postDelay_ms": 1200,
+                    "repeat": 0
+                },
+                {
+                    "command": "1B 41 6B 57 02 77 02 02 52 00 53",
+                    "postDelay_ms": 200,
+                    "repeat": 0
+                },
+                {
+                    "command": "1B 41 6B 57 00 52 03 53",
+                    "postDelay_ms": 200,
+                    "repeat": 0
+                },
+                {
+                    "command": "72",
+                    "frame": { "length": 3, "startByte": "none", "endByte": "none" },
+                    "checksum": { "eval": "data[1]", "compare": "1" },
+                    "data": {},
+                    "postDelay_ms": 30000,
+                    "repeat": 0
+                },
+				{
+                    "command": "1B 41 6B 57 02 77 04 71 52 00 53",
+                    "postDelay_ms": 300,
+                    "repeat": 0
+                },
+                {
+                    "command": "1B 41 6B 57 00 52 15 53",
+                    "postDelay_ms": 300,
+                    "repeat": 0
+                },
+                {
+                    "command": "72",
+                    "repeat": 0,
+					"postDelay_ms": 300
+                },
+                {
+                    "command": "1B 41 6B 57 02 77 04 71 52 00 53",
+                    "postDelay_ms": 5000,
+                    "repeat": 1
+                },
+                {
+                    "command": "1B 41 6B 57 00 52 15 53",
+                    "postDelay_ms": 300,
+                    "repeat": 1
+                },
+                {
+                    "command": "72",
+                    "frame": { 
+						"length": 21, 
+						"startByte": "none", 
+						"endByte": "none",
+						"stuffing": [
+							["5C B1", "1B"],
+							["5C C5", "5C"]
+						]
+					},
+                    "checksum": {
+                        "eval": "[0,3,6,9,12,15,18].reduce((sum,i)=>sum+data.slice(i,i+2).reduce((c,b)=>(c^=b,Array.from({length:8},()=>c=(c&0x80)?((c<<1)^0x31)&0xFF:(c<<1)&0xFF),c),0xFF),0)",
+                        "compare": "[2,5,8,11,14,17,20].reduce((sum,i)=>sum+data[i],0)"
+                    },
+                    "data": {
+                        "PM1.0":  { "value": "((data[0] << 8) + data[1]) / 10",   "unit": "μg/m³" },
+                        "PM2.5":  { "value": "((data[3] << 8) + data[4]) / 10",   "unit": "μg/m³" },
+                        "PM4.0":  { "value": "((data[6] << 8) + data[7]) / 10",   "unit": "μg/m³" },
+                        "PM10.0": { "value": "((data[9] << 8) + data[10]) / 10",  "unit": "μg/m³" },
+                        "RH":     { "value": "((data[12] << 8) + data[13]) / 100","unit": "%RH" },
+                        "Temp":   { "value": "((data[15] << 8) + data[16]) / 200","unit": "°C" },
+                        "CO2":    { "value": "(data[18] << 8) + data[19]",        "unit": "ppm" }
+                    },
+                    "repeat": 1,
+					"postDelay_ms": 300
+                }
+            ]
+        }	
 	]	
 }
