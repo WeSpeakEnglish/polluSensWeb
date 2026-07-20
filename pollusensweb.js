@@ -38,13 +38,16 @@ async function sleepInterruptible(ms) {
 }
 // Returns the data-field map regardless of whether the sensor uses the classic
 // flat format (config.data) or the new multi-command format (commands[].data).
+// For multi-command sensors all commands' data fields are merged into one map.
 function getConfigData() {
 	if (!config) return {};
 	if (config.data) return config.data;
 	if (Array.isArray(config.commands)) {
+		const merged = {};
 		for (const cmd of config.commands) {
-			if (cmd.data && Object.keys(cmd.data).length > 0) return cmd.data;
+			if (cmd.data) Object.assign(merged, cmd.data);
 		}
+		if (Object.keys(merged).length > 0) return merged;
 	}
 	return {};
 }
@@ -388,8 +391,16 @@ const chart = new Chart(canvas, {
 
 function updateCharts(parsedData) {
 	const now = new Date();
-	
-	collectedData.push({ timestamp: now.toISOString(), ...parsedData });
+
+	// For multi-command sensors: if none of the incoming fields exist in the last
+	// row yet, this is a different command in the same cycle — merge into that row.
+	// Otherwise (new cycle, or classic single-command sensor) push a fresh row.
+	const last = collectedData[collectedData.length - 1];
+	if (last && Object.keys(parsedData).every(k => last[k] === undefined)) {
+		Object.assign(last, parsedData);
+	} else {
+		collectedData.push({ timestamp: now.toISOString(), ...parsedData });
+	}
 	
 	for (const { chart, datasets, maxDatapoints } of Object.values(chartSettings)) {
 		datasets.forEach(([_, field], i) => {
