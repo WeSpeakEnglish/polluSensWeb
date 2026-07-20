@@ -1,0 +1,34 @@
+{
+	"sensors": [{
+		"name": "TERA NextPM",
+		"port": {"baudRate": 115200, "dataBits": 8, "stopBits": 1, "parity": "even"},
+		"commands": [
+			{
+				"command": "81 11 6E",
+				"repeat": 1,
+				"postDelay_ms": 1000,
+				"frame": {"startByte": "0x81", "endByte": "none", "length": 16},
+				"checksum": {"eval": "(256-data.slice(0,15).reduce((a,b)=>a+b,0)%256)%256", "compare": "data[15]"},
+				"data": {
+					"PM1":         {"value": "((data[9]<<8)+data[10])*0.1",   "unit": "µg/m³"},
+					"PM2.5":       {"value": "((data[11]<<8)+data[12])*0.1",  "unit": "µg/m³"},
+					"PM10":        {"value": "((data[13]<<8)+data[14])*0.1",  "unit": "µg/m³"},
+					"PM1 pcs/L":   {"value": "(data[3]<<8)+data[4]",          "unit": "pcs/L"},
+					"PM2.5 pcs/L": {"value": "(data[5]<<8)+data[6]",          "unit": "pcs/L"},
+					"PM10 pcs/L":  {"value": "(data[7]<<8)+data[8]",          "unit": "pcs/L"}
+				}
+			},
+			{
+				"command": "81 14 6B",
+				"repeat": 1,
+				"postDelay_ms": 1000,
+				"frame": {"startByte": "0x81", "endByte": "none", "length": 8},
+				"checksum": {"eval": "(256-data.slice(0,7).reduce((a,b)=>a+b,0)%256)%256", "compare": "data[7]"},
+				"data": {
+					"Temperature": {"value": "0.9754*((data[3]<<8)+data[4])/100-4.2488", "unit": "°C"},
+					"Humidity":   {"value": "1.1768*((data[5]<<8)+data[6])/100-4.727",  "unit": "%RH"}
+				}
+			}
+		]
+	}]
+}
