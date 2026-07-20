@@ -115,80 +115,6 @@ Each sensor config defines:
   
 7. If invalid → error logged
 
-## Multi-Command Support
-
-polluSensWeb now supports complex sensor initialization and measurement sequences using the `commands` array. This is essential for sensors that require multiple commands to configure, calibrate, or read data.
-
-### When to Use Multi-Command
-
-- Sensors requiring initialization sequences (e.g., SCD30, SEN63C)
-- Sensors with multiple measurement modes
-- Sensors needing configuration before reading
-- Complex sensors with calibration routines
-
-### Command Structure
-
-Each command in the `commands` array can have:
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `command` | string | yes | Hex command to send (e.g., `"1B 41 6B 57 00 52 03 53"`) |
-| `frame` | object | no | Frame specification for response parsing |
-| `checksum` | object | no | Checksum validation for response frame |
-| `data` | object | no | Data extraction rules for response frame |
-| `repeat` | number | no | 0 = init (run once), ≥1 = repeat N times per cycle |
-| `postDelay_ms` | number | no | Delay in milliseconds after command execution |
-
-### Multi-Command Flow
-
-1. **Init Phase** (`repeat: 0`): Commands run once before measurement loop
-2. **Measurement Cycle** (`repeat: ≥1`): Commands repeated continuously
-
-### Multi-Command Behavior
-
-**Init Commands** (`repeat: 0`):
-- Run once when connection starts
-- Used for sensor configuration, calibration, or setup
-- Can include their own frame parsing
-
-**Cycle Commands** (`repeat: ≥1`):
-- Run continuously in a loop
-- Each command can have its own repeat count and delay
-- The entire cycle repeats while connection is active
-
-**Frame Handling**:
-- Each command can define its own frame structure
-- Responses are parsed independently
-- Data from any command can update charts
-
-**`start_command` / `stop_command` in multi-command mode**:
-- `start_command` is **not sent** when `commands` array is present — use a `repeat: 0` entry in `commands` for one-time init instead
-- `stop_command` **is always sent** on disconnect, regardless of whether the sensor uses classic or multi-command mode
-
-**Multi-command example:**
-```json
-{
-  "commands": [
-    {
-      "command": "7E 00 03 00 FC 7E",
-      "repeat": 1,
-      "postDelay_ms": 50,
-      "frame": { ... },
-      "data": { ... },
-      "checksum": { ... }
-    },
-	{
-      "command": "67 00 05 00 FE 7E",
-      "repeat": 1,
-      "postDelay_ms": 50,
-      "frame": { ... },
-      "data": { ... },
-      "checksum": { ... }
-    }
-  ]
-}
-```
-
 ## User Interface
 
 ### Header Bar
@@ -400,7 +326,82 @@ You can reuse and override parts of existing sensors:
 }
 ```
 
-This example keeps all settings from `Plantower PMSA003` but adds a humidity value.
+This example keeps all settings from `Plantower PMSA003` but adds a humidity value.  
+  
+  
+## Multi-Command Support
+
+polluSensWeb now supports complex sensor initialization and measurement sequences using the `commands` array. This is essential for sensors that require multiple commands to configure, calibrate, or read data.
+
+### When to Use Multi-Command
+
+- Sensors requiring initialization sequences (e.g., SCD30, SEN63C)
+- Sensors with multiple measurement modes
+- Sensors needing configuration before reading
+- Complex sensors with calibration routines
+
+### Command Structure
+
+Each command in the `commands` array can have:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `command` | string | yes | Hex command to send (e.g., `"1B 41 6B 57 00 52 03 53"`) |
+| `frame` | object | no | Frame specification for response parsing |
+| `checksum` | object | no | Checksum validation for response frame |
+| `data` | object | no | Data extraction rules for response frame |
+| `repeat` | number | no | 0 = init (run once), ≥1 = repeat N times per cycle |
+| `postDelay_ms` | number | no | Delay in milliseconds after command execution |
+
+### Multi-Command Flow
+
+1. **Init Phase** (`repeat: 0`): Commands run once before measurement loop
+2. **Measurement Cycle** (`repeat: ≥1`): Commands repeated continuously
+
+### Multi-Command Behavior
+
+**Init Commands** (`repeat: 0`):
+- Run once when connection starts
+- Used for sensor configuration, calibration, or setup
+- Can include their own frame parsing
+
+**Cycle Commands** (`repeat: ≥1`):
+- Run continuously in a loop
+- Each command can have its own repeat count and delay
+- The entire cycle repeats while connection is active
+
+**Frame Handling**:
+- Each command can define its own frame structure
+- Responses are parsed independently
+- Data from any command can update charts
+
+**`start_command` / `stop_command` in multi-command mode**:
+- `start_command` is **not sent** when `commands` array is present — use a `repeat: 0` entry in `commands` for one-time init instead
+- `stop_command` **is always sent** on disconnect, regardless of whether the sensor uses classic or multi-command mode
+
+**Multi-command example:**
+```json
+{
+  "commands": [
+    {
+      "command": "7E 00 03 00 FC 7E",
+      "repeat": 1,
+      "postDelay_ms": 50,
+      "frame": { ... },
+      "data": { ... },
+      "checksum": { ... }
+    },
+	{
+      "command": "67 00 05 00 FE 7E",
+      "repeat": 1,
+      "postDelay_ms": 50,
+      "frame": { ... },
+      "data": { ... },
+      "checksum": { ... }
+    }
+  ]
+}
+```
 
 ### Per-command override in multi-command mode
 
