@@ -161,6 +161,10 @@ Each command in the `commands` array can have:
 - Responses are parsed independently
 - Data from any command can update charts
 
+**`start_command` / `stop_command` in multi-command mode**:
+- `start_command` is **not sent** when `commands` array is present — use a `repeat: 0` entry in `commands` for one-time init instead
+- `stop_command` **is always sent** on disconnect, regardless of whether the sensor uses classic or multi-command mode
+
 **Multi-command example:**
 ```json
 {
@@ -281,8 +285,8 @@ Each sensor object describes how to read and interpret data from a UART-connecte
 | `name`           | yes       | string    | Unique sensor name (shown in dropdown) |
 | `inherits_from`  | no       | string    | Name of another sensor to inherit from, ex. `"Plantower PMSA003-S"` |
 | `command`        | no       | string    | Hex string to send during connection (e.g. `"7E 00 03 00 FC 7E"`) or `"none"` |
-| `start_command`  | no       | string    | Hex string to send after connect event (e.g. `"7E 00 00 02 01 03 F9 7E"`) |
-| `stop_command`   | no       | string    | Hex string to send on disconnect (e.g. `"7E 00 01 00 FE 7E"`) |
+| `start_command`  | no       | string    | Hex string to send after connect event (e.g. `"7E 00 00 02 01 03 F9 7E"`). **Classic mode only** — ignored when `commands` array is present; use a `repeat: 0` command instead |
+| `stop_command`   | no       | string    | Hex string to send on disconnect (e.g. `"7E 00 01 00 FE 7E"`). **Works in both classic and multi-command modes** — always sent on disconnect regardless of whether `command` or `commands` is used |
 | `send_cmd_period`| no       | number    | If > 0, send `command` every N seconds, if = 0  - once |
 | `commands`       | no       | array     | Array of command objects for multi-command sequences (see below) |
 | `port`           | yes     | object    | fields: see below |
