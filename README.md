@@ -1,4 +1,5 @@
-# polluSensWeb
+# polluSensWeb  
+[![Mentioned in Awesome](https://github.com/awesome-selfhosted/awesome-selfhosted#internet-of-things-iot)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Web Serial API](https://img.shields.io/badge/Web%20Serial%20API-Supported-green)](https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API)
 [![Browser: Chrome](https://img.shields.io/badge/Browser-Chrome%20|%20Edge%20|%20Opera-orange)](https://caniuse.com/web-serial)
