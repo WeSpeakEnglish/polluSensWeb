@@ -2,7 +2,62 @@
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<title>polluSensWeb Chart</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+		<!-- ── Primary SEO ───────────────────────────────────────────────── -->
+		<title>polluSensWeb — Real-Time UART Air Quality Sensor Charts in the Browser</title>
+		<meta name="description" content="polluSensWeb lets you connect any UART air-quality sensor directly in Chrome, visualise PM1, PM2.5 and PM10 pollution levels as live charts, and forward data via webhook — no drivers or server required." />
+		<meta name="keywords" content="air quality sensor, pollution monitoring, UART sensor browser, WebSerial API, PM2.5 chart, PM10 real-time, PM1 visualiser, polluSens, browser sensor, particulate matter" />
+		<meta name="author" content="Aleksei Tertychnyi" />
+		<meta name="robots" content="index, follow" />
+		<meta name="theme-color" content="#00bfff" />
+
+		<!-- ── Canonical URL (update to your actual deployment URL) ─────── -->
+		<link rel="canonical" href="https://wespeakenglish.github.io/polluSensWeb/" />
+
+		<!-- ── Open Graph (Facebook, LinkedIn, Discord …) ───────────────── -->
+		<meta property="og:type"        content="website" />
+		<meta property="og:url"         content="https://wespeakenglish.github.io/polluSensWeb/" />
+		<meta property="og:site_name"   content="polluSensWeb" />
+		<meta property="og:title"       content="polluSensWeb — Real-Time UART Air Quality Sensor Charts in the Browser" />
+		<meta property="og:description" content="Connect any UART pollution sensor straight in Chrome. Live PM1 / PM2.5 / PM10 charts, CSV export and webhook forwarding — zero installation." />
+		<meta property="og:image"       content="https://wespeakenglish.github.io/polluSensWeb/og-image.png" />
+		<meta property="og:image:alt"   content="polluSensWeb dashboard showing real-time air quality charts" />
+		<meta property="og:locale"      content="en_US" />
+
+		<!-- ── Twitter / X Card ─────────────────────────────────────────── -->
+		<meta name="twitter:card"        content="summary_large_image" />
+		<meta name="twitter:title"       content="polluSensWeb — Real-Time UART Air Quality Sensor Charts in the Browser" />
+		<meta name="twitter:description" content="Connect any UART pollution sensor straight in Chrome. Live PM1 / PM2.5 / PM10 charts, CSV export and webhook forwarding — zero installation." />
+		<meta name="twitter:image"       content="https://wespeakenglish.github.io/polluSensWeb/og-image.png" />
+		<meta name="twitter:image:alt"   content="polluSensWeb dashboard showing real-time air quality charts" />
+
+		<!-- ── Structured Data (SoftwareApplication) ────────────────────── -->
+		<script type="application/ld+json">
+		{
+			"@context": "https://schema.org",
+			"@type": "SoftwareApplication",
+			"name": "polluSensWeb",
+			"url": "https://wespeakenglish.github.io/polluSensWeb/",
+			"description": "Browser-based tool that connects UART air-quality sensors via the WebSerial API and renders live PM1, PM2.5 and PM10 pollution charts with CSV export and webhook forwarding.",
+			"applicationCategory": "UtilitiesApplication",
+			"operatingSystem": "Web Browser (Chrome / Edge with WebSerial API)",
+			"author": {
+				"@type": "Person",
+				"name": "Aleksei Tertychnyi",
+				"url": "https://github.com/WeSpeakEnglish"
+			},
+			"offers": {
+				"@type": "Offer",
+				"price": "0",
+				"priceCurrency": "USD"
+			},
+			"codeRepository": "https://github.com/WeSpeakEnglish/polluSensWeb",
+			"license": "https://github.com/WeSpeakEnglish/polluSensWeb/blob/main/LICENSE",
+			"keywords": "air quality, pollution sensor, PM2.5, PM10, WebSerial, UART, real-time chart"
+		}
+		</script>
+
 		<script src="libs/chart.js"></script>
 		<script src="libs/chartjs-adapter-date-fns.js"></script>
 		<link rel="stylesheet" href="styles.css">

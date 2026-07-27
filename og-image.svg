@@ -1,0 +1,297 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <!-- Background gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#070c18"/>
+      <stop offset="55%"  stop-color="#0a1225"/>
+      <stop offset="100%" stop-color="#0d1a30"/>
+    </linearGradient>
+
+    <!-- Accent glow for text -->
+    <filter id="textGlow" x="-15%" y="-50%" width="130%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <!-- Soft glow for chart lines -->
+    <filter id="lineGlow" x="-5%" y="-80%" width="110%" height="260%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <!-- Particle haze -->
+    <filter id="particleHaze" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1.6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <!-- Dot node glow -->
+    <filter id="dotGlow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <!-- Chart card gradient -->
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#111c35" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#0c1528" stop-opacity="0.95"/>
+    </linearGradient>
+
+    <!-- Clip for chart area -->
+    <clipPath id="chartClip">
+      <rect x="110" y="312" width="980" height="195"/>
+    </clipPath>
+
+    <!-- Subtle grid fade -->
+    <linearGradient id="gridFade" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#1a3a6a" stop-opacity="0"/>
+      <stop offset="15%"  stop-color="#1a3a6a" stop-opacity="0.35"/>
+      <stop offset="85%"  stop-color="#1a3a6a" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#1a3a6a" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Radial glow behind logo -->
+    <radialGradient id="logoGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#00bfff" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#00bfff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- ── Background ─────────────────────────────────────────── -->
+  <rect width="1200" height="630" fill="url(#bgGrad)"/>
+
+  <!-- Subtle diagonal scan lines -->
+  <g opacity="0.03">
+    <line x1="0" y1="0" x2="1200" y2="630" stroke="#fff" stroke-width="0.5"/>
+    <line x1="200" y1="0" x2="1200" y2="500" stroke="#fff" stroke-width="0.5"/>
+    <line x1="0" y1="130" x2="1000" y2="630" stroke="#fff" stroke-width="0.5"/>
+  </g>
+
+  <!-- Corner grid accents -->
+  <rect x="0" y="0" width="1200" height="2" fill="#00bfff" opacity="0.25"/>
+  <rect x="0" y="628" width="1200" height="2" fill="#00bfff" opacity="0.18"/>
+  <rect x="0" y="0" width="2" height="630" fill="#00bfff" opacity="0.18"/>
+  <rect x="1198" y="0" width="2" height="630" fill="#00bfff" opacity="0.18"/>
+
+  <!-- Corner brackets -->
+  <g stroke="#00bfff" stroke-width="2" fill="none" opacity="0.55">
+    <polyline points="12,44 12,12 44,12"/>
+    <polyline points="1156,12 1188,12 1188,44"/>
+    <polyline points="12,586 12,618 44,618"/>
+    <polyline points="1156,618 1188,618 1188,586"/>
+  </g>
+
+  <!-- ── Radial glow behind logo area ─────────────────────── -->
+  <ellipse cx="600" cy="175" rx="420" ry="160" fill="url(#logoGlow)"/>
+
+  <!-- ── Logo sensor icon ──────────────────────────────────── -->
+  <!-- Outer ring -->
+  <circle cx="168" cy="155" r="60" fill="none" stroke="#00bfff" stroke-width="1.5" opacity="0.3"/>
+  <!-- Waveform inside circle -->
+  <g filter="url(#lineGlow)">
+    <path d="M118,155 Q125,155 132,140 T146,155 T160,172 T174,145 T188,162 T202,154 T218,155"
+          stroke="#00bfff" stroke-width="2.5" fill="none" opacity="0.9"/>
+    <path d="M120,158 Q127,158 134,170 T148,158 T162,144 T176,165 T190,150 T204,158 T220,158"
+          stroke="#00bfff" stroke-width="1.8" fill="none" opacity="0.5"/>
+  </g>
+  <!-- Sensor nodes -->
+  <g filter="url(#dotGlow)">
+    <circle cx="132" cy="140" r="4" fill="#00bfff" opacity="0.95"/>
+    <circle cx="160" cy="172" r="4" fill="#00bfff" opacity="0.95"/>
+    <circle cx="188" cy="162" r="4" fill="#00bfff" opacity="0.95"/>
+  </g>
+
+  <!-- Floating particles around icon -->
+  <g filter="url(#particleHaze)" opacity="0.75">
+    <circle cx="148" cy="128" r="8" fill="#00bfff" opacity="0.3"/>
+    <circle cx="185" cy="140" r="9.5" fill="#00bfff" opacity="0.22"/>
+    <circle cx="158" cy="174" r="7" fill="#00bfff" opacity="0.28"/>
+    <circle cx="195" cy="168" r="5.5" fill="#00bfff" opacity="0.32"/>
+    <circle cx="140" cy="158" r="4.5" fill="#00bfff" opacity="0.38"/>
+
+    <circle cx="152" cy="138" r="3.5" fill="#00bfff" opacity="0.52"/>
+    <circle cx="176" cy="145" r="4" fill="#00bfff" opacity="0.48"/>
+    <circle cx="167" cy="168" r="3.2" fill="#00bfff" opacity="0.55"/>
+    <circle cx="198" cy="152" r="3.8" fill="#00bfff" opacity="0.5"/>
+    <circle cx="138" cy="170" r="3" fill="#00bfff" opacity="0.45"/>
+
+    <circle cx="156" cy="148" r="1.8" fill="#00bfff" opacity="0.7"/>
+    <circle cx="172" cy="135" r="1.6" fill="#00bfff" opacity="0.72"/>
+    <circle cx="184" cy="158" r="2"   fill="#00bfff" opacity="0.68"/>
+    <circle cx="145" cy="163" r="1.5" fill="#00bfff" opacity="0.65"/>
+    <circle cx="193" cy="142" r="1.7" fill="#00bfff" opacity="0.7"/>
+  </g>
+
+  <!-- ── App name ───────────────────────────────────────────── -->
+  <text x="240" y="180"
+        font-family="'Courier New', Courier, monospace"
+        font-size="84" font-weight="bold"
+        fill="#00bfff" filter="url(#textGlow)"
+        letter-spacing="-2">polluSensWeb</text>
+
+  <!-- ── Tagline ───────────────────────────────────────────── -->
+  <text x="241" y="218"
+        font-family="'Courier New', Courier, monospace"
+        font-size="19" font-weight="500"
+        fill="#00bfff" opacity="0.6"
+        letter-spacing="1.8">Connect your UART sensor directly in the browser</text>
+
+  <!-- ── Chart card ────────────────────────────────────────── -->
+  <rect x="50" y="280" width="1080" height="255" rx="10" fill="url(#cardGrad)" stroke="#1e3a60" stroke-width="1.2"/>
+
+  <!-- Card header row -->
+  <rect x="85" y="280" width="1030" height="36" rx="10" fill="#0f1e3a"/>
+  <rect x="85" y="296" width="1030" height="20" fill="#0f1e3a"/>
+  <!-- Dot controls -->
+  <circle cx="112" cy="298" r="6" fill="#ff5f57" opacity="0.8"/>
+  <circle cx="132" cy="298" r="6" fill="#febc2e" opacity="0.8"/>
+  <circle cx="152" cy="298" r="6" fill="#28c840" opacity="0.8"/>
+  <!-- Card title -->
+  <text x="180" y="303" font-family="'Courier New', Courier, monospace" font-size="13" fill="#00bfff" opacity="0.7" letter-spacing="1">Air Quality — Real-time Monitor</text>
+  <!-- Live badge -->
+  <circle cx="1050" cy="298" r="5" fill="#00ff88" opacity="0.9"/>
+  <text x="1062" y="303" font-family="'Courier New', Courier, monospace" font-size="12" fill="#00ff88" opacity="0.85">LIVE</text>
+
+  <!-- Y-axis labels -->
+  <g font-family="'Courier New', Courier, monospace" font-size="11" fill="#4a7fa5" text-anchor="end">
+    <text x="100" y="325">200</text>
+    <text x="100" y="375">150</text>
+    <text x="100" y="425">100</text>
+    <text x="100" y="475"> 50</text>
+    <text x="100" y="510">  0</text>
+  </g>
+  <!-- Y-axis unit -->
+  <text x="72" y="415" font-family="'Courier New', Courier, monospace" font-size="10"
+        fill="#4a7fa5" transform="rotate(-90,72,415)" text-anchor="middle">µg/m³</text>
+
+  <!-- Grid lines (clipped) -->
+  <g clip-path="url(#chartClip)">
+    <g stroke="url(#gridFade)" stroke-width="0.7">
+      <line x1="110" y1="322" x2="1090" y2="322"/>
+      <line x1="110" y1="372" x2="1090" y2="372"/>
+      <line x1="110" y1="422" x2="1090" y2="422"/>
+      <line x1="110" y1="472" x2="1090" y2="472"/>
+      <line x1="110" y1="507" x2="1090" y2="507"/>
+    </g>
+    <!-- Vertical grid ticks -->
+    <g stroke="#1a3a6a" stroke-width="0.5" opacity="0.4">
+      <line x1="305" y1="312" x2="305" y2="507"/>
+      <line x1="500" y1="312" x2="500" y2="507"/>
+      <line x1="695" y1="312" x2="695" y2="507"/>
+      <line x1="890" y1="312" x2="890" y2="507"/>
+    </g>
+
+    <!-- ── PM10 line (orange-ish) ── wide, wiggly, high values -->
+    <path d="M110,390 C130,375 150,400 175,385 S210,368 235,380
+             S265,362 290,370 S320,355 350,365
+             S382,350 410,360 S440,342 465,352
+             S495,345 520,338 S548,330 572,340
+             S600,328 625,336 S655,322 680,330
+             S710,318 735,326 S762,312 790,322
+             S818,316 845,324 S872,310 900,318
+             S928,312 955,320 S982,308 1005,316
+             S1035,310 1060,318 L1090,315"
+          stroke="#ff8c42" stroke-width="2.5" fill="none" opacity="0.85" filter="url(#lineGlow)"/>
+
+    <!-- PM10 area fill -->
+    <path d="M110,390 C130,375 150,400 175,385 S210,368 235,380
+             S265,362 290,370 S320,355 350,365
+             S382,350 410,360 S440,342 465,352
+             S495,345 520,338 S548,330 572,340
+             S600,328 625,336 S655,322 680,330
+             S710,318 735,326 S762,312 790,322
+             S818,316 845,324 S872,310 900,318
+             S928,312 955,320 S982,308 1005,316
+             S1035,310 1060,318 L1090,315 L1090,507 L110,507 Z"
+          fill="#ff8c42" opacity="0.04"/>
+
+    <!-- ── PM2.5 line (cyan) ── middle values -->
+    <path d="M110,440 C130,428 152,448 178,435
+             S215,420 240,430 S270,415 298,422
+             S328,408 355,418 S385,402 412,410
+             S442,396 468,405 S498,390 524,400
+             S552,385 578,394 S608,378 634,388
+             S662,374 688,382 S718,365 744,375
+             S772,360 798,370 S828,354 854,364
+             S882,350 908,360 S936,344 962,354
+             S990,340 1016,350 S1048,336 1075,345 L1090,342"
+          stroke="#00bfff" stroke-width="2.8" fill="none" opacity="0.95" filter="url(#lineGlow)"/>
+
+    <!-- PM2.5 area fill -->
+    <path d="M110,440 C130,428 152,448 178,435
+             S215,420 240,430 S270,415 298,422
+             S328,408 355,418 S385,402 412,410
+             S442,396 468,405 S498,390 524,400
+             S552,385 578,394 S608,378 634,388
+             S662,374 688,382 S718,365 744,375
+             S772,360 798,370 S828,354 854,364
+             S882,350 908,360 S936,344 962,354
+             S990,340 1016,350 S1048,336 1075,345 L1090,342 L1090,507 L110,507 Z"
+          fill="#00bfff" opacity="0.05"/>
+
+    <!-- ── PM1 line (green) ── lowest, smoothest -->
+    <path d="M110,480 C135,472 160,484 185,476
+             S220,465 248,474 S280,460 308,468
+             S338,454 366,462 S396,450 424,457
+             S453,444 480,452 S510,440 538,448
+             S566,435 594,443 S624,430 650,438
+             S680,425 706,433 S736,420 762,428
+             S792,415 818,423 S848,410 874,418
+             S904,404 930,412 S958,400 984,408
+             S1014,396 1040,404 S1068,392 1090,400"
+          stroke="#00e676" stroke-width="2.2" fill="none" opacity="0.88" filter="url(#lineGlow)"/>
+
+    <!-- PM1 area fill -->
+    <path d="M110,480 C135,472 160,484 185,476
+             S220,465 248,474 S280,460 308,468
+             S338,454 366,462 S396,450 424,457
+             S453,444 480,452 S510,440 538,448
+             S566,435 594,443 S624,430 650,438
+             S680,425 706,433 S736,420 762,428
+             S792,415 818,423 S848,410 874,418
+             S904,404 930,412 S958,400 984,408
+             S1014,396 1040,404 S1068,392 1090,400 L1090,507 L110,507 Z"
+          fill="#00e676" opacity="0.04"/>
+
+    <!-- Data point highlights on PM2.5 -->
+    <g filter="url(#dotGlow)">
+      <circle cx="298" cy="422" r="4" fill="#00bfff" opacity="0.9"/>
+      <circle cx="524" cy="400" r="4" fill="#00bfff" opacity="0.9"/>
+      <circle cx="744" cy="375" r="4" fill="#00bfff" opacity="0.9"/>
+      <circle cx="962" cy="354" r="4" fill="#00bfff" opacity="0.9"/>
+    </g>
+  </g>
+
+  <!-- X-axis time labels -->
+  <g font-family="'Courier New', Courier, monospace" font-size="11" fill="#4a7fa5" text-anchor="middle">
+    <text x="110"  y="525">00:00</text>
+    <text x="305"  y="525">00:15</text>
+    <text x="500"  y="525">00:30</text>
+    <text x="695"  y="525">00:45</text>
+    <text x="890"  y="525">01:00</text>
+    <text x="1090" y="525">01:15</text>
+  </g>
+
+  <!-- ── Legend ────────────────────────────────────────────── -->
+  <g font-family="'Courier New', Courier, monospace" font-size="14">
+    <!-- PM10 -->
+    <line x1="270" y1="565" x2="310" y2="565" stroke="#ff8c42" stroke-width="2.5"/>
+    <circle cx="290" cy="565" r="4" fill="#ff8c42" opacity="0.9"/>
+    <text x="318" y="570" fill="#ff8c42" opacity="0.9">PM10</text>
+    <!-- PM2.5 -->
+    <line x1="430" y1="565" x2="470" y2="565" stroke="#00bfff" stroke-width="2.8"/>
+    <circle cx="450" cy="565" r="4" fill="#00bfff" opacity="0.95"/>
+    <text x="478" y="570" fill="#00bfff" opacity="0.95">PM2.5</text>
+    <!-- PM1 -->
+    <line x1="598" y1="565" x2="638" y2="565" stroke="#00e676" stroke-width="2.2"/>
+    <circle cx="618" cy="565" r="4" fill="#00e676" opacity="0.9"/>
+    <text x="646" y="570" fill="#00e676" opacity="0.9">PM1</text>
+  </g>
+
+  <!-- ── Bottom tagline ─────────────────────────────────────── -->
+  <text x="600" y="610"
+        font-family="'Courier New', Courier, monospace"
+        font-size="13" fill="#4a7fa5" text-anchor="middle" letter-spacing="1.4">
+    github.com/WeSpeakEnglish/polluSensWeb
+  </text>
+</svg>
