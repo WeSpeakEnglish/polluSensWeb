@@ -68,7 +68,10 @@ The following sensors are currently supported by `polluSensWeb`:
 32. **YYS D7**
 33. **YYS D7B**
 34. **Winsen ZH03B** 
-35. **Sensirion SEN63C** (via [KEL I2C to USB adapter](https://www.tindie.com/products/kel/usb-i2c-module/)) ...more coming soon!  
+35. **Sensirion SEN63C** (via [KEL I2C to USB adapter](https://www.tindie.com/products/kel/usb-i2c-module/)) 
+36. **Sensirion SCD41** via KEL I2C to USB adapter
+
+...more coming soon!  
   
   
 ## Supported Browsers

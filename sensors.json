@@ -1,539 +1,539 @@
 {
-	"sensors": [
-		{
-			"name": "Panasonic SN-GCJA5",
-			"command": "none",
-			"port": {
-				"baudRate": 9600,
-				"dataBits": 8,
-				"stopBits": 1,
-				"parity": "even"
-			},
-			"frame": {
-				"length": 32,
-				"startByte": 2,
-				"endByte": 3
-			},
-			"data": {
-				"PM1": {
-					"value": "(data[1] | (data[2] << 8) | (data[3] << 16) | (data[4] * 0x1000000)) >>> 0",
-					"unit": "μg/m³"
-				},
-				"PM2.5": {
-					"value": "(data[5] | (data[6] << 8) | (data[7] << 16) | (data[8] * 0x1000000)) >>> 0",
-					"unit": "μg/m³"
-				},
-				"PM10": {
-					"value": "(data[9] | (data[10] << 8) | (data[11] << 16) | (data[12] * 0x1000000)) >>> 0",
-					"unit": "μg/m³"
-				}
-			},
-			"checksum": {
-				"eval": "data.slice(1, 30).reduce((a, b) => a ^ b, 0)",
-				"compare": "data[30]"
-			}
-		},
-		{
-			"name": "Honeywell HPMA115S0-XXX",
-			"command": "none",
-			"port": {
-				"baudRate": 9600,
-				"dataBits": 8,
-				"stopBits": 1,
-				"parity": "none"
-			},
-			"frame": {
-				"length": 32,
-				"startByte": [66, 77],
-				"endByte": "none"
-			},
-			"data": {
-				"PM2.5": {
-					"value": "(data[6] << 8) + data[7]",
-					"unit": "μg/m³"
-				},
-				"PM10": {
-					"value": "(data[8] << 8) + data[9]",
-					"unit": "μg/m³"
-				}
-			},
-			"checksum": {
-				"eval": "data.slice(0, 30).reduce((a, b) => (a + b) & 0xFFFF, 0)",
-				"compare": "(data[30] << 8) + data[31]"
-			}
-		},
-		{
-			"name": "Air Master AM7 Plus",
-			"command": "55 CD 47 00 00 00 00 00 00 01 69 0D 0A",
-			"send_cmd_period": 10,
-			"port": {
-				"baudRate": 19200,
-				"dataBits": 8,
-				"stopBits": 1,
-				"parity": "none"
-			},
-			"frame": {
-				"length": 40,
-				"startByte": 170,
-				"endByte": [13, 10]
-			},
-			"data": {
-				"PM2.5": {
-					"value": "(data[1] << 8) + data[2]",
-					"unit": "μg/m³"
-				},
-				"PM10": {
-					"value": "(data[3] << 8) + data[4]",
-					"unit": "μg/m³"
-				},
-				"HCHO": {
-					"value": "((data[5] << 8) + data[6])/1000.0",
-					"unit": "mg/m³"
-				},
-				"VOCs": {
-					"value": "((data[7] << 8) + data[8])/1000.0",
-					"unit": "mg/m³"
-				},
-				"CO₂": {
-					"value": "(data[9] << 8) + data[10]",
-					"unit": "ppm"
-				},
-				"Temperature": {
-					"value": "((data[11] << 8) + data[12])/100.0",
-					"unit": "°C"
-				},
-				"Humidity": {
-					"value": "((data[13] << 8) + data[14])/100.0",
-					"unit": "%"
-				}
-			},
-			"checksum": {
-				"eval": "data.slice(0, 36).reduce((a, b) => (a + b) & 0xFFFF, 0)",
-				"compare": "(data[36] << 8) + data[37]"
-			}
-		},
-		{
-			"name": "Plantower PMSA003-S",
-			"command": "none",
-			"port": {
-				"baudRate": 9600,
-				"dataBits": 8,
-				"stopBits": 1,
-				"parity": "none"
-			},
-			"frame": {
-				"length": 32,
-				"startByte": [66,77],
-				"endByte": "none"
-			},
-			"data": {
-				"PM1.0 factory env.": {
-					"value": "(data[4] << 8) + data[5]",
-					"unit": "μg/m³"
-				},
-				"PM2.5 factory env.": {
-					"value": "(data[6] << 8) + data[7]",
-					"unit": "μg/m³"
-				},
-				"PM10 factory env.": {
-					"value": "(data[8] << 8) + data[9]",
-					"unit": "μg/m³"
-				},
-				"PM1.0 atmospheric env.": {
-					"value": "(data[10] << 8) + data[11]",
-					"unit": "μg/m³"
-				},
-				"PM2.5 atmospheric env.": {
-					"value": "(data[12] << 8) + data[13]",
-					"unit": "μg/m³"
-				},
-				"PM10 atmospheric env.": {
-					"value": "(data[14] << 8) + data[15]",
-					"unit": "μg/m³"
-				}
-			},
-			"checksum": {
-				"eval": "data.slice(0, 30).reduce((a, b) => (a + b) & 0xFFFF, 0)",
-				"compare": "(data[30] << 8) + data[31]"
-			}
-		},
-		{
-			"name": "Plantower PS3003A",
-			"inherits_from": "Plantower PMSA003-S"
-		},
-		{
-			"name": "Plantower PMS1003",
-			"inherits_from": "Plantower PMSA003-S"
-		},
-		{
-			"name": "Plantower PMS5003",
-			"inherits_from": "Plantower PMSA003-S"
-		},
-		{
-			"name": "Plantower PMS7003",
-			"inherits_from": "Plantower PMSA003-S"
-		},
-		{
-			"name": "Plantower PMS6003",
-			"inherits_from": "Plantower PMSA003-S"
-		},
-		{
-			"name": "Plantower PMS9103",
-			"inherits_from": "Plantower PMSA003-S"
-		},
-		{
-			"name": "Plantower PMS3003",
-			"inherits_from": "Plantower PMSA003-S",
-			"frame": {
-				"length": 24,
-				"startByte": ["0x42","0x4d"],
-				"endByte": "none"
-			},
-			"checksum": {
-				"eval": "data.slice(0, 22).reduce((a, b) => (a + b) & 0xFFFF, 0)",
-				"compare": "(data[22] << 8) + data[23]"
-			}
-		},
-		{
-			"name": "Nova PM SDS011",
-			"command": "none",
-			"port": {
-				"baudRate": 9600,
-				"dataBits": 8,
-				"stopBits": 1,
-				"parity": "none"
-			},
-			"frame": {
-				"length": 10,
-				"startByte": ["0xAA", "0xC0"],
-				"endByte": "0xAB"
-			},
-			"data": {
-				"PM2.5": {
-					"value": "((data[3] << 8) + data[2])/10",
-					"unit": "μg/m³"
-				},
-				"PM10": {
-					"value": "((data[5] << 8) + data[4])/10",
-					"unit": "μg/m³"
-				}
-			},
-			"checksum": {
-				"eval": "data.slice(2, 8).reduce((a, b) => (a + b) & 0xFF, 0)",
-				"compare": "data[8]"
-			}
-		},
-		{
-			"name": "Sensirion SPS30",
-			"stop_command": "7E 00 01 00 FE 7E",
-			"port": {"baudRate": 115200, "dataBits": 8, "stopBits": 1, "parity": "none"},
-			"commands": [
-				{
-					"command": "7E 00 00 02 01 03 F9 7E",
-					"repeat": 0,
-					"postDelay_ms": 1000,
-					"frame": {
-						"startByte": "0x7E", "endByte": "0x7E", "length": 7,
-						"stuffing": [["7D 5E","0x7E"],["7D 5D","0x7D"],["7D 31","0x11"],["7D 33","0x13"]]
-					},
-					"checksum": {"eval": "0xFF-(data.slice(1,5).reduce((a,b)=>a+b,0)&0xFF)", "compare": "data[5]"}
-				},
-				{
-					"command": "7E 00 03 00 FC 7E",
-					"repeat": 1,
-					"postDelay_ms": 1000,
-					"frame": {
-						"startByte": "0x7E", "endByte": "0x7E", "length": 47,
-						"stuffing": [["7D 5E","0x7E"],["7D 5D","0x7D"],["7D 31","0x11"],["7D 33","0x13"]]
-					},
-					"checksum": {"eval": "0xFF-(data.slice(1,45).reduce((a,b)=>a+b,0)&0xFF)", "compare": "data[45]"},
-					"data": {
-						"PM1.0":      {"value": "(dv=new DataView(new Uint8Array(data).buffer),dv.getFloat32(5,false))",  "unit": "µg/m³"},
-						"PM2.5":      {"value": "dv.getFloat32(9,false)",  "unit": "µg/m³"},
-						"PM4.0":      {"value": "dv.getFloat32(13,false)", "unit": "µg/m³"},
-						"PM10":       {"value": "dv.getFloat32(17,false)", "unit": "µg/m³"},
-						"NC0.5":      {"value": "dv.getFloat32(21,false)", "unit": "#/cm³"},
-						"NC1.0":      {"value": "dv.getFloat32(25,false)", "unit": "#/cm³"},
-						"NC2.5":      {"value": "dv.getFloat32(29,false)", "unit": "#/cm³"},
-						"NC4.0":      {"value": "dv.getFloat32(33,false)", "unit": "#/cm³"},
-						"NC10":       {"value": "dv.getFloat32(37,false)", "unit": "#/cm³"},
-						"TypicalSize":{"value": "dv.getFloat32(41,false)", "unit": "µm"}
-					}
-				}
-			]
-		},
-		{
-			"name": "SHUYI SY210",
-			"command": "none",
-			"port": {
-				"baudRate": 9600,
-				"dataBits": 8,
-				"stopBits": 1,
-				"parity": "none"
-			},
-			"frame": {
-				"length": 5,
-				"startByte": [66, 77],
-				"endByte": "none"
-			},
-			"data": {
-				"PM2.5": {
-					"value": "(data[2] << 8) + data[3]",
-					"unit": "μg/m³"
-				}
-			},
-			"checksum": {
-				"eval": "(-(data[0]+data[1]+data[2]+data[3]))&0xFF",
-				"compare": "data[4]"
-			}
-		},
-		{
-			"name": "TERA NextPM",
-			"port": {"baudRate": 115200, "dataBits": 8, "stopBits": 1, "parity": "even"},
-			"commands": [
-				{
-					"command": "81 11 6E",
-					"repeat": 1,
-					"postDelay_ms": 1000,
-					"frame": {"startByte": "0x81", "endByte": "none", "length": 16},
-					"checksum": {"eval": "(256-data.slice(0,15).reduce((a,b)=>a+b,0)%256)%256", "compare": "data[15]"},
-					"data": {
-						"PM1":         {"value": "((data[9]<<8)+data[10])*0.1",   "unit": "µg/m³"},
-						"PM2.5":       {"value": "((data[11]<<8)+data[12])*0.1",  "unit": "µg/m³"},
-						"PM10":        {"value": "((data[13]<<8)+data[14])*0.1",  "unit": "µg/m³"},
-						"PM1 pcs/L":   {"value": "(data[3]<<8)+data[4]",          "unit": "pcs/L"},
-						"PM2.5 pcs/L": {"value": "(data[5]<<8)+data[6]",          "unit": "pcs/L"},
-						"PM10 pcs/L":  {"value": "(data[7]<<8)+data[8]",          "unit": "pcs/L"}
-					}
-				},
-				{
-					"command": "81 14 6B",
-					"repeat": 1,
-					"postDelay_ms": 1000,
-					"frame": {"startByte": "0x81", "endByte": "none", "length": 8},
-					"checksum": {"eval": "(256-data.slice(0,7).reduce((a,b)=>a+b,0)%256)%256", "compare": "data[7]"},
-					"data": {
-						"Temperature": {"value": "0.9754*((data[3]<<8)+data[4])/100-4.2488", "unit": "°C"},
-						"Humidity":   {"value": "1.1768*((data[5]<<8)+data[6])/100-4.727",  "unit": "%RH"}
-					}
-				}
-			]
-		},
-		{
-			"name": "SenseAir S8 004-0-0053",
-			"command": "FE 04 00 03 00 01 D5 C5",
-			"send_cmd_period": 4,
-			"port": {
-				"baudRate": 9600,
-				"dataBits": 8,
-				"stopBits": 1,
-				"parity": "none"
-			},
-			"frame": {
-				"length": 7,
-				"startByte": ["0xFE", "0x04"],
-				"endByte": "none"
-			},
-			"data": {
-				"CO2": {
-					"value": "(data[3] << 8) + data[4]",
-					"unit": "ppm"
-				}
-			},
-			"checksum": {
-				"eval": "data.slice(0,5).reduce((c,b)=>(c^=b,Array.from({length:8},()=>c=(c&1)?(c>>1)^0xA001:c>>1),c),0xFFFF)",
-				"compare": "(data[6]<<8)|data[5]"
-			}
-		},
-		{
-			"name": "SenseAir S88 Residential",
-			"inherits_from": "SenseAir S8 004-0-0053"
-		},
-		{
-			"name": "SenseAir S88 LP",
-			"inherits_from": "SenseAir S8 004-0-0053"
-		},
-		{
-			"name": "SenseAir S88 GH",
-			"inherits_from": "SenseAir S8 004-0-0053"
-		},
-		{
-			"name": "SenseAir K30",
-			"inherits_from": "SenseAir S8 004-0-0053"
-		},
-		{
-			"name": "SenseAir K33",
-			"inherits_from": "SenseAir S8 004-0-0053"
-		},
-		{
-			"name": "SenseAir eSENSE",
-			"inherits_from": "SenseAir S8 004-0-0053"
-		},
-		{
-			"name": "SenseAir S8 004-0-0017",
-			"inherits_from": "SenseAir S8 004-0-0053",
-			"data": {
-				"CO2": {
-					"value": "((data[3] << 8) + data[4])*10",
-					"unit": "ppm"
-				}
-			}
-		},
-		{
-			"name": "SenseAir K33 ICB",
-			"inherits_from": "SenseAir S8 004-0-0017"
-		},
-		{
-			"name": "Sensirion SCD30",
-			"start_command": "61 06 00 36 00 00 60 64",
-			"command": "61 03 00 28 00 06 4C 60",
-			"send_cmd_period": 2,
-			"port": {
-				"baudRate": 19200,
-				"dataBits": 8,
-				"stopBits": 1,
-				"parity": "none"
-			},
-			"frame": {
-				"length": 17,
-				"startByte": ["0x61", "0x03"],
-				"endByte": "none"
-			},
-			"data": {
-				"CO2": {
-					"value": "new DataView(new Uint8Array(data.slice(3,7)).buffer).getFloat32(0, false)",
-					"unit": "ppm"
-				},
-				"Temperature": {
-					"value": "new DataView(new Uint8Array(data.slice(7,11)).buffer).getFloat32(0, false)",
-					"unit": "°C"
-				},
-				"Humidity": {
-					"value": "new DataView(new Uint8Array(data.slice(11,15)).buffer).getFloat32(0, false)",
-					"unit": "%RH"
-				}
-			},
-			"checksum": {
-				"eval": "data.slice(0,15).reduce((c,b)=>(c^=b,Array.from({length:8},()=>c=(c&1)?(c>>1)^0xA001:c>>1),c),0xFFFF)",
-				"compare": "(data[16]<<8)|data[15]"
-			}
-		},
-		{
-			"name": "YYS DC01",
-			"command": "none",
-			"port": {
-				"baudRate": 9600,
-				"dataBits": 8,
-				"stopBits": 1,
-				"parity": "none"
-			},
-			"frame": {
-				"length": 4,
-				"startByte": "0xA5",
-				"endByte": "none"
-			},
-			"data": {
-				"PM2.5": {
-					"value": "(data[1] << 7) + data[2]",
-					"unit": "μg/m³"
-				}
-			},
-			"checksum": {
-				"eval": "(data[0] + data[1] + data[2])&0x7F",
-				"compare": "data[3]"
-			}
-		},
-		{
-			"name": "YYS D01",
-			"inherits_from": "YYS DC01"
-		},
-		{
-			"name": "YYS D01-P",
-			"inherits_from": "YYS DC01"
-		},
-		{
-			"name": "YYS D9",
-			"command": "none",
-			"port": {
-				"baudRate": 9600,
-				"dataBits": 8,
-				"stopBits": 1,
-				"parity": "none"
-			},
-			"frame": {
-				"length": 32,
-				"startByte": [66,77],
-				"endByte": "none"
-			},
-			"data": {
-				"PM1.0": {
-					"value": "(data[4] << 8) + data[5]",
-					"unit": "μg/m³"
-				},
-				"PM2.5": {
-					"value": "(data[6] << 8) + data[7]",
-					"unit": "μg/m³"
-				},
-				"PM10": {
-					"value": "(data[8] << 8) + data[9]",
-					"unit": "μg/m³"
-				}
-			},
-			"checksum": {
-				"eval": "data.slice(0, 30).reduce((a, b) => (a + b) & 0xFFFF, 0)",
-				"compare": "(data[30] << 8) + data[31]"
-			}
-		},
-		{
-			"name": "YYS D3",
-			"inherits_from": "YYS D9"
-		},
-		{
-			"name": "YYS D5",
-			"inherits_from": "YYS D9"
-		},
-		{
-			"name": "YYS D7",
-			"inherits_from": "YYS D9"
-		},
-		{
-			"name": "YYS D7B",
-			"inherits_from": "YYS D9"
-		},
-		{
-			"name": "Winsen ZH03B",
-			"command": "none",
-			"port": {
-				"baudRate": 9600,
-				"dataBits": 8,
-				"stopBits": 1,
-				"parity": "none"
-			},
-			"frame": {
-				"length": 24,
-				"startByte": ["0x42","0x4d"],
-				"endByte": "none"
-			},
-			"data": {
-				"PM1.0": {
-					"value": "(data[10] << 8) + data[11]",
-					"unit": "μg/m³"
-				},
-				"PM2.5": {
-					"value": "(data[12] << 8) + data[13]",
-					"unit": "μg/m³"
-				},
-				"PM10": {
-					"value": "(data[14] << 8) + data[15]",
-					"unit": "μg/m³"
-				}
-			},
-			"checksum": {
-				"eval": "data.slice(0, 22).reduce((a, b) => (a + b) & 0xFFFF, 0)",
-				"compare": "(data[22] << 8) + data[23]"
-			}
-		},
-		{
+    "sensors": [
+        {
+            "name": "Panasonic SN-GCJA5",
+            "command": "none",
+            "port": {
+                "baudRate": 9600,
+                "dataBits": 8,
+                "stopBits": 1,
+                "parity": "even"
+            },
+            "frame": {
+                "length": 32,
+                "startByte": 2,
+                "endByte": 3
+            },
+            "data": {
+                "PM1": {
+                    "value": "(data[1] | (data[2] << 8) | (data[3] << 16) | (data[4] * 0x1000000)) >>> 0",
+                    "unit": "μg/m³"
+                },
+                "PM2.5": {
+                    "value": "(data[5] | (data[6] << 8) | (data[7] << 16) | (data[8] * 0x1000000)) >>> 0",
+                    "unit": "μg/m³"
+                },
+                "PM10": {
+                    "value": "(data[9] | (data[10] << 8) | (data[11] << 16) | (data[12] * 0x1000000)) >>> 0",
+                    "unit": "μg/m³"
+                }
+            },
+            "checksum": {
+                "eval": "data.slice(1, 30).reduce((a, b) => a ^ b, 0)",
+                "compare": "data[30]"
+            }
+        },
+        {
+            "name": "Honeywell HPMA115S0-XXX",
+            "command": "none",
+            "port": {
+                "baudRate": 9600,
+                "dataBits": 8,
+                "stopBits": 1,
+                "parity": "none"
+            },
+            "frame": {
+                "length": 32,
+                "startByte": [66, 77],
+                "endByte": "none"
+            },
+            "data": {
+                "PM2.5": {
+                    "value": "(data[6] << 8) + data[7]",
+                    "unit": "μg/m³"
+                },
+                "PM10": {
+                    "value": "(data[8] << 8) + data[9]",
+                    "unit": "μg/m³"
+                }
+            },
+            "checksum": {
+                "eval": "data.slice(0, 30).reduce((a, b) => (a + b) & 0xFFFF, 0)",
+                "compare": "(data[30] << 8) + data[31]"
+            }
+        },
+        {
+            "name": "Air Master AM7 Plus",
+            "command": "55 CD 47 00 00 00 00 00 00 01 69 0D 0A",
+            "send_cmd_period": 10,
+            "port": {
+                "baudRate": 19200,
+                "dataBits": 8,
+                "stopBits": 1,
+                "parity": "none"
+            },
+            "frame": {
+                "length": 40,
+                "startByte": 170,
+                "endByte": [13, 10]
+            },
+            "data": {
+                "PM2.5": {
+                    "value": "(data[1] << 8) + data[2]",
+                    "unit": "μg/m³"
+                },
+                "PM10": {
+                    "value": "(data[3] << 8) + data[4]",
+                    "unit": "μg/m³"
+                },
+                "HCHO": {
+                    "value": "((data[5] << 8) + data[6])/1000.0",
+                    "unit": "mg/m³"
+                },
+                "VOCs": {
+                    "value": "((data[7] << 8) + data[8])/1000.0",
+                    "unit": "mg/m³"
+                },
+                "CO₂": {
+                    "value": "(data[9] << 8) + data[10]",
+                    "unit": "ppm"
+                },
+                "Temperature": {
+                    "value": "((data[11] << 8) + data[12])/100.0",
+                    "unit": "°C"
+                },
+                "Humidity": {
+                    "value": "((data[13] << 8) + data[14])/100.0",
+                    "unit": "%"
+                }
+            },
+            "checksum": {
+                "eval": "data.slice(0, 36).reduce((a, b) => (a + b) & 0xFFFF, 0)",
+                "compare": "(data[36] << 8) + data[37]"
+            }
+        },
+        {
+            "name": "Plantower PMSA003-S",
+            "command": "none",
+            "port": {
+                "baudRate": 9600,
+                "dataBits": 8,
+                "stopBits": 1,
+                "parity": "none"
+            },
+            "frame": {
+                "length": 32,
+                "startByte": [66,77],
+                "endByte": "none"
+            },
+            "data": {
+                "PM1.0 factory env.": {
+                    "value": "(data[4] << 8) + data[5]",
+                    "unit": "μg/m³"
+                },
+                "PM2.5 factory env.": {
+                    "value": "(data[6] << 8) + data[7]",
+                    "unit": "μg/m³"
+                },
+                "PM10 factory env.": {
+                    "value": "(data[8] << 8) + data[9]",
+                    "unit": "μg/m³"
+                },
+                "PM1.0 atmospheric env.": {
+                    "value": "(data[10] << 8) + data[11]",
+                    "unit": "μg/m³"
+                },
+                "PM2.5 atmospheric env.": {
+                    "value": "(data[12] << 8) + data[13]",
+                    "unit": "μg/m³"
+                },
+                "PM10 atmospheric env.": {
+                    "value": "(data[14] << 8) + data[15]",
+                    "unit": "μg/m³"
+                }
+            },
+            "checksum": {
+                "eval": "data.slice(0, 30).reduce((a, b) => (a + b) & 0xFFFF, 0)",
+                "compare": "(data[30] << 8) + data[31]"
+            }
+        },
+        {
+            "name": "Plantower PS3003A",
+            "inherits_from": "Plantower PMSA003-S"
+        },
+        {
+            "name": "Plantower PMS1003",
+            "inherits_from": "Plantower PMSA003-S"
+        },
+        {
+            "name": "Plantower PMS5003",
+            "inherits_from": "Plantower PMSA003-S"
+        },
+        {
+            "name": "Plantower PMS7003",
+            "inherits_from": "Plantower PMSA003-S"
+        },
+        {
+            "name": "Plantower PMS6003",
+            "inherits_from": "Plantower PMSA003-S"
+        },
+        {
+            "name": "Plantower PMS9103",
+            "inherits_from": "Plantower PMSA003-S"
+        },
+        {
+            "name": "Plantower PMS3003",
+            "inherits_from": "Plantower PMSA003-S",
+            "frame": {
+                "length": 24,
+                "startByte": ["0x42","0x4d"],
+                "endByte": "none"
+            },
+            "checksum": {
+                "eval": "data.slice(0, 22).reduce((a, b) => (a + b) & 0xFFFF, 0)",
+                "compare": "(data[22] << 8) + data[23]"
+            }
+        },
+        {
+            "name": "Nova PM SDS011",
+            "command": "none",
+            "port": {
+                "baudRate": 9600,
+                "dataBits": 8,
+                "stopBits": 1,
+                "parity": "none"
+            },
+            "frame": {
+                "length": 10,
+                "startByte": ["0xAA", "0xC0"],
+                "endByte": "0xAB"
+            },
+            "data": {
+                "PM2.5": {
+                    "value": "((data[3] << 8) + data[2])/10",
+                    "unit": "μg/m³"
+                },
+                "PM10": {
+                    "value": "((data[5] << 8) + data[4])/10",
+                    "unit": "μg/m³"
+                }
+            },
+            "checksum": {
+                "eval": "data.slice(2, 8).reduce((a, b) => (a + b) & 0xFF, 0)",
+                "compare": "data[8]"
+            }
+        },
+        {
+            "name": "Sensirion SPS30",
+            "stop_command": "7E 00 01 00 FE 7E",
+            "port": {"baudRate": 115200, "dataBits": 8, "stopBits": 1, "parity": "none"},
+            "commands": [
+                {
+                    "command": "7E 00 00 02 01 03 F9 7E",
+                    "repeat": 0,
+                    "postDelay_ms": 1000,
+                    "frame": {
+                        "startByte": "0x7E", "endByte": "0x7E", "length": 7,
+                        "stuffing": [["7D 5E","0x7E"],["7D 5D","0x7D"],["7D 31","0x11"],["7D 33","0x13"]]
+                    },
+                    "checksum": {"eval": "0xFF-(data.slice(1,5).reduce((a,b)=>a+b,0)&0xFF)", "compare": "data[5]"}
+                },
+                {
+                    "command": "7E 00 03 00 FC 7E",
+                    "repeat": 1,
+                    "postDelay_ms": 1000,
+                    "frame": {
+                        "startByte": "0x7E", "endByte": "0x7E", "length": 47,
+                        "stuffing": [["7D 5E","0x7E"],["7D 5D","0x7D"],["7D 31","0x11"],["7D 33","0x13"]]
+                    },
+                    "checksum": {"eval": "0xFF-(data.slice(1,45).reduce((a,b)=>a+b,0)&0xFF)", "compare": "data[45]"},
+                    "data": {
+                        "PM1.0":      {"value": "(dv=new DataView(new Uint8Array(data).buffer),dv.getFloat32(5,false))",  "unit": "µg/m³"},
+                        "PM2.5":      {"value": "dv.getFloat32(9,false)",  "unit": "µg/m³"},
+                        "PM4.0":      {"value": "dv.getFloat32(13,false)", "unit": "µg/m³"},
+                        "PM10":       {"value": "dv.getFloat32(17,false)", "unit": "µg/m³"},
+                        "NC0.5":      {"value": "dv.getFloat32(21,false)", "unit": "#/cm³"},
+                        "NC1.0":      {"value": "dv.getFloat32(25,false)", "unit": "#/cm³"},
+                        "NC2.5":      {"value": "dv.getFloat32(29,false)", "unit": "#/cm³"},
+                        "NC4.0":      {"value": "dv.getFloat32(33,false)", "unit": "#/cm³"},
+                        "NC10":       {"value": "dv.getFloat32(37,false)", "unit": "#/cm³"},
+                        "TypicalSize":{"value": "dv.getFloat32(41,false)", "unit": "µm"}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SHUYI SY210",
+            "command": "none",
+            "port": {
+                "baudRate": 9600,
+                "dataBits": 8,
+                "stopBits": 1,
+                "parity": "none"
+            },
+            "frame": {
+                "length": 5,
+                "startByte": [66, 77],
+                "endByte": "none"
+            },
+            "data": {
+                "PM2.5": {
+                    "value": "(data[2] << 8) + data[3]",
+                    "unit": "μg/m³"
+                }
+            },
+            "checksum": {
+                "eval": "(-(data[0]+data[1]+data[2]+data[3]))&0xFF",
+                "compare": "data[4]"
+            }
+        },
+        {
+            "name": "TERA NextPM",
+            "port": {"baudRate": 115200, "dataBits": 8, "stopBits": 1, "parity": "even"},
+            "commands": [
+                {
+                    "command": "81 11 6E",
+                    "repeat": 1,
+                    "postDelay_ms": 1000,
+                    "frame": {"startByte": "0x81", "endByte": "none", "length": 16},
+                    "checksum": {"eval": "(256-data.slice(0,15).reduce((a,b)=>a+b,0)%256)%256", "compare": "data[15]"},
+                    "data": {
+                        "PM1":         {"value": "((data[9]<<8)+data[10])*0.1",   "unit": "µg/m³"},
+                        "PM2.5":       {"value": "((data[11]<<8)+data[12])*0.1",  "unit": "µg/m³"},
+                        "PM10":        {"value": "((data[13]<<8)+data[14])*0.1",  "unit": "µg/m³"},
+                        "PM1 pcs/L":   {"value": "(data[3]<<8)+data[4]",          "unit": "pcs/L"},
+                        "PM2.5 pcs/L": {"value": "(data[5]<<8)+data[6]",          "unit": "pcs/L"},
+                        "PM10 pcs/L":  {"value": "(data[7]<<8)+data[8]",          "unit": "pcs/L"}
+                    }
+                },
+                {
+                    "command": "81 14 6B",
+                    "repeat": 1,
+                    "postDelay_ms": 1000,
+                    "frame": {"startByte": "0x81", "endByte": "none", "length": 8},
+                    "checksum": {"eval": "(256-data.slice(0,7).reduce((a,b)=>a+b,0)%256)%256", "compare": "data[7]"},
+                    "data": {
+                        "Temperature": {"value": "0.9754*((data[3]<<8)+data[4])/100-4.2488", "unit": "°C"},
+                        "Humidity":   {"value": "1.1768*((data[5]<<8)+data[6])/100-4.727",  "unit": "%RH"}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SenseAir S8 004-0-0053",
+            "command": "FE 04 00 03 00 01 D5 C5",
+            "send_cmd_period": 4,
+            "port": {
+                "baudRate": 9600,
+                "dataBits": 8,
+                "stopBits": 1,
+                "parity": "none"
+            },
+            "frame": {
+                "length": 7,
+                "startByte": ["0xFE", "0x04"],
+                "endByte": "none"
+            },
+            "data": {
+                "CO2": {
+                    "value": "(data[3] << 8) + data[4]",
+                    "unit": "ppm"
+                }
+            },
+            "checksum": {
+                "eval": "data.slice(0,5).reduce((c,b)=>(c^=b,Array.from({length:8},()=>c=(c&1)?(c>>1)^0xA001:c>>1),c),0xFFFF)",
+                "compare": "(data[6]<<8)|data[5]"
+            }
+        },
+        {
+            "name": "SenseAir S88 Residential",
+            "inherits_from": "SenseAir S8 004-0-0053"
+        },
+        {
+            "name": "SenseAir S88 LP",
+            "inherits_from": "SenseAir S8 004-0-0053"
+        },
+        {
+            "name": "SenseAir S88 GH",
+            "inherits_from": "SenseAir S8 004-0-0053"
+        },
+        {
+            "name": "SenseAir K30",
+            "inherits_from": "SenseAir S8 004-0-0053"
+        },
+        {
+            "name": "SenseAir K33",
+            "inherits_from": "SenseAir S8 004-0-0053"
+        },
+        {
+            "name": "SenseAir eSENSE",
+            "inherits_from": "SenseAir S8 004-0-0053"
+        },
+        {
+            "name": "SenseAir S8 004-0-0017",
+            "inherits_from": "SenseAir S8 004-0-0053",
+            "data": {
+                "CO2": {
+                    "value": "((data[3] << 8) + data[4])*10",
+                    "unit": "ppm"
+                }
+            }
+        },
+        {
+            "name": "SenseAir K33 ICB",
+            "inherits_from": "SenseAir S8 004-0-0017"
+        },
+        {
+            "name": "Sensirion SCD30",
+            "start_command": "61 06 00 36 00 00 60 64",
+            "command": "61 03 00 28 00 06 4C 60",
+            "send_cmd_period": 2,
+            "port": {
+                "baudRate": 19200,
+                "dataBits": 8,
+                "stopBits": 1,
+                "parity": "none"
+            },
+            "frame": {
+                "length": 17,
+                "startByte": ["0x61", "0x03"],
+                "endByte": "none"
+            },
+            "data": {
+                "CO2": {
+                    "value": "new DataView(new Uint8Array(data.slice(3,7)).buffer).getFloat32(0, false)",
+                    "unit": "ppm"
+                },
+                "Temperature": {
+                    "value": "new DataView(new Uint8Array(data.slice(7,11)).buffer).getFloat32(0, false)",
+                    "unit": "°C"
+                },
+                "Humidity": {
+                    "value": "new DataView(new Uint8Array(data.slice(11,15)).buffer).getFloat32(0, false)",
+                    "unit": "%RH"
+                }
+            },
+            "checksum": {
+                "eval": "data.slice(0,15).reduce((c,b)=>(c^=b,Array.from({length:8},()=>c=(c&1)?(c>>1)^0xA001:c>>1),c),0xFFFF)",
+                "compare": "(data[16]<<8)|data[15]"
+            }
+        },
+        {
+            "name": "YYS DC01",
+            "command": "none",
+            "port": {
+                "baudRate": 9600,
+                "dataBits": 8,
+                "stopBits": 1,
+                "parity": "none"
+            },
+            "frame": {
+                "length": 4,
+                "startByte": "0xA5",
+                "endByte": "none"
+            },
+            "data": {
+                "PM2.5": {
+                    "value": "(data[1] << 7) + data[2]",
+                    "unit": "μg/m³"
+                }
+            },
+            "checksum": {
+                "eval": "(data[0] + data[1] + data[2])&0x7F",
+                "compare": "data[3]"
+            }
+        },
+        {
+            "name": "YYS D01",
+            "inherits_from": "YYS DC01"
+        },
+        {
+            "name": "YYS D01-P",
+            "inherits_from": "YYS DC01"
+        },
+        {
+            "name": "YYS D9",
+            "command": "none",
+            "port": {
+                "baudRate": 9600,
+                "dataBits": 8,
+                "stopBits": 1,
+                "parity": "none"
+            },
+            "frame": {
+                "length": 32,
+                "startByte": [66,77],
+                "endByte": "none"
+            },
+            "data": {
+                "PM1.0": {
+                    "value": "(data[4] << 8) + data[5]",
+                    "unit": "μg/m³"
+                },
+                "PM2.5": {
+                    "value": "(data[6] << 8) + data[7]",
+                    "unit": "μg/m³"
+                },
+                "PM10": {
+                    "value": "(data[8] << 8) + data[9]",
+                    "unit": "μg/m³"
+                }
+            },
+            "checksum": {
+                "eval": "data.slice(0, 30).reduce((a, b) => (a + b) & 0xFFFF, 0)",
+                "compare": "(data[30] << 8) + data[31]"
+            }
+        },
+        {
+            "name": "YYS D3",
+            "inherits_from": "YYS D9"
+        },
+        {
+            "name": "YYS D5",
+            "inherits_from": "YYS D9"
+        },
+        {
+            "name": "YYS D7",
+            "inherits_from": "YYS D9"
+        },
+        {
+            "name": "YYS D7B",
+            "inherits_from": "YYS D9"
+        },
+        {
+            "name": "Winsen ZH03B",
+            "command": "none",
+            "port": {
+                "baudRate": 9600,
+                "dataBits": 8,
+                "stopBits": 1,
+                "parity": "none"
+            },
+            "frame": {
+                "length": 24,
+                "startByte": ["0x42","0x4d"],
+                "endByte": "none"
+            },
+            "data": {
+                "PM1.0": {
+                    "value": "(data[10] << 8) + data[11]",
+                    "unit": "μg/m³"
+                },
+                "PM2.5": {
+                    "value": "(data[12] << 8) + data[13]",
+                    "unit": "μg/m³"
+                },
+                "PM10": {
+                    "value": "(data[14] << 8) + data[15]",
+                    "unit": "μg/m³"
+                }
+            },
+            "checksum": {
+                "eval": "data.slice(0, 22).reduce((a, b) => (a + b) & 0xFFFF, 0)",
+                "compare": "(data[22] << 8) + data[23]"
+            }
+        },
+        {
             "name": "Sensirion SEN63C via KEL I2C to UART",
             "send_cmd_period_ms": 10000,
             "port": {
@@ -541,15 +541,17 @@
                 "dataBits": 8,
                 "stopBits": 1,
                 "parity": "none",
-				"inter_frame_gap_ms": 30
+                "inter_frame_gap_ms": 30
             },
             "commands": [
                 {
+                    "_comment": "Start Continuous Measurement SEN6x 0x0021 (addr 0x6B), 50 ms execution time",
                     "command": "1B 41 6B 57 02 77 00 21 52 00 53",
                     "postDelay_ms": 1200,
                     "repeat": 0
                 },
                 {
+                    "_comment": "Get Data Ready SEN6x 0x0202",
                     "command": "1B 41 6B 57 02 77 02 02 52 00 53",
                     "postDelay_ms": 200,
                     "repeat": 0
@@ -560,18 +562,32 @@
                     "repeat": 0
                 },
                 {
+                    "_comment": "Passes only if CRC valid AND status word == 0x0001 (data ready)",
                     "command": "72",
-                    "frame": { "length": 3, "startByte": "none", "endByte": "none" },
-                    "checksum": { "eval": "data[2]", "compare": "176" },
+                    "frame": {
+                        "length": 3,
+                        "startByte": "none",
+                        "endByte": "none",
+                        "stuffing": [
+                            ["5C B1", "1B"],
+                            ["5C C5", "5C"]
+                        ]
+                    },
+                    "checksum": {
+                        "eval": "(data.slice(0,2).reduce((c,b)=>(c^=b,Array.from({length:8},()=>c=(c&0x80)?((c<<1)^0x31)&0xFF:(c<<1)&0xFF),c),0xFF)===data[2]&&((data[0]<<8)+data[1])===1)?1:0",
+                        "compare": "1"
+                    },
                     "postDelay_ms": 30000,
                     "repeat": 0
                 },
-				{
+                {
+                    "_comment": "Read Measured Values SEN63C 0x0471, 21 bytes - priming read",
                     "command": "1B 41 6B 57 02 77 04 71 52 00 53",
                     "postDelay_ms": 300,
                     "repeat": 0
                 },
                 {
+                    "_comment": "RLENGTH 21 = 0x15, no escaping needed",
                     "command": "1B 41 6B 57 00 52 15 53",
                     "postDelay_ms": 300,
                     "repeat": 0
@@ -579,9 +595,11 @@
                 {
                     "command": "72",
                     "repeat": 0,
-					"postDelay_ms": 300
+                    "postDelay_ms": 300
                 },
+                
                 {
+                    "_comment": "--- measurement loop ---",
                     "command": "1B 41 6B 57 02 77 04 71 52 00 53",
                     "postDelay_ms": 5000,
                     "repeat": 1
@@ -593,32 +611,145 @@
                 },
                 {
                     "command": "72",
-                    "frame": { 
-						"length": 21, 
-						"startByte": "none", 
-						"endByte": "none",
-						"stuffing": [
-							["5C B1", "1B"],
-							["5C C5", "5C"]
-						]
-					},
+                    "frame": {
+                        "length": 21,
+                        "startByte": "none",
+                        "endByte": "none",
+                        "stuffing": [
+                            ["5C B1", "1B"],
+                            ["5C C5", "5C"]
+                        ]
+                    },
                     "checksum": {
-                        "eval": "[0,3,6,9,12,15,18].reduce((sum,i)=>sum+data.slice(i,i+2).reduce((c,b)=>(c^=b,Array.from({length:8},()=>c=(c&0x80)?((c<<1)^0x31)&0xFF:(c<<1)&0xFF),c),0xFF),0)",
-                        "compare": "[2,5,8,11,14,17,20].reduce((sum,i)=>sum+data[i],0)"
+                        "eval": "[0,3,6,9,12,15,18].every(i=>data.slice(i,i+2).reduce((c,b)=>(c^=b,Array.from({length:8},()=>c=(c&0x80)?((c<<1)^0x31)&0xFF:(c<<1)&0xFF),c),0xFF)===data[i+2])?1:0",
+                        "compare": "1"
                     },
                     "data": {
-                        "PM1.0":  { "value": "((data[0] << 8) + data[1]) / 10",   "unit": "μg/m³" },
-                        "PM2.5":  { "value": "((data[3] << 8) + data[4]) / 10",   "unit": "μg/m³" },
-                        "PM4.0":  { "value": "((data[6] << 8) + data[7]) / 10",   "unit": "μg/m³" },
-                        "PM10.0": { "value": "((data[9] << 8) + data[10]) / 10",  "unit": "μg/m³" },
-                        "RH":     { "value": "((data[12] << 8) + data[13]) / 100","unit": "%RH" },
-                        "Temp":   { "value": "((data[15] << 8) + data[16]) / 200","unit": "°C" },
-                        "CO2":    { "value": "(data[18] << 8) + data[19]",        "unit": "ppm" }
+                        "PM1.0":  { "value": "((data[0] << 8) + data[1]) / 10",                     "unit": "μg/m³" },
+                        "PM2.5":  { "value": "((data[3] << 8) + data[4]) / 10",                     "unit": "μg/m³" },
+                        "PM4.0":  { "value": "((data[6] << 8) + data[7]) / 10",                     "unit": "μg/m³" },
+                        "PM10.0": { "value": "((data[9] << 8) + data[10]) / 10",                    "unit": "μg/m³" },
+                        "RH":     { "value": "((((data[12] << 8) + data[13]) << 16 >> 16)) / 100",  "unit": "%RH" },
+                        "Temp":   { "value": "((((data[15] << 8) + data[16]) << 16 >> 16)) / 200",  "unit": "°C" },
+                        "CO2":    { "value": "(data[18] << 8) + data[19]",                          "unit": "ppm" }
                     },
                     "repeat": 1,
-					"postDelay_ms": 300
+                    "postDelay_ms": 300
                 }
             ]
-        }	
+        },
+        {
+            "name": "Sensirion SCD41 via KEL I2C to UART",
+            "send_cmd_period_ms": 5000,
+            "port": {
+                "baudRate": 9600,
+                "dataBits": 8,
+                "stopBits": 1,
+                "parity": "none",
+                "inter_frame_gap_ms": 30
+            },
+            "commands": [
+                {
+                    "_comment": "stop_periodic_measurement 0x3F86 - safe entry state, 500 ms execution time",
+                    "command": "1B 41 62 57 02 77 3F 86 52 00 53",
+                    "postDelay_ms": 500,
+                    "repeat": 0
+                },
+                {
+                    "_comment": "reinit 0x3646 - reload user settings from EEPROM, 20 ms",
+                    "command": "1B 41 62 57 02 77 36 46 52 00 53",
+                    "postDelay_ms": 200,
+                    "repeat": 0
+                },
+                {
+                    "_comment": "start_periodic_measurement 0x21B1 - first sample after ~5 s",
+                    "command": "1B 41 62 57 02 77 21 B1 52 00 53",
+                    "postDelay_ms": 5200,
+                    "repeat": 0
+                },
+                {
+                    "_comment": "get_data_ready_status 0xE4B8",
+                    "command": "1B 41 62 57 02 77 E4 B8 52 00 53",
+                    "postDelay_ms": 100,
+                    "repeat": 0
+                },
+                {
+                    "_comment": "RLENGTH 3 + START",
+                    "command": "1B 41 62 57 00 52 03 53",
+                    "postDelay_ms": 100,
+                    "repeat": 0
+                },
+                {
+                    "_comment": "RDATA - passes only if CRC valid AND least significant 11 bits of status word are non-zero",
+                    "command": "72",
+                    "frame": {
+                        "length": 3,
+                        "startByte": "none",
+                        "endByte": "none",
+                        "stuffing": [
+                            ["5C B1", "1B"],
+                            ["5C C5", "5C"]
+                        ]
+                    },
+                    "checksum": {
+                        "eval": "(data.slice(0,2).reduce((c,b)=>(c^=b,Array.from({length:8},()=>c=(c&0x80)?((c<<1)^0x31)&0xFF:(c<<1)&0xFF),c),0xFF)===data[2]&&((((data[0]<<8)+data[1])&0x07FF)!==0))?1:0",
+                        "compare": "1"
+                    },
+                    "postDelay_ms": 100,
+                    "repeat": 0
+                },
+                {
+                    "_comment": "read_measurement 0xEC05 - priming read, first sample discarded",
+                    "command": "1B 41 62 57 02 77 EC 05 52 00 53",
+                    "postDelay_ms": 100,
+                    "repeat": 0
+                },
+                {
+                    "command": "1B 41 62 57 00 52 09 53",
+                    "postDelay_ms": 100,
+                    "repeat": 0
+                },
+                {
+                    "command": "72",
+                    "postDelay_ms": 100,
+                    "repeat": 0
+                },
+                
+                {
+                    "_comment": "--- measurement loop, 5 s cadence ---",
+                    "command": "1B 41 62 57 02 77 EC 05 52 00 53",
+                    "postDelay_ms": 4700,
+                    "repeat": 1
+                },
+                {
+                    "command": "1B 41 62 57 00 52 09 53",
+                    "postDelay_ms": 150,
+                    "repeat": 1
+                },
+                {
+                    "command": "72",
+                    "frame": {
+                        "length": 9,
+                        "startByte": "none",
+                        "endByte": "none",
+                        "stuffing": [
+                            ["5C B1", "1B"],
+                            ["5C C5", "5C"]
+                        ]
+                    },
+                    "checksum": {
+                        "eval": "[0,3,6].every(i=>data.slice(i,i+2).reduce((c,b)=>(c^=b,Array.from({length:8},()=>c=(c&0x80)?((c<<1)^0x31)&0xFF:(c<<1)&0xFF),c),0xFF)===data[i+2])?1:0",
+                        "compare": "1"
+                    },
+                    "data": {
+                        "CO2":  { "value": "(data[0] << 8) + data[1]",                          "unit": "ppm" },
+                        "Temp": { "value": "-45 + 175 * (((data[3] << 8) + data[4]) / 65536)",  "unit": "°C" },
+                        "RH":   { "value": "100 * (((data[6] << 8) + data[7]) / 65536)",        "unit": "%RH" }
+                    },
+                    "postDelay_ms": 150,
+                    "repeat": 1
+                }
+            ]
+        }
 	]	
 }
