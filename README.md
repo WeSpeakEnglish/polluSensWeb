@@ -70,6 +70,8 @@ The following sensors are currently supported by `polluSensWeb`:
 34. **Winsen ZH03B** 
 35. **Sensirion SEN63C** (via [KEL I2C to USB adapter](https://www.tindie.com/products/kel/usb-i2c-module/)) 
 36. **Sensirion SCD41** via KEL I2C to USB adapter
+37. **Sensirion SEN66** - thanks to Michael Lažan for testing! ([senzorvzduchu.cz](https://senzorvzduchu.cz/))
+38. **Sensirion SEN55 UART** - thanks to Michael Lažan for testing and PR! ([senzorvzduchu.cz](https://senzorvzduchu.cz/))
 
 ...more coming soon!  
   
