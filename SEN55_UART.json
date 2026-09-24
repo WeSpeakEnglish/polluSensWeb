@@ -1,0 +1,113 @@
+{
+  "name": "Sensirion SEN55 UART",
+  "_protocol_note": "SEN5x UART/SHDLC, undocumented by Sensirion, mapped by probing 2026-09. 115200 8N1, SEL floating. Start: cmd 0x00 data 0x02 (state 0x43 if already measuring - harmless). Read: cmd 0x03 data 0x0C -> 16 bytes: PM1.0,PM2.5,PM4.0,PM10 (u16 /10), RH (i16 /100), T (i16 /200), VOC (i16 /10), NOx (i16 /10), big-endian, no per-word CRC. cmd 0x03 data 0xFD returns a 94-byte float32 raw/debug dump. Device info: cmd 0xD0 data 0x03 = serial (ASCII), cmd 0xD1 = version.",
+  "stop_command": "7E 00 01 00 FE 7E",
+  "port": {
+    "baudRate": 115200,
+    "dataBits": 8,
+    "stopBits": 1,
+    "parity": "none"
+  },
+  "commands": [
+    {
+      "_comment": "Start measurement (cmd 0x00, mode 0x02). Response state 0x00 = started, 0x43 = already running; SHDLC checksum passes either way.",
+      "command": "7E 00 00 01 02 FC 7E",
+      "repeat": 0,
+      "postDelay_ms": 2000,
+      "frame": {
+        "startByte": "0x7E",
+        "endByte": "0x7E",
+        "length": 7,
+        "stuffing": [
+          [
+            "7D 5E",
+            "0x7E"
+          ],
+          [
+            "7D 5D",
+            "0x7D"
+          ],
+          [
+            "7D 31",
+            "0x11"
+          ],
+          [
+            "7D 33",
+            "0x13"
+          ]
+        ]
+      },
+      "checksum": {
+        "eval": "0xFF-(data.slice(1,5).reduce((a,b)=>a+b,0)&0xFF)",
+        "compare": "data[5]"
+      }
+    },
+    {
+      "_comment": "Read measured values (cmd 0x03, param 0x0C): 8 words, I2C channel order.",
+      "command": "7E 00 03 01 0C EF 7E",
+      "repeat": 1,
+      "postDelay_ms": 1000,
+      "frame": {
+        "startByte": "0x7E",
+        "endByte": "0x7E",
+        "length": 23,
+        "stuffing": [
+          [
+            "7D 5E",
+            "0x7E"
+          ],
+          [
+            "7D 5D",
+            "0x7D"
+          ],
+          [
+            "7D 31",
+            "0x11"
+          ],
+          [
+            "7D 33",
+            "0x13"
+          ]
+        ]
+      },
+      "checksum": {
+        "eval": "0xFF-(data.slice(1,21).reduce((a,b)=>a+b,0)&0xFF)",
+        "compare": "data[21]"
+      },
+      "data": {
+        "PM1.0": {
+          "value": "(dv=new DataView(new Uint8Array(data).buffer),dv.getUint16(5,false)/10)",
+          "unit": "µg/m³"
+        },
+        "PM2.5": {
+          "value": "dv.getUint16(7,false)/10",
+          "unit": "µg/m³"
+        },
+        "PM4.0": {
+          "value": "dv.getUint16(9,false)/10",
+          "unit": "µg/m³"
+        },
+        "PM10.0": {
+          "value": "dv.getUint16(11,false)/10",
+          "unit": "µg/m³"
+        },
+        "RH": {
+          "value": "dv.getInt16(13,false)/100",
+          "unit": "%RH"
+        },
+        "Temp": {
+          "value": "dv.getInt16(15,false)/200",
+          "unit": "°C"
+        },
+        "VOC": {
+          "value": "dv.getInt16(17,false)/10",
+          "unit": "index"
+        },
+        "NOx": {
+          "value": "dv.getInt16(19,false)/10",
+          "unit": "index"
+        }
+      }
+    }
+  ]
+}
