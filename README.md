@@ -7,8 +7,8 @@
 
 **polluSensWeb** is a free and open-source browser-based tool for connecting and visualizing real air quality sensor data directly from UART devices via Web Serial API.
 It is designed for education, teaching labs, and rapid IoT prototyping.
-## Try it out yourself: [LIVE](https://wespeakenglish.github.io/polluSensWeb/) 
-## WIKI: [WIKI](https://github.com/WeSpeakEnglish/polluSensWeb/wiki)
+### Try it out yourself: [LIVE](https://wespeakenglish.github.io/polluSensWeb/) 
+### WIKI: [WIKI](https://github.com/WeSpeakEnglish/polluSensWeb/wiki)
 *"polluSensWeb" is an independent project. Any similarity to other software names is coincidental.*
 
 <div align="center">
