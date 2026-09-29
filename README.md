@@ -72,6 +72,7 @@ The following sensors are currently supported by `polluSensWeb`:
 36. **Sensirion SCD41** via KEL I2C to USB adapter
 37. **Sensirion SEN66** - thanks to Michael Lažan for testing! ([senzorvzduchu.cz](https://senzorvzduchu.cz/))
 38. **Sensirion SEN55 UART** - thanks to Michael Lažan for testing and PR! ([senzorvzduchu.cz](https://senzorvzduchu.cz/))
+39. **usbtemp.com USB thermometer (DS18B20)** - thank you ([KEL](https://www.tindie.com/products/kel/usb-thermometer/)) for the gift!
 
 ...more coming soon!  
   
