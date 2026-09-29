@@ -629,7 +629,7 @@ async function runMultiCommandSequence() {
 	const rxBuffer = [];
 
 	// Background task: drains the serial port into rxBuffer
-	const readerTask = (async () => {
+	const startReaderTask = () => (async () => {
 		try {
 			while (reading) {
 				const { value, done } = await reader.read();
@@ -638,6 +638,25 @@ async function runMultiCommandSequence() {
 			}
 		} catch (_) { /* reader was cancelled or port closed */ }
 	})();
+	let readerTask = startReaderTask();
+
+	// Per-command baud rate (optional cmd.baudRate).
+	// Web Serial cannot change the baud rate of an open port, so the port is
+	// closed and reopened with the new rate. Protocols that tolerate idle gaps
+	// between bytes (e.g. 1-Wire over UART) keep working across the switch.
+	let currentBaud = config.port.baudRate;
+	async function setBaudRate(baud) {
+		if (!baud || baud === currentBaud || !reading) return;
+		try { await reader.cancel(); } catch (_) {}
+		await readerTask;
+		try { reader.releaseLock(); } catch (_) {}
+		await port.close();
+		await port.open({ ...config.port, baudRate: baud });
+		reader = port.readable.getReader();
+		currentBaud = baud;
+		rxBuffer.length = 0;          // drop bytes received at the previous rate
+		readerTask = startReaderTask();
+	}
 
 	// Read a frame from the buffer using the same logic as classic loop
 	async function readFrameFromBuffer(frameSpec, timeoutMs = 5000) {
@@ -814,6 +833,10 @@ async function runMultiCommandSequence() {
 
 	// Send one command and, if it declares a frame, read + validate + parse the response.
 	async function processCommand(cmd) {
+		if (cmd.baudRate) {
+			try { await setBaudRate(cmd.baudRate); }
+			catch (e) { logMessage(`❌ Baud rate change to ${cmd.baudRate} failed: ${e.message}`); reading = false; return null; }
+		}
 		await sendCommand(cmd.command);
 		if (!cmd.frame) return null;
 

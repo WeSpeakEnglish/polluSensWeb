@@ -1201,6 +1201,89 @@
                     }
                 }
             ]
+        },
+        {
+            "name": "usbtemp.com USB thermometer (DS18B20)",
+            "port": {
+                "baudRate": 9600,
+                "dataBits": 8,
+                "stopBits": 1,
+                "parity": "none"
+            },
+            "commands": [
+                {
+                    "baudRate": 9600,
+                    "command": "F0",
+                    "repeat": 0,
+                    "frame": {
+                        "startByte": "none",
+                        "endByte": "none",
+                        "length": 1
+                    }
+                },
+                {
+                    "baudRate": 115200,
+                    "command": "00 00 FF FF 00 00 FF FF 00 FF FF FF 00 00 FF 00 FF FF 00 FF 00 00 FF 00 00 FF FF 00 00 00 FF 00 FF FF FF FF FF FF FF 00",
+                    "repeat": 0,
+                    "frame": {
+                        "startByte": "none",
+                        "endByte": "none",
+                        "length": 40
+                    }
+                },
+                {
+                    "baudRate": 9600,
+                    "command": "F0",
+                    "repeat": 1,
+                    "frame": {
+                        "startByte": "none",
+                        "endByte": "none",
+                        "length": 1
+                    }
+                },
+                {
+                    "baudRate": 115200,
+                    "command": "00 00 FF FF 00 00 FF FF 00 00 FF 00 00 00 FF 00",
+                    "repeat": 1,
+                    "frame": {
+                        "startByte": "none",
+                        "endByte": "none",
+                        "length": 16
+                    },
+                    "postDelay_ms": 800
+                },
+                {
+                    "baudRate": 9600,
+                    "command": "F0",
+                    "repeat": 1,
+                    "frame": {
+                        "startByte": "none",
+                        "endByte": "none",
+                        "length": 1
+                    }
+                },
+                {
+                    "baudRate": 115200,
+                    "command": "00 00 FF FF 00 00 FF FF 00 FF FF FF FF FF 00 FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF",
+                    "repeat": 1,
+                    "frame": {
+                        "startByte": "none",
+                        "endByte": "none",
+                        "length": 88
+                    },
+                    "postDelay_ms": 1000,
+                    "checksum": {
+                        "eval": "(() => { const B = i => data.slice(16 + i * 8, 24 + i * 8).reduce((v, b, k) => v | ((b === 0xFF ? 1 : 0) << k), 0); const sp = Array.from({ length: 9 }, (_, i) => B(i)); const crc = sp.reduce((c, b) => { c ^= b; for (let i = 0; i < 8; i++) c = (c & 1) ? (c >>> 1) ^ 0x8C : c >>> 1; return c; }, 0); return crc === 0 && sp.some(b => b !== 0); })()",
+                        "compare": "true"
+                    },
+                    "data": {
+                        "Temperature": {
+                            "value": "(() => { const B = i => data.slice(16 + i * 8, 24 + i * 8).reduce((v, b, k) => v | ((b === 0xFF ? 1 : 0) << k), 0); return ((((B(1) << 8) | B(0)) << 16) >> 16) / 16; })()",
+                            "unit": "°C"
+                        }
+                    }
+                }
+            ]
         }
     ]
 }
