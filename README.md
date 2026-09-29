@@ -22,6 +22,7 @@ It is designed for education, teaching labs, and rapid IoT prototyping.
 - Live serial data acquisition
 - Frame parsing with startByte / endByte / checksum
 - **Multi-command support** - sequential command sequences with configurable repeats
+- **Per-command baud rate** - switch serial speed between commands (e.g. 1-Wire over UART)
 - Dynamic charts with customizable signal style (color, thickness, tension)
 - Multiple simultaneous charts
 - Full CSV export (timestamp + all signals)
@@ -230,7 +231,7 @@ Each sensor object describes how to read and interpret data from a UART-connecte
 
 | Field             | Required | Type      | Description |
 |------------------|----------|-----------|-------------|
-| `baudRate`  | yes | integer | connection speed, ex. `9600`, `19200`, `115200` |
+| `baudRate`  | yes | integer | connection speed, ex. `9600`, `19200`, `115200`. In multi-command mode this is the initial speed; individual commands may override it (see [Per-command baud rate](#per-command-baud-rate)) |
 | `dataBits`  | yes | integer | bits in byte, typically `8` |
 | `stopBits`  | yes | integer | stop bits quantity, typically `1` |
 | `parity`    | yes | integer | parity, ex. `"none"`, `"even"`, `"odd"` |
@@ -274,6 +275,7 @@ Example:
 | `id` | no | number | 0-based position index used by child sensors to override this command via inheritance (see [Per-command override](#per-command-override-in-multi-command-mode)) |
 | `repeat` | no | number | `0` = init (run once), `≥1` = repeat N times per measurement cycle |
 | `postDelay_ms` | no | number | Delay in milliseconds after command before next operation |
+| `baudRate` | no | integer | Serial speed for this command. Port is reopened at this speed before sending if it differs from the current one (see [Per-command baud rate](#per-command-baud-rate)) |
 | `frame` | no | object | Frame specification for response parsing (same as main frame) |
 | `checksum` | no | object | Checksum validation for response (same as main checksum) |
 | `data` | no | object | Data extraction rules for response (same as main data) |
@@ -359,6 +361,7 @@ Each command in the `commands` array can have:
 | `data` | object | no | Data extraction rules for response frame |
 | `repeat` | number | no | 0 = init (run once), ≥1 = repeat N times per cycle |
 | `postDelay_ms` | number | no | Delay in milliseconds after command execution |
+| `baudRate` | integer | no | Serial speed for this command; port is reopened if the speed changes |
 
 ### Multi-Command Flow
 
@@ -410,6 +413,20 @@ Each command in the `commands` array can have:
 }
 ```
 
+### Per-command baud rate
+
+Some devices need different serial speeds within a single transaction. A typical example is **1-Wire over UART** (e.g. the [usbtemp](https://github.com/usbtemp) DS18B20 thermometer): the reset pulse is generated at 9600 baud, while data bits are sent at 115200 baud, where each UART byte represents one 1-Wire bit slot (`00` = write 0, `FF` = write 1 / read slot).
+
+Add an optional `baudRate` to any command in the `commands` array:
+
+- Before the command is sent, the current speed is compared with `baudRate`. If they differ, the port is closed and reopened at the new speed (Web Serial cannot change the speed of an open port). All other settings (`dataBits`, `stopBits`, `parity`) are taken from `port`.
+- The receive buffer is cleared after the switch, so bytes received at the previous speed are discarded.
+- The speed stays in effect for following commands until another command sets a different one.
+- Commands **without** `baudRate` do not change the speed, so all existing configurations behave exactly as before.
+- If the port cannot be reopened, the error is logged and the sequence stops.
+
+The switch takes a few milliseconds, so this is only suitable for protocols that tolerate idle gaps between bytes (1-Wire does; most request/response protocols do as well).
+
 ### Per-command override in multi-command mode
 
 When the parent sensor uses a `commands` array, a child sensor can override individual commands without repeating the entire array. Use the `id` field on a child command to specify which position (0-based) in the parent's `commands` array to merge into.
@@ -442,6 +459,7 @@ All other fields of command at position 1 (`command`, `frame`, `data`, `checksum
 - For multi-command sensors, ensure proper `postDelay_ms` values to allow sensor processing time.
 - Use `repeat: 0` for one-time initialization commands.
 - Use `repeat: ≥1` for continuous measurement commands.
+- Use a per-command `baudRate` only when a device needs different speeds within one sequence; leave it out otherwise.
 
 ## Webhook Integration – polluSensWeb
 
@@ -607,3 +625,4 @@ Extact release archive or open git clone, open index.html in browser and load JS
 - Default sensors: [`sensors.json`](https://raw.githubusercontent.com/WeSpeakEnglish/polluSensWeb/main/sensors.json)
 - Project homepage: [pollutants.eu/sensor](https://pollutants.eu/sensor)
 - Hackaday project:  [Connect any UART sensor in your browser](https://hackaday.io/project/203369-uart-air-pollution-sensor-in-browser-easy)
+
